@@ -89,7 +89,7 @@ class WS {
         if (this.request.has(msg.Seq)) {
             let cb = this.request.get(msg.Seq)
 
-            if (msg.Action === RespActionFailed) {
+            if (msg.Action === RespActionFailed || msg.Action === 0) {
                 // @ts-ignore
                 cb.call(this, false, null, data.data)
             } else {

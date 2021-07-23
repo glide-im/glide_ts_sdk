@@ -1,16 +1,39 @@
-import {ws} from "./ws";
-
+import {Callback, ws} from "./ws";
+import {
+    ActionOnlineUser,
+    ActionUserChatList,
+    ActionUserLogin,
+    ActionUserRegister,
+    AuthResponse, Chat,
+    SearchUser
+} from "./message";
 
 export class Client {
 
+    public login(account: string, password: string, callback: Callback<AuthResponse>) {
 
-    public login(username: string, password: string) {
+        let m = {Account: account, Password: password}
 
-        let m = {Username: username, Password: password}
+        ws.sendMessage<any>(ActionUserLogin, m, callback)
+    }
 
-        ws.sendMessage<any>(1048577, m, (success, result, msg) => {
-            console.log(result)
-        })
+    public register(account: string, password: string, callback: Callback<boolean>) {
+
+        let m = {Account: account, Password: password}
+
+        ws.sendMessage<any>(ActionUserRegister, m, callback)
+    }
+
+    public getChatList(callback: Callback<Chat[]>) {
+        ws.sendMessage(ActionUserChatList, "", callback)
+    }
+
+    public getAllOnlineUser(callback: Callback<SearchUser[]>) {
+        ws.sendMessage<any>(ActionOnlineUser, "", callback)
+    }
+
+    public newChat() {
+
     }
 }
 

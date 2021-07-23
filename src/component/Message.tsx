@@ -21,7 +21,7 @@ export function ChatMessageComp(v: { msg: ChatMessage }) {
                 padding: "6px",
                 borderRadius:"6px"
             }}>
-                <Typography variant={"body1"} component={'span'}>{`${v.msg.Time}-${v.msg.Message}`}</Typography>
+                <Typography variant={"body1"} component={'span'}>{`${v.msg.Message}`}</Typography>
             </Box>
         </Grid>
         {me ? m : <div/>}

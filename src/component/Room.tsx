@@ -7,19 +7,19 @@ import {ActionEcho} from "../im/message";
 import {setInterval} from "timers";
 
 
-const initMsg: ChatMessage = {Message: "init", Nickname: "", Sender: -1, Time: Date.now(), Avatar: ""}
+const initMsg: ChatMessage[] = []
 
-export function ChatComp() {
+export function ChatComp(props: { uid: number }) {
 
     const messageListEle = useRef<HTMLUListElement>(null)
-    const [messages, setMessages] = useState([initMsg])
+    const [messages, setMessages] = useState(initMsg)
 
     useEffect(() => {
         ws.connect()
         ws.addMessageListener((data) => {
             let msg: ChatMessage = {
                 Avatar: "",
-                Message: `${data.Action}-${data.Seq}-${data.Data}`,
+                Message: `${data.Data}`,
                 Nickname: "xxx",
                 Sender: 0,
                 Time: Date.now()
@@ -29,7 +29,7 @@ export function ChatComp() {
 
             // @ts-ignore
             const ele: HTMLUListElement = messageListEle.current
-            setInterval(()=>{
+            setInterval(() => {
                 const from = ele.scrollHeight
                 const to = ele.scrollTop
                 if (from - to > 400) {
@@ -57,7 +57,7 @@ export function ChatComp() {
     return (
         <Box>
             <Box height={"70px"} paddingLeft={"16px"}>
-                <Typography variant={"h6"} style={{lineHeight: "70px"}}>Chat</Typography>
+                <Typography variant={"h6"} style={{lineHeight: "70px"}}>Chat: {props.uid}</Typography>
             </Box>
             <Divider/>
             <Box style={{height: "490px"}}>
