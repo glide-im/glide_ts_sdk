@@ -8,6 +8,7 @@ export const ActionUserEditInfo = MaskActionApi | 4
 export const ActionUserLogout = MaskActionApi | 5
 export const ActionUserSyncMsg = MaskActionApi | 6
 export const ActionUserInfo = MaskActionApi | 7
+export const ActionUserNewChat = MaskActionApi | 11
 
 export const ActionOnlineUser = MaskActionApi | 20
 
@@ -41,9 +42,15 @@ export interface SearchUser {
 
 export interface Chat {
     Cid: number
+    UcId: number
     Target: number
     ChatType: number
     Unread: number
     NewMessageAt: any
     ReadAt: any
+}
+
+export interface NewChat {
+    Id: number,
+    Type: number
 }

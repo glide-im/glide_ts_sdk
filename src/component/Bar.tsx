@@ -1,12 +1,13 @@
 import {Avatar, Box, Grid, IconButton, Snackbar} from "@material-ui/core";
 import React, {useEffect, useState} from "react";
 import {AccountBox, AddBox, ChatBubble, ViewList} from "@material-ui/icons";
-import {State, ws} from "../im/ws";
+import {State, Ws} from "../im/ws";
 import {MyDialog} from "./Dialog";
 import {client} from "../im/client";
+import {RouteComponentProps, withRouter} from "react-router-dom";
 
 
-export function Bar() {
+export const Bar = withRouter((props: RouteComponentProps) => {
 
     const [state, setState] = useState(State.CONNECTED)
     const [showDialog, setShowDialog] = useState(false)
@@ -14,16 +15,16 @@ export function Bar() {
     const [snackMsg, setSnackMsg] = useState("")
 
     useEffect(() => {
-        ws.addStateListener((s) => {
+        Ws.addStateListener((s) => {
             setState(s)
         })
     }, [])
 
     const changeState = () => {
         if (state === State.CONNECTED) {
-            ws.close()
+            Ws.close()
         } else {
-            ws.connect()
+            Ws.connect()
         }
     }
 
@@ -82,16 +83,20 @@ export function Bar() {
                 <AccountBox color={s}/>
             </IconButton>
             <IconButton onClick={() => {
-                setShowDialog(true)
+                props.history.push("/")
             }}>
                 <ChatBubble/>
             </IconButton>
-            <IconButton>
+            <IconButton onClick={() => {
+                props.history.push("/friends")
+            }}>
                 <ViewList/>
             </IconButton>
-            <IconButton>
+            <IconButton onClick={() => {
+                setShowDialog(true)
+            }}>
                 <AddBox/>
             </IconButton>
         </Grid>
     </Box>
-}
+})

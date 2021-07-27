@@ -12,9 +12,9 @@ export enum State {
 
 export type Callback<T> = (success: boolean, result: T, msg: string) => void
 
-class WS {
+class MyWs {
 
-    private ws?: WebSocket | null
+    private websocket?: WebSocket | null
     private listener: Listener[]
     private stateChangeListener: StateListener[]
 
@@ -22,7 +22,7 @@ class WS {
     private seq: number
 
     constructor() {
-        this.ws = null
+        this.websocket = null
         this.seq = 1
         this.listener = []
         this.stateChangeListener = []
@@ -32,31 +32,31 @@ class WS {
     public connect() {
 
         this.stateChangeListener.forEach((value => value(State.CONNECTING, "")))
-        this.ws = new WebSocket("ws://127.0.0.1:8080/ws")
+        this.websocket = new WebSocket("ws://127.0.0.1:8080/ws")
         setTimeout(() => {
-            if (!this.ws?.OPEN) {
+            if (!this.websocket?.OPEN) {
                 // this.listener.forEach((value => value("TIMEOUT")))
             }
         }, 1000 * 3);
 
-        this.ws.onerror = (e) => {
+        this.websocket.onerror = (e) => {
             // this.listener.forEach((value => value("ERROR: " + e)))
         }
-        this.ws.onclose = (e) => {
+        this.websocket.onclose = (e) => {
             // this.listener.forEach((value => value("CLOSED")))
             this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
         }
-        this.ws.onopen = (e) => {
+        this.websocket.onopen = (e) => {
             // this.listener.forEach((value => value("CONNECTED")))
             this.stateChangeListener.forEach((value => value(State.CONNECTED, "connected")))
         }
-        this.ws.onmessage = ev => {
+        this.websocket.onmessage = ev => {
             this.onMessage(ev)
         }
     }
 
     public sendMessage<T>(action: number, data: any, cb: Callback<T> | null) {
-        if (!this.ws?.OPEN) {
+        if (this.websocket?.OPEN !== 1) {
             return
         }
         let m: Message = {
@@ -67,11 +67,14 @@ class WS {
         if (cb !== null) {
             this.request.set(m.Seq, cb)
         }
-        this.ws.send(JSON.stringify(m))
+        this.websocket.send(JSON.stringify(m))
     }
 
     public close() {
-        this.ws?.close(3001, "bye")
+        if (this.websocket === null) {
+            return
+        }
+        this.websocket?.close(3001, "bye")
     }
 
     public addStateListener(l: StateListener) {
@@ -84,6 +87,13 @@ class WS {
 
     private onMessage(data: MessageEvent) {
         let msg: Message = JSON.parse(data.data)
+        let log: any
+        try {
+            log = JSON.parse(msg.Data)
+        } catch (e) {
+            log = msg.Data
+        }
+        console.log("New Message => ", msg.Action, msg.Seq, log)
         this.listener.forEach((value => value(msg)))
 
         if (this.request.has(msg.Seq)) {
@@ -101,4 +111,4 @@ class WS {
     }
 }
 
-export const ws = new WS()
+export const Ws = new MyWs()

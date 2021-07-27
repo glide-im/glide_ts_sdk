@@ -1,51 +1,86 @@
-import {Box, Divider, IconButton, List, ListItem, ListItemText} from "@material-ui/core";
+import {
+    Avatar,
+    Box,
+    Divider,
+    Grid,
+    IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Typography
+} from "@material-ui/core";
 import React, {useEffect, useState} from "react";
 import {client} from "../im/client";
-import {SearchUser} from "../im/message";
+import {Chat} from "../im/message";
 import {Refresh} from "@material-ui/icons";
+import {ChatComp} from "./Room";
 
-const emptyUser: SearchUser[] = []
+const emptyChats: Chat[] | null = []
+const noneChat: Chat | null = null
 
-export function ChatList(prop: { onSelectUser: (uid: number) => void }) {
+export function ChatList() {
 
-    const [users, setUsers] = useState(emptyUser)
+    const [chatList, setChatList] = useState(emptyChats)
+    const [chat, setChat] = useState(noneChat)
 
     useEffect(() => {
-        client.getChatList((success, result, msg) => {
-
+        client.subscribeChatList((success, result, msg) => {
+            if (success) {
+                setChatList(() => result)
+                if (result.length > 0) {
+                    setChat(() => result[0])
+                }
+            }
         })
     }, [])
 
-    const list = users.flatMap(value => (
-            <>
-                <ListItem style={{cursor: "pointer"}} key={value.Account} onClick={() => {
-                    prop.onSelectUser(value.Uid)
+    const list = chatList?.flatMap(value => (
+            <div  key={value.Cid}>
+                <ListItem style={{cursor: "pointer"}} onClick={() => {
+                    setChat(value)
                 }}>
-                    <ListItemText primary={`${value.Account}-${value.Uid}`}/>
+                    <ListItemIcon>
+                        <Avatar/>
+                    </ListItemIcon>
+                    <ListItemText primary={`${value.Cid}-${value.Target}`}
+                                  secondary={`${value.NewMessageAt}-${value.ReadAt}`}/>
                 </ListItem>
                 <Divider/>
-            </>
+            </div>
         )
     )
 
     const refresh = () => {
-        client.getAllOnlineUser((success, result, msg) => {
-            setUsers(() => result)
-        })
+        client.getChatList(((success, result, msg) => {
+            if (success) {
+                setChatList(result)
+            }
+        }))
     }
 
     return <Box style={{height: "700px"}}>
-        <Box m={2}>
-            <IconButton size={"small"} onClick={refresh}>
-                <Refresh/>
-            </IconButton>
-        </Box>
-        <Divider/>
-        <List style={{overflow: "auto"}}>
-            {list}
-            <ListItem>
-                <ListItemText primary={" "}/>
-            </ListItem>
-        </List>
+
+        <Grid alignItems={"center"} container style={{}}>
+            <Grid item md={4} style={{borderRight: "#ccc 2px solid", height: "700px"}}>
+                <Box m={2}>
+                    <Typography variant={"caption"}>Messages</Typography>
+                    <IconButton size={"small"} onClick={refresh}>
+                        <Refresh/>
+                    </IconButton>
+                </Box>
+                <Divider/>
+                <List style={{overflow: "auto"}}>
+                    {list}
+                    <ListItem>
+                        <ListItemText primary={" "}/>
+                    </ListItem>
+                </List>
+            </Grid>
+            <Grid item md={8} style={{height: "700px"}}>
+                <ChatComp chat={chat}/>
+            </Grid>
+        </Grid>
+
     </Box>
 }

@@ -1,63 +1,60 @@
 import {Box, Button, Divider, List, ListItem, Typography} from "@material-ui/core";
 import {useEffect, useRef, useState} from "react";
-import {ws} from "../im/ws";
 import {ChatMessage} from "../Model";
 import {ChatMessageComp} from "./Message";
-import {ActionEcho} from "../im/message";
+import {Chat} from "../im/message";
 import {setInterval} from "timers";
+import {client} from "../im/client";
 
+export function ChatComp(props: { chat: Chat | null }) {
 
-const initMsg: ChatMessage[] = []
-
-export function ChatComp(props: { uid: number }) {
-
+    const cid = props.chat !== null ? props.chat.Cid : -1
     const messageListEle = useRef<HTMLUListElement>(null)
-    const [messages, setMessages] = useState(initMsg)
+    const [messages, setMessages] = useState(client.getChatMessage(cid))
 
     useEffect(() => {
-        ws.connect()
-        ws.addMessageListener((data) => {
-            let msg: ChatMessage = {
-                Avatar: "",
-                Message: `${data.Data}`,
-                Nickname: "xxx",
-                Sender: 0,
-                Time: Date.now()
-            }
 
-            setMessages((messages) => [...messages, msg])
+        if (props.chat === null) {
+            return
+        }
+        const onMessage = (m: ChatMessage) => {
+            setMessages((messages) => [...messages, m])
 
             // @ts-ignore
             const ele: HTMLUListElement = messageListEle.current
             setInterval(() => {
+                if (ele == null) {
+                    return
+                }
                 const from = ele.scrollHeight
                 const to = ele.scrollTop
                 if (from - to > 400) {
                     ele.scrollTop = from
                 }
-            }, 60)
-        })
-        return ws.close
-    }, [])
+            }, 100)
+        }
+
+        client.setChatRoomListener(props.chat.Cid, onMessage)
+
+        return () => client.setChatRoomListener(-1, () => null)
+    }, [props.chat])
 
     let sendMessage = (msg: string) => {
+        if (props.chat === null) {
+            return
+        }
         let m: ChatMessage = {
-            Avatar: "",
-            Message: msg,
-            Nickname: "xxx",
-            Sender: -1,
-            Time: Date.now()
+            Mid: 0, ChatId: props.chat?.Cid, Message: msg, MessageType: 1, SendAt: "", Sender: -1
         }
         setMessages((messages) => [...messages, m])
-        ws.sendMessage(ActionEcho, JSON.stringify(m), (success, result, msg1) => {
-
-        })
+        client.sendChatMessage(props.chat.UcId, props.chat.Target, msg)
     }
 
     return (
         <Box>
             <Box height={"70px"} paddingLeft={"16px"}>
-                <Typography variant={"h6"} style={{lineHeight: "70px"}}>Chat: {props.uid}</Typography>
+                <Typography variant={"h6"}
+                            style={{lineHeight: "70px"}}>Chat: {props.chat == null ? "" : props.chat.Target}</Typography>
             </Box>
             <Divider/>
             <Box style={{height: "490px"}}>
@@ -65,7 +62,7 @@ export function ChatComp(props: { uid: number }) {
                       className={"BeautyScrollBar"}>
                     {
                         messages.flatMap(value =>
-                            (<ListItem key={value.Time}>
+                            (<ListItem key={`${value.Mid}-${Date.now()}`}>
                                 <ChatMessageComp msg={value}/>
                             </ListItem>)
                         )
