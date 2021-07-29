@@ -1,9 +1,10 @@
-import {ChatMessage} from "../Model";
 import {Avatar, Box, Grid, Typography} from "@material-ui/core";
+import {client} from "../im/client";
+import {IChatMessage} from "../im/message";
 
-export function ChatMessageComp(v: { msg: ChatMessage }) {
+export function ChatMessageComp(v: { msg: IChatMessage }) {
 
-    const me = v.msg.Sender === -1
+    const me = v.msg.SenderUid === client.getMyUid()
     const align: "flex-start" | "flex-end" = me ? "flex-end" : "flex-start"
     const m = <Grid item md={1}><Avatar/></Grid>
 

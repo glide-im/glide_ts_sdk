@@ -9,6 +9,8 @@ export const ActionUserLogout = MaskActionApi | 5
 export const ActionUserSyncMsg = MaskActionApi | 6
 export const ActionUserInfo = MaskActionApi | 7
 export const ActionUserNewChat = MaskActionApi | 11
+export const ActionUserChatHistory = MaskActionApi | 12
+export const ActionUserChatInfo = MaskActionApi | 13
 
 export const ActionOnlineUser = MaskActionApi | 20
 
@@ -31,16 +33,17 @@ export interface Message {
 
 export interface AuthResponse {
     Token: string
+    Uid: number
 }
 
-export interface SearchUser {
+export interface UserInfo {
     Uid: number
     Account: string
     Nickname: string
     Avatar: string
 }
 
-export interface Chat {
+export interface IChat {
     Cid: number
     UcId: number
     Target: number
@@ -48,9 +51,44 @@ export interface Chat {
     Unread: number
     NewMessageAt: any
     ReadAt: any
+
+    Avatar: string
+    Title: string
+    LatestMsg: string
 }
 
 export interface NewChat {
     Id: number,
+    Type: number
+}
+
+export interface IChatMessage {
+    Mid: number
+    Cid: number
+    SenderUid: number
+    MessageType: number
+    Message: string
+    SendAt: number
+}
+
+export interface SendChatMessage {
+    Cid: number
+    UcId: number
+    Receiver: number
+    MessageType: number
+    Message: string
+}
+
+export interface GroupMessage {
+    ChatId: number
+    Sender: number
+    MessageType: number
+    Message: string
+    SendAt: string
+}
+
+export interface ChatHistoryRequest {
+    Cid: number
+    Time: number
     Type: number
 }

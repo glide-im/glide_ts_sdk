@@ -2,100 +2,92 @@ import {Callback, Ws} from "./ws";
 import {
     ActionChatMessage,
     ActionOnlineUser,
-    ActionUserChatList,
+    ActionUserGetInfo,
     ActionUserLogin,
-    ActionUserNewChat,
     ActionUserRegister,
     AuthResponse,
-    Chat,
-    SearchUser
+    UserInfo
 } from "./message";
-import {ChatMessage, SendChatMessage} from "../Model";
+import {ChatMessage} from "./Chat";
+import {ChatList} from "./ChatList";
+
 
 export class Client {
 
-    private chatListCb: Callback<Chat[]> | null = null;
-
-    private messages: Map<number, ChatMessage[]> = new Map()
-
-    private currentChatId: number = -1
+    chatList: ChatList = new ChatList()
+    private userInfo: Map<number, UserInfo> = new Map<number, UserInfo>()
+    private uid: number = -1
 
     public login(account: string, password: string, callback: Callback<AuthResponse>) {
 
         let m = {Account: account, Password: password}
 
-        Ws.sendMessage<any>(ActionUserLogin, m, ((success, result, msg) => {
-            callback(success, result, msg)
+        Ws.sendMessage<any>(ActionUserLogin, m, ((success, result: AuthResponse, msg) => {
             if (success) {
-                if (this.chatListCb != null) {
-                    Ws.sendMessage(ActionUserChatList, "", this.chatListCb)
-                }
-
-                Ws.addMessageListener((msg => {
-                    if (msg.Action === ActionChatMessage) {
-                        this.onNewMessage(JSON.parse(msg.Data))
-                    }
-                }))
+                this.uid = result.Uid
+                this.onAuthed()
             }
+            callback(success, result, msg)
         }))
     }
 
     public register(account: string, password: string, callback: Callback<boolean>) {
 
         let m = {Account: account, Password: password}
-
         Ws.sendMessage<any>(ActionUserRegister, m, callback)
     }
 
-    public subscribeChatList(callback: Callback<Chat[]>) {
-        this.chatListCb = callback
-    }
-
-    public getAllOnlineUser(callback: Callback<SearchUser[]>) {
-        Ws.sendMessage<any>(ActionOnlineUser, "", callback)
-    }
-
-    public getChatList(callback: Callback<Chat[]>) {
-        Ws.sendMessage(ActionUserChatList, "", callback)
-    }
-
-    public sendChatMessage(ucid: number, receiver: number, msg: string) {
-        let m2: SendChatMessage = {Cid: this.currentChatId, UcId: ucid, Message: msg, MessageType: 1, Receiver: receiver}
-        Ws.sendMessage(ActionChatMessage, m2, ((success, result, msg1) => {
-
+    public getAllOnlineUser(callback: (ret: UserInfo[]) => void) {
+        Ws.sendMessage<UserInfo[]>(ActionOnlineUser, "", ((success, result, msg) => {
+            if (!success) {
+                console.log(msg)
+                return
+            }
+            result.forEach((v) => {
+                this.userInfo.set(v.Uid, v)
+            })
+            callback(result)
         }))
     }
 
-    public getChatMessage(cid: number): ChatMessage[] {
-        const ret = this.messages.get(cid)
-        if (typeof ret !== "undefined") {
-            return ret
-        } else {
-            return []
+    public getUserInfo(uids: number[], callback: (u) => void) {
+        Ws.sendMessage(ActionUserGetInfo, uids, callback)
+    }
+
+    public getMyUid(): number {
+        return this.uid
+    }
+
+    public getChatTitle(id: number, type: number): string {
+        if (type === 1 && this.userInfo.has(id)) {
+            return this.userInfo.get(id).Nickname
         }
+        return "-"
     }
 
-    public setChatRoomListener(cid: number, l: (m: ChatMessage) => void) {
-        this.currentChatId = cid
-        this.chatListener = l
-    }
+    private onAuthed() {
+        this.getAllOnlineUser(() => {
 
-    public newChat(id: number, type: number, callback: () => void) {
-
-        Ws.sendMessage(ActionUserNewChat, {Id: id, Type: type}, ((success, result, msg) => {
-            console.log(msg)
-            callback()
+        })
+        this.chatList.update()
+        // this.updateChatList()
+        Ws.addMessageListener((msg => {
+            if (msg.Action === ActionChatMessage) {
+                this.onNewMessage(JSON.parse(msg.Data))
+            }
+            // something else
         }))
-    }
-
-    private chatListener: (m: ChatMessage) => void = () => {
     }
 
     private onNewMessage(msg: ChatMessage) {
-        if (this.currentChatId >= 0 && msg.ChatId === this.currentChatId) {
-            this.chatListener(msg)
-        }
+        this.chatList.onChatMessage(msg)
     }
 }
 
 export let client = new Client()
+
+
+
+
+
+

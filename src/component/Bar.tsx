@@ -1,4 +1,4 @@
-import {Avatar, Box, Grid, IconButton, Snackbar} from "@material-ui/core";
+import {Avatar, Box, Grid, IconButton, Snackbar, Typography} from "@material-ui/core";
 import React, {useEffect, useState} from "react";
 import {AccountBox, AddBox, ChatBubble, ViewList} from "@material-ui/icons";
 import {State, Ws} from "../im/ws";
@@ -13,6 +13,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     const [showDialog, setShowDialog] = useState(false)
     const [snack, setSnack] = useState(false)
     const [snackMsg, setSnackMsg] = useState("")
+    const [uid, setUid] = useState(-1)
 
     useEffect(() => {
         Ws.addStateListener((s) => {
@@ -42,7 +43,6 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     }
 
     const auth = function (reg: boolean, p: { account: string, password: string }) {
-        console.log(reg, p)
         if (reg) {
             client.register(p.account, p.password, function (success, result, msg) {
                 if (result) {
@@ -60,6 +60,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
                 } else {
                     setSnackMsg(msg)
                 }
+                setUid(result.Uid)
                 setSnack(true)
                 setShowDialog(false)
             })
@@ -78,6 +79,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         <Grid justifyContent={"center"} container color={"primary.dark"}>
             <Box m={2}>
                 <Avatar/>
+                <Typography variant={"subtitle2"}>uid:{uid}</Typography>
             </Box>
             <IconButton onClick={changeState}>
                 <AccountBox color={s}/>

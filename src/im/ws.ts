@@ -103,8 +103,13 @@ class MyWs {
                 // @ts-ignore
                 cb.call(this, false, null, data.data)
             } else {
-                // @ts-ignore
-                cb.call(this, true, JSON.parse(msg.Data), "")
+                if (msg.Data.length === 0) {
+                    // @ts-ignore
+                    cb.call(this, true, msg.Data, "body empty")
+                }else{
+                    // @ts-ignore
+                    cb.call(this, true, JSON.parse(msg.Data), "ok")
+                }
             }
             this.request.delete(msg.Seq)
         }

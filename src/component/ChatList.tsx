@@ -12,39 +12,43 @@ import {
 } from "@material-ui/core";
 import React, {useEffect, useState} from "react";
 import {client} from "../im/client";
-import {Chat} from "../im/message";
 import {Refresh} from "@material-ui/icons";
-import {ChatComp} from "./Room";
-
-const emptyChats: Chat[] | null = []
-const noneChat: Chat | null = null
+import {ChatRoom} from "./Room";
+import {Chat, ChatMessage} from "../im/Chat";
 
 export function ChatList() {
 
-    const [chatList, setChatList] = useState(emptyChats)
-    const [chat, setChat] = useState(noneChat)
+    console.log("enter chat list")
+    const [chatList, setChatList] = useState(client.chatList.getAllChat())
+    const [chat, setChat] = useState(client.chatList.getCurrentChat())
 
-    useEffect(() => {
-        client.subscribeChatList((success, result, msg) => {
-            if (success) {
-                setChatList(() => result)
-                if (result.length > 0) {
-                    setChat(() => result[0])
-                }
-            }
-        })
-    }, [])
+    useEffect(()=>{
+        client.chatList.setChatListUpdateListener((chats => {
+            console.log("chat list update")
+            setChatList(() => [...chats])
+        }))
+    })
 
-    const list = chatList?.flatMap(value => (
-            <div  key={value.Cid}>
+    const onChatUpdate = (chat: Chat) => {
+
+    }
+
+    const onChatMessage = (msg: ChatMessage) => {
+
+    }
+
+    const list = chatList.flatMap(value => (
+            <div key={value.Cid}>
                 <ListItem style={{cursor: "pointer"}} onClick={() => {
-                    setChat(value)
+                    const c = client.chatList.get(value.Cid)
+                    client.chatList.setCurrentChat(c, onChatUpdate, onChatMessage)
+                    setChat(client.chatList.getCurrentChat())
                 }}>
                     <ListItemIcon>
                         <Avatar/>
                     </ListItemIcon>
-                    <ListItemText primary={`${value.Cid}-${value.Target}`}
-                                  secondary={`${value.NewMessageAt}-${value.ReadAt}`}/>
+                    <ListItemText primary={value.Title}
+                                  secondary={`${value.LatestMsg}`}/>
                 </ListItem>
                 <Divider/>
             </div>
@@ -52,13 +56,8 @@ export function ChatList() {
     )
 
     const refresh = () => {
-        client.getChatList(((success, result, msg) => {
-            if (success) {
-                setChatList(result)
-            }
-        }))
+        client.chatList?.update()
     }
-
     return <Box style={{height: "700px"}}>
 
         <Grid alignItems={"center"} container style={{}}>
@@ -78,7 +77,7 @@ export function ChatList() {
                 </List>
             </Grid>
             <Grid item md={8} style={{height: "700px"}}>
-                <ChatComp chat={chat}/>
+                <ChatRoom chat={chat}/>
             </Grid>
         </Grid>
 
