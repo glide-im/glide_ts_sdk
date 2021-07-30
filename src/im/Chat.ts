@@ -24,8 +24,8 @@ export class Chat implements IChat {
     public Unread: number = 0
 
     private messages: ChatMessage[] = []
-    private hasMoreMessage = true
     private messageListener: (m: ChatMessage) => void = (() => null)
+    private updateListener: (c: Chat) => void = (() => null)
 
     public static create(c: IChat): Chat {
         const ret = new Chat()
@@ -34,6 +34,8 @@ export class Chat implements IChat {
     }
 
     public init(onUpdate: (c: Chat) => void) {
+
+        console.log("Chat/init", this.Cid)
         if (this.UcId <= 0) {
             Ws.sendMessage<Chat>(ActionUserChatInfo, {Cid: this.Cid}, ((success, result, msg) => {
                 if (!success) {
@@ -45,7 +47,6 @@ export class Chat implements IChat {
             }))
         }
         this.Title = client.getChatTitle(this.Target, this.ChatType)
-        this.hasMoreMessage = true
         this.messages = []
         this.loadHistory(() => {
             onUpdate(this)
@@ -53,6 +54,7 @@ export class Chat implements IChat {
     }
 
     public sendMessage(msg: string, onSuc: (msg) => void) {
+        console.log("Chat/sendMessage", msg)
         let m2: SendChatMessage = {
             Cid: this.Cid,
             UcId: this.UcId,
@@ -68,10 +70,13 @@ export class Chat implements IChat {
     public onNewMessage(message: ChatMessage) {
         console.log("Chat/onNewMessage", message)
         this.messages.push(message)
-        this.messages.sort(((a, b) => a.SendAt > b.SendAt ? 1 : -1))
 
         this.LatestMsg = message.Message
         this.messageListener(message)
+    }
+
+    public setUpdateListener(o: (m: Chat) => void) {
+        this.updateListener = o
     }
 
     public setMessageListener(l: (m: ChatMessage) => void) {
@@ -79,24 +84,28 @@ export class Chat implements IChat {
     }
 
     public loadHistory(onSuc: (m: ChatMessage[]) => void) {
+        console.log("Chat/loadHistory", this.Cid)
         let time = Date.now();
         if (this.messages.length > 0) {
             time = this.messages[this.messages.length - 1].SendAt
         }
         const req: ChatHistoryRequest = {Cid: this.Cid, Time: time, Type: this.ChatType}
 
-        Ws.sendMessage<ChatMessage[]>(ActionUserChatHistory, req,
-            ((success, result, msg) => {
-                if (!success) {
-                    console.log(msg)
+        Ws.request<ChatMessage[]>(ActionUserChatHistory, req)
+            .then(value => {
+                if (!value.success) {
+                    console.log(value.msg)
                     return
                 }
-                this.hasMoreMessage = false
-                result.forEach((v) => {
+                value.result.forEach((v) => {
                     this.messages.push(v)
                 })
-                onSuc(result)
-            }))
+                this.sortMessage()
+                if (this.messages.length > 0) {
+                    this.LatestMsg = this.messages[this.messages.length - 1].Message
+                }
+                onSuc(value.result)
+            })
     }
 
     public getMessage(): ChatMessage[] {
@@ -104,6 +113,7 @@ export class Chat implements IChat {
     }
 
     public update(chat: IChat) {
+        console.log("Chat/update", chat.Cid)
         this.Cid = chat.Cid
         this.UcId = chat.UcId
         this.Target = chat.Target
@@ -112,7 +122,16 @@ export class Chat implements IChat {
         this.Avatar = chat.Avatar
         this.ReadAt = chat.ReadAt
         this.NewMessageAt = chat.NewMessageAt
+        this.LatestMsg = chat.LatestMsg
         this.Title = client.getChatTitle(this.Target, this.ChatType)
+        if (this.Title === "-") {
+            this.Title = `${chat.Cid}-${chat.Target}`
+        }
+        this.updateListener(this)
+    }
+
+    private sortMessage() {
+        this.messages.sort(((a, b) => a.SendAt > b.SendAt ? 1 : -1))
     }
 }
 

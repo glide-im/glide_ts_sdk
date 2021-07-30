@@ -12,21 +12,29 @@ export enum State {
 
 export type Callback<T> = (success: boolean, result: T, msg: string) => void
 
+export interface Result<T> {
+    success: boolean
+    result: T
+    msg: string
+}
+
 class MyWs {
 
     private websocket?: WebSocket | null
     private listener: Listener[]
     private stateChangeListener: StateListener[]
 
-    private request: Map<number, Callback<any>>
+    private messageCallbacks: Map<number, Callback<any>>
     private seq: number
+
+    private waits: Map<number, () => void> = new Map<number, () => void>()
 
     constructor() {
         this.websocket = null
         this.seq = 1
         this.listener = []
         this.stateChangeListener = []
-        this.request = new Map<number, any>()
+        this.messageCallbacks = new Map<number, any>()
     }
 
     public connect() {
@@ -55,6 +63,15 @@ class MyWs {
         }
     }
 
+    public async request<T>(action: number, data?: any): Promise<Result<T>> {
+        const resolved = (resolve: (r: Result<T>) => void) => {
+            this.sendMessage<T>(action, data, (success, result, msg) => {
+                resolve({msg: msg, result: result, success: success})
+            })
+        }
+        return new Promise<Result<T>>(resolved)
+    }
+
     public sendMessage<T>(action: number, data: any, cb: Callback<T> | null) {
         if (this.websocket?.OPEN !== 1) {
             return
@@ -65,7 +82,7 @@ class MyWs {
             Seq: Date.now() + (this.seq++)
         }
         if (cb !== null) {
-            this.request.set(m.Seq, cb)
+            this.messageCallbacks.set(m.Seq, cb)
         }
         this.websocket.send(JSON.stringify(m))
     }
@@ -96,8 +113,8 @@ class MyWs {
         console.log("New Message => ", msg.Action, msg.Seq, log)
         this.listener.forEach((value => value(msg)))
 
-        if (this.request.has(msg.Seq)) {
-            let cb = this.request.get(msg.Seq)
+        if (this.messageCallbacks.has(msg.Seq)) {
+            let cb = this.messageCallbacks.get(msg.Seq)
 
             if (msg.Action === RespActionFailed || msg.Action === 0) {
                 // @ts-ignore
@@ -106,12 +123,12 @@ class MyWs {
                 if (msg.Data.length === 0) {
                     // @ts-ignore
                     cb.call(this, true, msg.Data, "body empty")
-                }else{
+                } else {
                     // @ts-ignore
                     cb.call(this, true, JSON.parse(msg.Data), "ok")
                 }
             }
-            this.request.delete(msg.Seq)
+            this.messageCallbacks.delete(msg.Seq)
         }
     }
 }

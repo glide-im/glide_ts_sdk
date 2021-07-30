@@ -2,7 +2,7 @@ import {Avatar, Box, Grid, IconButton, Snackbar, Typography} from "@material-ui/
 import React, {useEffect, useState} from "react";
 import {AccountBox, AddBox, ChatBubble, ViewList} from "@material-ui/icons";
 import {State, Ws} from "../im/ws";
-import {MyDialog} from "./Dialog";
+import {MyDialog} from "./SignDialog";
 import {client} from "../im/client";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 
@@ -44,7 +44,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const auth = function (reg: boolean, p: { account: string, password: string }) {
         if (reg) {
-            client.register(p.account, p.password, function (success, result, msg) {
+            client.register(p.account, p.account, function (success, result, msg) {
                 if (result) {
                     setSnackMsg("register success")
                 } else {
@@ -54,7 +54,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
                 setShowDialog(false)
             })
         } else {
-            client.login(p.account, p.password, function (success, result, msg) {
+            client.login(p.account, p.account, function (success, result, msg) {
                 if (success) {
                     setSnackMsg("login success token=" + result.Token)
                 } else {

@@ -3,10 +3,21 @@ import {useEffect, useRef, useState} from "react";
 import {ChatMessageComp} from "./Message";
 import {Chat, ChatMessage} from "../im/Chat";
 
+function scrollBottom(ele: HTMLUListElement | null) {
+    if (ele == null) {
+        return
+    }
+    const from = ele.scrollHeight
+    const to = ele.scrollTop
+    if (from - to > 400) {
+        ele.scrollTop = from + 100
+    }
+}
+
 export function ChatRoom(props: { chat: Chat | null }) {
 
-    console.log("enter chat room, ", props.chat?.Cid)
-    const messageListEle = useRef<HTMLUListElement>(null)
+    console.log("ChatRoom", "enter chat room, ", props.chat?.Cid)
+    const messageListEle = useRef<HTMLUListElement>()
     const [messages, setMessages] = useState(() => props.chat === null ? [] : props.chat.getMessage())
 
     useEffect(() => {
@@ -15,28 +26,20 @@ export function ChatRoom(props: { chat: Chat | null }) {
         }
         const onMessage = (m: ChatMessage) => {
             setMessages((messages) => [...messages, m])
-
-            // @ts-ignore
-            const ele: HTMLUListElement = messageListEle.current
-            if (ele == null) {
-                return
-            }
-            const from = ele.scrollHeight
-            const to = ele.scrollTop
-            if (from - to > 400) {
-                ele.scrollTop = from + 100
-            }
+            scrollBottom(messageListEle.current)
         }
         props.chat.setMessageListener(onMessage)
-        setMessages(()=>props.chat.getMessage())
+        setMessages(() => props.chat.getMessage())
         // return () => client.setChatRoomListener(null, () => null)
     }, [props.chat])
+
+    scrollBottom(messageListEle.current)
 
     let sendMessage = (msg: string) => {
         if (props.chat === null) {
             return
         }
-        if (msg.trim().length === 0){
+        if (msg.trim().length === 0) {
             return
         }
         props.chat.sendMessage(msg, () => {

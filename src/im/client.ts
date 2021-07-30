@@ -1,4 +1,4 @@
-import {Callback, Ws} from "./ws";
+import {Callback, State, Ws} from "./ws";
 import {
     ActionChatMessage,
     ActionOnlineUser,
@@ -17,6 +17,11 @@ export class Client {
     chatList: ChatList = new ChatList()
     private userInfo: Map<number, UserInfo> = new Map<number, UserInfo>()
     private uid: number = -1
+    private userStateListener: (loggedIn: boolean) => void | null = null
+
+    constructor() {
+        Ws.addStateListener(this.onWsStateChanged)
+    }
 
     public login(account: string, password: string, callback: Callback<AuthResponse>) {
 
@@ -26,9 +31,16 @@ export class Client {
             if (success) {
                 this.uid = result.Uid
                 this.onAuthed()
+                if (this.userStateListener != null) {
+                    this.userStateListener(true)
+                }
             }
             callback(success, result, msg)
         }))
+    }
+
+    public onUserStateChange(l: (loggedIn: boolean) => void) {
+        this.userStateListener = l
     }
 
     public register(account: string, password: string, callback: Callback<boolean>) {
@@ -69,7 +81,6 @@ export class Client {
         this.getAllOnlineUser(() => {
 
         })
-        this.chatList.update()
         // this.updateChatList()
         Ws.addMessageListener((msg => {
             if (msg.Action === ActionChatMessage) {
@@ -81,6 +92,15 @@ export class Client {
 
     private onNewMessage(msg: ChatMessage) {
         this.chatList.onChatMessage(msg)
+    }
+
+    private onWsStateChanged(state: State, msg: string) {
+        if (state === State.CLOSED) {
+            if (this.userStateListener != null) {
+                this.userStateListener(false)
+            }
+            this.uid = -1
+        }
     }
 }
 

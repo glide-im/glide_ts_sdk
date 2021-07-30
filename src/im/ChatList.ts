@@ -11,6 +11,42 @@ export class ChatList {
     private chatUpdateListener: (chat: Chat) => void = (() => null)
     private chatListUpdateListener: (chats: Chat[]) => void = ((c) => null)
 
+    public async asyncUpdate(): Promise<Chat[]> {
+        return Ws.request<IChat[]>(ActionUserChatList)
+            .then(value => {
+                if (!value.success) {
+                    console.log("get chat list error", value.msg)
+                    return Promise.reject(value)
+                }
+                console.log("ChatList/update", "update")
+                for (let chat of value.result) {
+                    if (this.contain(chat.Cid)) {
+                        this.get(chat.Cid).update(chat)
+                    } else {
+                        this.add(Chat.create(chat))
+                    }
+                }
+                return Promise.resolve(this.chats)
+            })
+            .then(value => {
+                const chatUpdate = value.map((c) =>
+                    new Promise<Chat>((resolved: (c) => void) => {
+                        c.init(resolved)
+                    })
+                )
+                return Promise.allSettled(chatUpdate)
+            })
+            .then(() => {
+                if (this.currentChat == null && this.chats.length > 0) {
+                    this.currentChat = this.chats[0]
+                }
+                this.chatListUpdateListener(this.chats)
+            })
+            .then(() => {
+                return Promise.resolve(this.chats)
+            })
+    }
+
     public update() {
         Ws.sendMessage<IChat[]>(ActionUserChatList, "", ((success, result, msg) => {
             if (!success) {
