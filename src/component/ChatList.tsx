@@ -18,8 +18,8 @@ export function ChatList() {
 
     client.onUserStateChange(loggedIn => {
         if (!loggedIn) {
+            client.chatList.setCurrentChat(null)
             setChatList([])
-            setChat(null)
             return
         }
         client.chatList.asyncUpdate()

@@ -20,7 +20,9 @@ export class Client {
     private userStateListener: (loggedIn: boolean) => void | null = null
 
     constructor() {
-        Ws.addStateListener(this.onWsStateChanged)
+        Ws.addStateListener((a, b) => {
+            this.onWsStateChanged(a, b)
+        })
     }
 
     public login(account: string, password: string, callback: Callback<AuthResponse>) {
@@ -72,7 +74,11 @@ export class Client {
 
     public getChatTitle(id: number, type: number): string {
         if (type === 1 && this.userInfo.has(id)) {
-            return this.userInfo.get(id).Nickname
+            const ret = this.userInfo.get(id).Nickname
+            if (ret.length === 0) {
+                return `${id}-${type}`
+            }
+            return ret
         }
         return "-"
     }
@@ -95,8 +101,8 @@ export class Client {
     }
 
     private onWsStateChanged(state: State, msg: string) {
-        if (state === State.CLOSED) {
-            if (this.userStateListener != null) {
+        if (state === State.CLOSED && this) {
+            if (this.userStateListener) {
                 this.userStateListener(false)
             }
             this.uid = -1

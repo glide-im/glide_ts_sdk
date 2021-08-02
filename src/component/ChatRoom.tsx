@@ -25,12 +25,13 @@ export function ChatRoom(props: { chat: Chat | null }) {
             return
         }
         const onMessage = (m: ChatMessage) => {
-            setMessages((messages) => [...messages, m])
+            console.log("ChatRoom", "onNewMessage", m)
+            setMessages((messages) => [...props.chat.getMessage(), m])
             scrollBottom(messageListEle.current)
         }
         props.chat.setMessageListener(onMessage)
         setMessages(() => props.chat.getMessage())
-        // return () => client.setChatRoomListener(null, () => null)
+        return () => props.chat.setMessageListener(null)
     }, [props.chat])
 
     scrollBottom(messageListEle.current)

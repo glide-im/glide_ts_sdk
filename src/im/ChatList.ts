@@ -107,11 +107,15 @@ export class ChatList {
     }
 
     public setCurrentChat(chat: Chat | null,
-                          updateListener: (chat: Chat) => void,
-                          chatMsgListener: (message: ChatMessage) => void) {
+                          updateListener?: (chat: Chat) => void,
+                          chatMsgListener?: (message: ChatMessage) => void) {
         this.currentChat = chat
-        this.chatUpdateListener = updateListener
-        this.chatMessageListener = chatMsgListener
+        if (updateListener) {
+            this.chatUpdateListener = updateListener
+        }
+        if (chatMsgListener) {
+            this.chatMessageListener = chatMsgListener
+        }
     }
 
     public newChat(chatId: number): Chat {

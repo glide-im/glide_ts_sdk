@@ -29,8 +29,8 @@ export function ChatItem(props: { chat: Chat, onSelect: (c: Chat) => void }) {
             <ListItemIcon>
                 <Avatar/>
             </ListItemIcon>
-            <ListItemText primary={chat.Title}
-                          secondary={`${chat.LatestMsg}`}/>
+            <ListItemText primary={!chat.Title ? "-" : chat.Title}
+                          secondary={`${!chat.LatestMsg ? " " : chat.LatestMsg}`}/>
         </ListItem>
         <Divider/>
     </div>
