@@ -12,7 +12,7 @@ import {ChatMessage} from "./Chat";
 import {ChatList} from "./ChatList";
 
 
-export class Client {
+class Client {
 
     chatList: ChatList = new ChatList()
     private userInfo: Map<number, UserInfo> = new Map<number, UserInfo>()
@@ -110,8 +110,11 @@ export class Client {
     }
 }
 
-export let client = new Client()
+const client = new Client()
 
+export {
+    client
+}
 
 
 

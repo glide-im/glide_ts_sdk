@@ -53,7 +53,7 @@ export class Chat implements IChat {
         })
     }
 
-    public sendMessage(msg: string, onSuc: (msg) => void) {
+    public sendMessage(msg: string, onSuc?: (msg) => void) {
         console.log("Chat/sendMessage", msg)
         let m2: SendChatMessage = {
             Cid: this.Cid,
@@ -63,7 +63,9 @@ export class Chat implements IChat {
             Receiver: this.Target
         }
         Ws.sendMessage(ActionChatMessage, m2, ((success, result, msg1) => {
-            onSuc(result)
+            if (onSuc) {
+                onSuc(result)
+            }
         }))
     }
 
@@ -109,6 +111,7 @@ export class Chat implements IChat {
     }
 
     public getMessage(): ChatMessage[] {
+        console.log("Chat/getMessages", this.messages)
         return this.messages
     }
 

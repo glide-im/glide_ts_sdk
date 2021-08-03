@@ -4,15 +4,11 @@ import {client} from "../im/client";
 import {Refresh} from "@material-ui/icons";
 import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
-import {Chat} from "../im/Chat";
-
-const emptyChat: Chat | null = null
-const emptyChats: Chat[] = []
 
 export function ChatList() {
 
-    const [chatList, setChatList] = useState(emptyChats)
-    const [chat, setChat] = useState(emptyChat)
+    const [chatList, setChatList] = useState(client.chatList.getAllChat())
+    const [chat, setChat] = useState(client.chatList.getCurrentChat())
 
     console.log("ChatList", "enter chat list", chat, chatList)
 

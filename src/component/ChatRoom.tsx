@@ -18,7 +18,7 @@ export function ChatRoom(props: { chat: Chat | null }) {
 
     console.log("ChatRoom", "enter chat room, ", props.chat?.Cid)
     const messageListEle = useRef<HTMLUListElement>()
-    const [messages, setMessages] = useState(() => props.chat === null ? [] : props.chat.getMessage())
+    const [messages, setMessages] = useState(props.chat?.getMessage() ?? [])
 
     useEffect(() => {
         if (props.chat === null) {
@@ -26,26 +26,20 @@ export function ChatRoom(props: { chat: Chat | null }) {
         }
         const onMessage = (m: ChatMessage) => {
             console.log("ChatRoom", "onNewMessage", m)
-            setMessages((messages) => [...props.chat.getMessage(), m])
+            setMessages((messages) => [...props.chat.getMessage()])
             scrollBottom(messageListEle.current)
         }
         props.chat.setMessageListener(onMessage)
-        setMessages(() => props.chat.getMessage())
+        setMessages(() => [...props.chat.getMessage()])
         return () => props.chat.setMessageListener(null)
     }, [props.chat])
 
-    scrollBottom(messageListEle.current)
-
-    let sendMessage = (msg: string) => {
-        if (props.chat === null) {
-            return
+    const sendMessage = (msg: string) => {
+        if (props.chat && msg.trim().length !== 0) {
+            props.chat.sendMessage(msg)
         }
-        if (msg.trim().length === 0) {
-            return
-        }
-        props.chat.sendMessage(msg, () => {
-        })
     }
+    console.log(">>>>>", props.chat?.getMessage() === messages, props.chat?.getMessage(), messages)
 
     return (
         <Box>
