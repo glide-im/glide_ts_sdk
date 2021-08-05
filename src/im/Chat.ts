@@ -37,14 +37,17 @@ export class Chat implements IChat {
 
         console.log("Chat/init", this.Cid)
         if (this.UcId <= 0) {
-            Ws.sendMessage<Chat>(ActionUserChatInfo, {Cid: this.Cid}, ((success, result, msg) => {
-                if (!success) {
-                    console.log(msg)
-                    return
-                }
-                this.update(result)
-                this.init(onUpdate)
-            }))
+            Ws.sendMessage<Chat>(
+                ActionUserChatInfo,
+                {Cid: this.Cid},
+                ((success, result, msg) => {
+                    if (!success) {
+                        console.log(msg)
+                        return
+                    }
+                    this.update(result)
+                    this.init(onUpdate)
+                }))
         }
         this.Title = client.getChatTitle(this.Target, this.ChatType)
         this.messages = []
@@ -93,7 +96,7 @@ export class Chat implements IChat {
         }
         const req: ChatHistoryRequest = {Cid: this.Cid, Time: time, Type: this.ChatType}
 
-        Ws.request<ChatMessage[]>(ActionUserChatHistory, req)
+        Ws.request1<ChatMessage[]>(ActionUserChatHistory, req)
             .then(value => {
                 if (!value.success) {
                     console.log(value.msg)
@@ -111,7 +114,6 @@ export class Chat implements IChat {
     }
 
     public getMessage(): ChatMessage[] {
-        console.log("Chat/getMessages", this.messages)
         return this.messages
     }
 
@@ -127,9 +129,6 @@ export class Chat implements IChat {
         this.NewMessageAt = chat.NewMessageAt
         this.LatestMsg = chat.LatestMsg
         this.Title = client.getChatTitle(this.Target, this.ChatType)
-        if (this.Title === "-") {
-            this.Title = `${chat.Cid}-${chat.Target}`
-        }
         this.updateListener(this)
     }
 

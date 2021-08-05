@@ -19,7 +19,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         Ws.addStateListener((s) => {
             setState(s)
         })
-    }, [])
+    }, [state])
 
     const changeState = () => {
         if (state === State.CONNECTED) {
@@ -32,12 +32,18 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     let s: 'error' | 'action' | 'disabled'
     switch (state) {
         case State.CONNECTED:
+            if (client.getMyUid() <= 0 && props.location.pathname !== "/"){
+                props.history.push("/")
+            }
             s = "disabled"
             break;
         case State.CONNECTING:
             s = "action"
             break;
         case State.CLOSED:
+            if (props.location.pathname !== "/disconnected") {
+                props.history.push("/disconnected")
+            }
             s = "error"
             break;
     }
@@ -57,10 +63,11 @@ export const Bar = withRouter((props: RouteComponentProps) => {
             client.login(p.account, p.account, function (success, result, msg) {
                 if (success) {
                     setSnackMsg("login success token=" + result.Token)
+                    setUid(result.Uid)
+                    props.history.push("/message")
                 } else {
                     setSnackMsg(msg)
                 }
-                setUid(result.Uid)
                 setSnack(true)
                 setShowDialog(false)
             })
@@ -79,13 +86,13 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         <Grid justifyContent={"center"} container color={"primary.dark"}>
             <Box m={2}>
                 <Avatar/>
-                <Typography variant={"subtitle2"}>uid:{uid}</Typography>
+                <Typography align={"center"} variant={"subtitle2"}>{uid}</Typography>
             </Box>
             <IconButton onClick={changeState}>
                 <AccountBox color={s}/>
             </IconButton>
             <IconButton onClick={() => {
-                props.history.push("/")
+                props.history.push("/message")
             }}>
                 <ChatBubble/>
             </IconButton>

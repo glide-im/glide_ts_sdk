@@ -16,7 +16,7 @@ function scrollBottom(ele: HTMLUListElement | null) {
 
 export function ChatRoom(props: { chat: Chat | null }) {
 
-    console.log("ChatRoom", "enter chat room, ", props.chat?.Cid)
+    console.log("ChatRoom", "enter chat room, ", props.chat?.UcId)
     const messageListEle = useRef<HTMLUListElement>()
     const [messages, setMessages] = useState(props.chat?.getMessage() ?? [])
 
@@ -39,7 +39,6 @@ export function ChatRoom(props: { chat: Chat | null }) {
             props.chat.sendMessage(msg)
         }
     }
-    console.log(">>>>>", props.chat?.getMessage() === messages, props.chat?.getMessage(), messages)
 
     return (
         <Box>

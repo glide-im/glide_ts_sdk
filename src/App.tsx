@@ -4,8 +4,9 @@ import {Container, Grid} from "@material-ui/core";
 import {Bar} from "./component/Bar";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
 import {ChatList} from "./component/ChatList";
-import {FriendList} from "./component/FriendList";
+import {ContactsList} from "./component/ContactsList";
 import {Ws} from "./im/ws";
+import {SnackBar} from "./component/SnackBar";
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
 
     return (
         <div className="App">
+            <SnackBar/>
             <Container color={"text.disabled"} style={{height: "100vh"}}>
                 <BrowserRouter>
                     <Grid container color={"text.disabled"} style={{height: "100vh", width: "1000px", margin: "auto"}}
@@ -25,12 +27,11 @@ function App() {
                             </Grid>
                             <Grid item md={11} style={{height: "700px"}}>
                                 <Switch>
-                                    <Route path={"/"} exact={true} children={<ChatList/>}/>
+                                    <Route path={"/message"} exact={true} children={<ChatList/>}/>
                                     <Route path={"/friends"} exact={true}>
-                                        <FriendList onSelectUser={(uid) => {
-
-                                        }}/>
+                                        <ContactsList/>
                                     </Route>
+                                    <Route path={"/disconnected"} exact={true}/>
                                 </Switch>
                             </Grid>
                         </Grid>

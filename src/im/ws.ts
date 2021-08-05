@@ -48,13 +48,16 @@ class MyWs {
         }, 1000 * 3);
 
         this.websocket.onerror = (e) => {
+            console.log("WS ERROR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e)
             // this.listener.forEach((value => value("ERROR: " + e)))
         }
         this.websocket.onclose = (e) => {
+            console.log("WS CLOSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             // this.listener.forEach((value => value("CLOSED")))
             this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
         }
         this.websocket.onopen = (e) => {
+            console.log("WS OPEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             // this.listener.forEach((value => value("CONNECTED")))
             this.stateChangeListener.forEach((value => value(State.CONNECTED, "connected")))
         }
@@ -63,7 +66,7 @@ class MyWs {
         }
     }
 
-    public async request<T>(action: number, data?: any): Promise<Result<T>> {
+    public request1<T>(action: number, data?: any): Promise<Result<T>> {
         const resolved = (resolve: (r: Result<T>) => void) => {
             this.sendMessage<T>(action, data, (success, result, msg) => {
                 resolve({msg: msg, result: result, success: success})
@@ -72,16 +75,38 @@ class MyWs {
         return new Promise<Result<T>>(resolved)
     }
 
-    public sendMessage<T>(action: number, data: any, cb: Callback<T> | null) {
+    public request<T>(action: number, data?: any): Promise<T> {
+        const executor = (resolve: (r: T) => void, reject: (reason: string) => void) => {
+            this.sendMessage<T>(action, data, (success, result, msg) => {
+                if (success) {
+                    resolve(result)
+                } else {
+                    reject(msg)
+                }
+            })
+        }
+        return new Promise<T>(executor)
+    }
+
+    public sendMessage<T>(action: number, data: any, cb?: Callback<T>) {
         if (this.websocket?.OPEN !== 1) {
             return
         }
+        let dat = ""
+        try {
+            dat = JSON.stringify(data)
+        } catch (e) {
+            if (cb) {
+                cb(false, null, "cannot json to string of " + data)
+            }
+            return;
+        }
         let m: Message = {
             Action: action,
-            Data: JSON.stringify(data),
-            Seq: Date.now() + (this.seq++)
+            Data: dat,
+            Seq: this.seq++
         }
-        if (cb !== null) {
+        if (cb) {
             this.messageCallbacks.set(m.Seq, cb)
         }
         this.websocket.send(JSON.stringify(m))
@@ -118,14 +143,14 @@ class MyWs {
 
             if (msg.Action === RespActionFailed || msg.Action === 0) {
                 // @ts-ignore
-                cb.call(this, false, null, data.data)
+                cb(false, null, data.data)
             } else {
                 if (msg.Data.length === 0) {
                     // @ts-ignore
-                    cb.call(this, true, msg.Data, "body empty")
+                    cb(true, msg.Data, "body empty")
                 } else {
                     // @ts-ignore
-                    cb.call(this, true, JSON.parse(msg.Data), "ok")
+                    cb(true, JSON.parse(msg.Data), "ok")
                 }
             }
             this.messageCallbacks.delete(msg.Seq)

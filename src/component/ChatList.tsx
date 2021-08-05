@@ -4,29 +4,14 @@ import {client} from "../im/client";
 import {Refresh} from "@material-ui/icons";
 import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
+import {Contacts} from "../im/message";
 
 export function ChatList() {
 
     const [chatList, setChatList] = useState(client.chatList.getAllChat())
     const [chat, setChat] = useState(client.chatList.getCurrentChat())
 
-    console.log("ChatList", "enter chat list", chat, chatList)
-
-    client.onUserStateChange(loggedIn => {
-        if (!loggedIn) {
-            client.chatList.setCurrentChat(null)
-            setChatList([])
-            return
-        }
-        client.chatList.asyncUpdate()
-            .then((chats) => {
-
-            }).catch(reason => {
-
-        }).finally(() => {
-
-        })
-    })
+    console.log("ChatList", "enter chat list cid=", chat?.Cid, "len=", chatList.length)
 
     useEffect(() => {
         client.chatList.setChatListUpdateListener((chats => {
@@ -44,19 +29,12 @@ export function ChatList() {
     )
 
     const refresh = () => {
-        client.chatList?.asyncUpdate()
-            .then(c => {
-                console.log("ChatList refresh")
-                setChatList(c)
-            })
-            .catch(reason => {
-                console.log("ChatList", reason)
-            })
+        client.updateChatList().then()
     }
     return <Box style={{height: "700px"}}>
 
         <Grid alignItems={"center"} container style={{}}>
-            <Grid item md={4} style={{borderRight: "#ccc 2px solid", height: "700px"}}>
+            <Grid item md={4} style={{height: "700px"}}>
                 <Box m={2}>
                     <Typography variant={"caption"}>Messages</Typography>
                     <IconButton size={"small"} onClick={refresh}>
@@ -72,6 +50,7 @@ export function ChatList() {
                 </List>
             </Grid>
             <Grid item md={8} style={{height: "700px"}}>
+                <Divider orientation={"vertical"} style={{float: "left"}}/>
                 <ChatRoom chat={chat}/>
             </Grid>
         </Grid>

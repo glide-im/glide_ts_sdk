@@ -11,8 +11,20 @@ export const ActionUserInfo = MaskActionApi | 7
 export const ActionUserNewChat = MaskActionApi | 11
 export const ActionUserChatHistory = MaskActionApi | 12
 export const ActionUserChatInfo = MaskActionApi | 13
+export const ActionUserAddFriend = MaskActionApi | 14
 
 export const ActionOnlineUser = MaskActionApi | 20
+
+const MaskActionGroupApi = MaskActionApi | (1 << 21)
+
+export const ActionGroupCreate = MaskActionGroupApi | 1
+export const ActionGroupGetMember = MaskActionGroupApi | 2
+export const ActionGroupJoin = MaskActionGroupApi | 3
+export const ActionGroupExit = MaskActionGroupApi | 4
+export const ActionGroupRemoveMember = MaskActionGroupApi | 5
+export const ActionGroupInfo = MaskActionGroupApi | 6
+export const ActionGroupUpdate = MaskActionGroupApi | 7
+export const ActionGroupAddMember = MaskActionGroupApi | 8
 
 export const MaskRespActionApi = 1 << 20
 export const RespActionFailed = MaskRespActionApi | 1
@@ -24,6 +36,17 @@ export const ActionGroupMessage = 33554433
 export const ActionChatMessage = 33554434
 export const ActionHeartbeat = 1073741825
 export const ActionEcho = 1073741924
+
+const MaskRespActionNotify = 1 << 30
+export const RespActionGroupRemoved = MaskRespActionNotify | 1
+export const RespActionGroupApproval = MaskRespActionNotify | 3
+export const RespActionGroupApproved = MaskRespActionNotify | 4
+export const RespActionGroupRefused = MaskRespActionNotify | 5
+export const RespActionEcho = MaskRespActionNotify | 100
+
+export const RespActionFriendApproval = MaskRespActionNotify | 6
+export const RespActionFriendApproved = MaskRespActionNotify | 7
+export const RespActionFriendRefused = MaskRespActionNotify | 8
 
 export interface Message {
     Seq: number
@@ -41,6 +64,29 @@ export interface UserInfo {
     Account: string
     Nickname: string
     Avatar: string
+}
+
+export interface Friend {
+    Uid: number
+    Remark: string
+    AddTime: number
+}
+
+export interface Contacts {
+    Id: number
+    Name: string
+    Avatar: string
+    Type: number
+}
+
+export interface Group {
+    Gid: number,
+    Name: string,
+    Avatar: string,
+    Owner: number,
+    Mute: boolean,
+    Notice: string,
+    CreateAt: number
 }
 
 export interface IChat {

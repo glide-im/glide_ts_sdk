@@ -4,7 +4,8 @@ import {Chat, ChatMessage} from "./Chat";
 
 export class ChatList {
 
-    private chatMap: Map<number, Chat> = new Map<number, Chat>()
+    private chatIdMap: Map<number, Chat> = new Map<number, Chat>()
+    private targetIdMap: Map<string, Chat> = new Map<string, Chat>()
     private chats: Chat[] = []
     private chatMessageListener: (message: ChatMessage) => void = (() => null)
     private currentChat: Chat | null = null
@@ -14,12 +15,8 @@ export class ChatList {
     public async asyncUpdate(): Promise<Chat[]> {
         return Ws.request<IChat[]>(ActionUserChatList)
             .then(value => {
-                if (!value.success) {
-                    console.log("get chat list error", value.msg)
-                    return Promise.reject(value)
-                }
                 console.log("ChatList/update", "update")
-                for (let chat of value.result) {
+                for (let chat of value) {
                     if (this.contain(chat.Cid)) {
                         this.get(chat.Cid).update(chat)
                     } else {
@@ -70,12 +67,15 @@ export class ChatList {
         }))
     }
 
-    public startChat(id: number, type: number, callback: () => void) {
-
-        Ws.sendMessage<IChat>(ActionUserNewChat, {Id: id, Type: type}, ((success, result, msg) => {
-            console.log(msg)
-            callback()
-        }))
+    public startChat(id: number, type: number): Promise<Chat> {
+        return Ws.request<IChat>(ActionUserNewChat, {Id: id, Type: type})
+            .then(value => {
+                const chat = this.newChat(value.Cid)
+                chat.update(value)
+                this.add(chat)
+                this.setCurrentChat(chat)
+                return Promise.resolve(chat)
+            })
     }
 
     public setChatListUpdateListener(l: (chats: Chat[]) => void) {
@@ -118,6 +118,14 @@ export class ChatList {
         }
     }
 
+    public getChatByTarget(id: number, type: number = 1): Chat | null {
+        const key = `${type}-${id}`
+        if (this.targetIdMap.has(key)) {
+            return this.targetIdMap.get(key)
+        }
+        return null
+    }
+
     public newChat(chatId: number): Chat {
         const chat = new Chat()
         chat.Cid = chatId
@@ -131,23 +139,32 @@ export class ChatList {
     }
 
     public add(chat: Chat) {
-        if (this.chatMap.has(chat.Cid)) {
+        if (this.chatIdMap.has(chat.Cid)) {
             return
         }
         this.chats.push(chat)
-        this.chatMap.set(chat.Cid, chat)
+        this.targetIdMap.set(`${chat.ChatType}-${chat.Target}`, chat)
+        this.chatIdMap.set(chat.Cid, chat)
     }
 
     public get(chatId: number): Chat | null {
         if (this.contain(chatId)) {
-            return this.chatMap.get(chatId)
+            return this.chatIdMap.get(chatId)
         } else {
             return null
         }
     }
 
+    public clear() {
+        this.currentChat = null
+        this.chats = []
+        this.chatIdMap = new Map<number, Chat>()
+        this.targetIdMap = new Map<string, Chat>()
+        this.chatListUpdateListener([])
+    }
+
     public contain(chatId: number): boolean {
-        return this.chatMap.has(chatId)
+        return this.chatIdMap.has(chatId)
     }
 
     private onChatUpdate(chat: Chat) {
