@@ -1,6 +1,6 @@
 import {Ws} from "./ws";
 import {ActionUserChatList, ActionUserNewChat, IChat} from "./message";
-import {Chat, ChatMessage} from "./Chat";
+import {Chat, ChatMessage} from "./chat";
 
 export class ChatList {
 
@@ -129,7 +129,9 @@ export class ChatList {
     public newChat(chatId: number): Chat {
         const chat = new Chat()
         chat.Cid = chatId
-        chat.init(this.onChatUpdate)
+        chat.init((c) => {
+            this.onChatUpdate(c)
+        })
         this.add(chat)
         return chat
     }

@@ -1,7 +1,7 @@
 import {Avatar, ListItem, ListItemIcon, ListItemText} from "@material-ui/core";
 import {client} from "../im/client";
 import React, {useState} from "react";
-import {Chat, ChatMessage} from "../im/Chat";
+import {Chat, ChatMessage} from "../im/chat";
 
 export function ChatItem(props: { chat: Chat, onSelect: (c: Chat) => void }) {
 

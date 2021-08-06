@@ -18,7 +18,7 @@ import {
     RespActionFriendApproval,
     UserInfo
 } from "./message";
-import {Chat, ChatMessage} from "./Chat";
+import {Chat, ChatMessage} from "./chat";
 import {ChatList} from "./ChatList";
 
 type ContactChangeListener = (u: Contacts[]) => void | null
@@ -181,7 +181,6 @@ class Client {
                 for (let contact of this.contacts) {
                     contact.Name = this.getChatTitle(contact.Id, contact.Type)
                 }
-                console.log("client/updateContacts", "complete! contacts=", this.contacts)
                 if (this.contactChangeListener) {
                     this.contactChangeListener(this.contacts)
                 }

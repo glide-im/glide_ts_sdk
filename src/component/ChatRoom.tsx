@@ -1,7 +1,7 @@
 import {Box, Button, Divider, List, ListItem, Typography} from "@material-ui/core";
 import {useEffect, useRef, useState} from "react";
 import {ChatMessageComp} from "./Message";
-import {Chat, ChatMessage} from "../im/Chat";
+import {Chat, ChatMessage} from "../im/chat";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -26,7 +26,7 @@ export function ChatRoom(props: { chat: Chat | null }) {
         }
         const onMessage = (m: ChatMessage) => {
             console.log("ChatRoom", "onNewMessage", m)
-            setMessages((messages) => [...props.chat.getMessage()])
+            setMessages(() => [...props.chat.getMessage()])
             scrollBottom(messageListEle.current)
         }
         props.chat.setMessageListener(onMessage)

@@ -41,9 +41,8 @@ export function ContactsList() {
     return <Grid container style={{height: "700px"}}>
         <Grid item md={4}>
             <Box m={2}>
-                <AddContactDialog open={showAddContact} onClose={() => {
-                    setShowAddContact(false)
-                }} onSubmit={addContactHandler}/>
+                <AddContactDialog open={showAddContact} onClose={() => setShowAddContact(false)}
+                                  onSubmit={addContactHandler}/>
                 <Typography variant={"caption"}>Contacts</Typography>
                 <IconButton size={"small"} onClick={refresh}>
                     <Refresh/>

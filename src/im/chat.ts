@@ -77,7 +77,9 @@ export class Chat implements IChat {
         this.messages.push(message)
 
         this.LatestMsg = message.Message
-        this.messageListener(message)
+        if (this.messageListener) {
+            this.messageListener(message)
+        }
     }
 
     public setUpdateListener(o: (m: Chat) => void) {
