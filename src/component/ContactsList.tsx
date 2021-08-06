@@ -14,6 +14,7 @@ export function ContactsList() {
         client.setContactChangeListener(contacts => {
             setContacts([...contacts])
         })
+        return () => client.setContactChangeListener(null)
     }, [])
 
     const list = contacts?.flatMap(value => {
@@ -25,7 +26,7 @@ export function ContactsList() {
     )
 
     const refresh = () => {
-        client.updateContacts()
+        client.updateContacts().then()
     }
 
     const addContactHandler = (isGroup: boolean, id: number) => {

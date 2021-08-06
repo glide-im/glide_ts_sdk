@@ -32,7 +32,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     let s: 'error' | 'action' | 'disabled'
     switch (state) {
         case State.CONNECTED:
-            if (client.getMyUid() <= 0 && props.location.pathname !== "/"){
+            if (client.getMyUid() <= 0 && props.location.pathname !== "/") {
                 props.history.push("/")
             }
             s = "disabled"
@@ -50,27 +50,23 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const auth = function (reg: boolean, p: { account: string, password: string }) {
         if (reg) {
-            client.register(p.account, p.account, function (success, result, msg) {
-                if (result) {
+            client.register(p.account, p.account)
+                .then(v => {
                     setSnackMsg("register success")
-                } else {
-                    setSnackMsg(msg)
-                }
-                setSnack(true)
-                setShowDialog(false)
-            })
+                    setSnack(true)
+                    setShowDialog(false)
+                })
+                .catch((r) => {
+                    setSnackMsg(r)
+                    setSnack(true)
+                })
         } else {
-            client.login(p.account, p.account, function (success, result, msg) {
-                if (success) {
-                    setSnackMsg("login success token=" + result.Token)
-                    setUid(result.Uid)
+            client.login(p.account, p.account)
+                .then(value => {
+                    setUid(value.Uid)
                     props.history.push("/message")
-                } else {
-                    setSnackMsg(msg)
-                }
-                setSnack(true)
-                setShowDialog(false)
-            })
+                    setShowDialog(false)
+                })
         }
     }
 

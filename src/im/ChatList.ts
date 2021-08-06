@@ -10,7 +10,7 @@ export class ChatList {
     private chatMessageListener: (message: ChatMessage) => void = (() => null)
     private currentChat: Chat | null = null
     private chatUpdateListener: (chat: Chat) => void = (() => null)
-    private chatListUpdateListener: (chats: Chat[]) => void = ((c) => null)
+    private chatListUpdateListener: (chats: Chat[]) => void = (() => null)
 
     public async asyncUpdate(): Promise<Chat[]> {
         return Ws.request<IChat[]>(ActionUserChatList)

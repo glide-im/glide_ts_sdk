@@ -4,7 +4,6 @@ import {client} from "../im/client";
 import {Refresh} from "@material-ui/icons";
 import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
-import {Contacts} from "../im/message";
 
 export function ChatList() {
 
