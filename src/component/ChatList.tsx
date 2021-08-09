@@ -36,7 +36,7 @@ export function ChatList() {
             <Grid item md={4} style={{height: "700px"}}>
                 <Box m={2}>
                     <Typography variant={"caption"}>Messages</Typography>
-                    <IconButton size={"small"} onClick={refresh}>
+                    <IconButton size={"small"} onClick={refresh} style={{float:"right"}}>
                         <Refresh/>
                     </IconButton>
                 </Box>

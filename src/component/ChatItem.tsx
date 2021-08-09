@@ -26,14 +26,23 @@ export function ChatItem(props: { chat: Chat, onSelect: (c: Chat) => void }) {
         props.onSelect(client.chatList.getCurrentChat())
     }
 
+    const lastMsg = chat.getLastMessage()
+    let hint = " "
+
+    if (lastMsg != null) {
+        const sender = client.getCachedUserInfo(lastMsg.Sender)
+        if (sender != null) {
+            hint = sender.Nickname + ": " + lastMsg.Message
+        }
+    }
+
     return <div key={chat.Cid}>
         <ListItem button selected={client.chatList.getCurrentChat() === chat} style={{cursor: "pointer"}}
                   onClick={onItemClick}>
             <ListItemIcon>
                 <Avatar/>
             </ListItemIcon>
-            <ListItemText primary={!chat.Title ? "-" : chat.Title}
-                          secondary={`${!chat.LatestMsg ? " " : chat.LatestMsg}`}/>
+            <ListItemText primary={!chat.Title ? "-" : chat.Title} secondary={hint}/>
         </ListItem>
     </div>
 }

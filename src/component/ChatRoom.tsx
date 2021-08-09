@@ -1,7 +1,8 @@
-import {Box, Button, Divider, List, ListItem, Typography} from "@material-ui/core";
+import {Box, Divider, IconButton, List, ListItem, Typography} from "@material-ui/core";
 import {useEffect, useRef, useState} from "react";
 import {ChatMessageComp} from "./Message";
 import {Chat, ChatMessage} from "../im/chat";
+import {Send} from "@material-ui/icons";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -43,8 +44,9 @@ export function ChatRoom(props: { chat: Chat | null }) {
     return (
         <Box>
             <Box height={"70px"} paddingLeft={"16px"}>
-                <Typography variant={"h6"}
-                            style={{lineHeight: "70px"}}>{props.chat == null ? "" : props.chat.Title}</Typography>
+                <Typography variant={"h6"} style={{lineHeight: "70px"}}>
+                    {props.chat == null ? "" : props.chat.Title}
+                </Typography>
             </Box>
             <Divider/>
             <Box style={{height: "490px"}}>
@@ -69,7 +71,9 @@ export function ChatRoom(props: { chat: Chat | null }) {
                                   e.currentTarget.value = ""
                               }
                           }}/>
-                <Button color={"primary"} size={"small"} variant="outlined" style={{float: "right"}}>Send</Button>
+                <IconButton color={"primary"} size={"small"} style={{float: "right"}}>
+                    <Send/>
+                </IconButton>
             </Box>
         </Box>
     )

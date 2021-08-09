@@ -13,7 +13,7 @@ import {
     AuthResponse,
     Contacts,
     Friend,
-    Group,
+    IGroup,
     Message,
     RespActionFriendApproval,
     UserInfo
@@ -29,7 +29,7 @@ class Client {
     public contacts: Contacts[] = []
 
     private userInfo = new Map<number, UserInfo>()
-    private groupInfo = new Map<number, Group>()
+    private groupInfo = new Map<number, IGroup>()
     private uid = -1
     private userStateListener: (loggedIn: boolean) => void | null = null
     private contactChangeListener: ContactChangeListener = null
@@ -69,7 +69,7 @@ class Client {
                 this.uid = value.Uid
                 this.onAuthed()
                 return this.updateContacts()
-                    .then(() => this.updateChatList())
+                    .then(() => Promise.allSettled([this.updateChatList(), this.getUserInfo([this.uid])]))
                     .then(() => {
                         if (this.userStateListener != null) {
                             this.userStateListener(true)
@@ -96,6 +96,9 @@ class Client {
     public joinGroup(gid: number): Promise<Chat> {
         console.log("client/joinGroup", gid)
         return Ws.request<Chat>(ActionGroupJoin, {Gid: gid})
+            .then(value => {
+                this.chatList.add(Chat.create(value))
+            })
             .catch(reason => this.catchPromiseReject(reason))
             .finally(() => {
                 console.log("client/joinGroup", "completed!")
@@ -104,11 +107,12 @@ class Client {
             })
     }
 
-    public createGroup(name: string): Promise<Group> {
+    public createGroup(name: string): Promise<IGroup> {
         console.log("client/createGroup", name)
-        return Ws.request<Group>(ActionGroupCreate, {Name: name})
+        return Ws.request<IGroup>(ActionGroupCreate, {Name: name})
             .then(value => {
                 this.updateContacts().then()
+                this.updateChatList().then()
                 console.log("client/createGroup", value)
                 return Promise.resolve(value)
             })
@@ -158,6 +162,13 @@ class Client {
         return ret
     }
 
+    public getCachedUserInfo(id: number): UserInfo | null {
+        if (this.userInfo.has(id)) {
+            return this.userInfo.get(id)
+        }
+        return null
+    }
+
     public updateContacts(): Promise<Contacts[]> {
         console.log("client/updateContacts")
         return Ws.request<Contacts[]>(ActionUserRelation)
@@ -201,7 +212,11 @@ class Client {
             })
     }
 
-    private getGroupInfo(gid: number[], update: boolean = false): Promise<Group[]> {
+    public showToast(msg: string) {
+        this.toaster(msg)
+    }
+
+    private getGroupInfo(gid: number[], update = false, memberInfo = true): Promise<IGroup[]> {
         console.log("client/getGroupInfo", gid, update)
         const ids = update ? gid : gid.filter(value => {
             return !this.groupInfo.has(value)
@@ -209,12 +224,14 @@ class Client {
         if (ids.length === 0) {
             return Promise.resolve([])
         }
-        return Ws.request<Group[]>(ActionGroupInfo, {Gid: gid})
+        return Ws.request<IGroup[]>(ActionGroupInfo, {Gid: gid})
             .then(value => {
+                let allMembers: number[] = []
                 for (let group of value) {
                     this.groupInfo.set(group.Gid, group)
+                    allMembers = allMembers.concat(group.Members.map(m => m.Uid))
                 }
-                return Promise.resolve(value)
+                return this.getUserInfo(allMembers).then(() => value)
             })
             .catch(reason => this.catchPromiseReject(reason))
             .finally(() => {

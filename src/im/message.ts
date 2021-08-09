@@ -79,7 +79,7 @@ export interface Contacts {
     Type: number
 }
 
-export interface Group {
+export interface IGroup {
     Gid: number,
     Name: string,
     Avatar: string,
@@ -87,6 +87,17 @@ export interface Group {
     Mute: boolean,
     Notice: string,
     CreateAt: number
+    Members: IGroupMember[]
+}
+
+export interface IGroupMember {
+    Id: number
+    Uid: number
+    Type: number
+    Avatar: number
+    Remark: string
+    Mute: boolean
+    JoinAt: number
 }
 
 export interface IChat {
@@ -111,7 +122,7 @@ export interface NewChat {
 export interface IChatMessage {
     Mid: number
     Cid: number
-    SenderUid: number
+    Sender: number
     MessageType: number
     Message: string
     SendAt: number
@@ -120,9 +131,10 @@ export interface IChatMessage {
 export interface SendChatMessage {
     Cid: number
     UcId: number
-    Receiver: number
+    TargetId: number
     MessageType: number
     Message: string
+    SendAt: number
 }
 
 export interface GroupMessage {

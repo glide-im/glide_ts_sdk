@@ -91,7 +91,7 @@ export class ChatList {
             this.add(chat)
         }
         this.get(message.Cid).onNewMessage(message)
-        if (this.currentChat.Cid === message.Cid) {
+        if (this.currentChat != null && this.currentChat.Cid === message.Cid) {
             this.chatMessageListener(message)
             this.onChatUpdate(this.get(message.Cid))
         }

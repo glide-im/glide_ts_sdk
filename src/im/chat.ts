@@ -1,5 +1,6 @@
 import {
     ActionChatMessage,
+    ActionGroupMessage,
     ActionUserChatHistory,
     ActionUserChatInfo,
     ChatHistoryRequest,
@@ -33,6 +34,13 @@ export class Chat implements IChat {
         return ret
     }
 
+    public getLastMessage(): ChatMessage | null {
+        if (this.messages.length === 0) {
+            return null
+        }
+        return this.messages[this.messages.length - 1]
+    }
+
     public init(onUpdate: (c: Chat) => void) {
 
         console.log("Chat/init", this.Cid)
@@ -63,9 +71,11 @@ export class Chat implements IChat {
             UcId: this.UcId,
             Message: msg,
             MessageType: 1,
-            Receiver: this.Target
+            TargetId: this.Target,
+            SendAt: Date.now()
         }
-        Ws.sendMessage(ActionChatMessage, m2, ((success, result, msg1) => {
+        const action = this.ChatType === 1 ? ActionChatMessage : ActionGroupMessage
+        Ws.sendMessage(action, m2, ((success, result, msg1) => {
             if (onSuc) {
                 onSuc(result)
             }
@@ -145,5 +155,5 @@ export class ChatMessage implements IChatMessage {
     public Cid: number
     public MessageType: number
     public SendAt: number
-    public SenderUid: number
+    public Sender: number
 }

@@ -44,6 +44,9 @@ export const Bar = withRouter((props: RouteComponentProps) => {
             if (props.location.pathname !== "/disconnected") {
                 props.history.push("/disconnected")
             }
+            if (uid !== -1) {
+                setUid(-1)
+            }
             s = "error"
             break;
     }
@@ -70,6 +73,15 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         }
     }
 
+    let avatar = ""
+    let nickname = ""
+
+    const userInfo = client.getCachedUserInfo(uid)
+    if (userInfo) {
+        avatar = userInfo.Avatar
+        nickname = userInfo.Nickname + "_" + userInfo.Uid
+    }
+
     return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
 
         <Snackbar open={snack} autoHideDuration={4000} onClose={() => {
@@ -81,8 +93,8 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
         <Grid justifyContent={"center"} container color={"primary.dark"}>
             <Box m={2}>
-                <Avatar/>
-                <Typography align={"center"} variant={"subtitle2"}>{uid}</Typography>
+                <Avatar src={avatar}/>
+                <Typography align={"center"} variant={"subtitle2"}>{nickname}</Typography>
             </Box>
             <IconButton onClick={changeState}>
                 <AccountBox color={s}/>

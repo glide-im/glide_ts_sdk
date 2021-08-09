@@ -1,14 +1,16 @@
 import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@material-ui/core";
 import React, {useEffect, useState} from "react";
 import {client} from "../im/client";
-import {Refresh} from "@material-ui/icons";
+import {GroupAdd, Refresh} from "@material-ui/icons";
 import {AddContactDialog} from "./AddContactDialog";
 import {ContactsItem} from "./ContactsItem";
+import {CreateGroupDialog} from "./CreateGroupDialog";
 
 export function ContactsList() {
 
     const [contacts, setContacts] = useState([...client.contacts])
     const [showAddContact, setShowAddContact] = useState(false)
+    const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     useEffect(() => {
         client.setContactChangeListener(contacts => {
@@ -29,6 +31,14 @@ export function ContactsList() {
         client.updateContacts().then()
     }
 
+    const createGroup = (name: string) => {
+        client.createGroup(name)
+            .then(value => {
+                client.showToast(`success: ${value.Gid}`)
+            })
+        setShowCreateGroup(false)
+    }
+
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
             client.addFriend(id).then()
@@ -41,18 +51,23 @@ export function ContactsList() {
     return <Grid container style={{height: "700px"}}>
         <Grid item md={4}>
             <Box m={2}>
+                <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)}
+                                   onSubmit={createGroup}/>
                 <AddContactDialog open={showAddContact} onClose={() => setShowAddContact(false)}
                                   onSubmit={addContactHandler}/>
                 <Typography variant={"caption"}>Contacts</Typography>
-                <IconButton size={"small"} onClick={refresh}>
+
+                <IconButton size={"small"} onClick={refresh} style={{float: "right"}}>
                     <Refresh/>
+                </IconButton>
+
+                <IconButton size={"small"} onClick={() => setShowCreateGroup(true)} style={{float: "right"}}>
+                    <GroupAdd/>
                 </IconButton>
             </Box>
             <Divider/>
             <List style={{overflow: "auto"}}>
-                <ListItem key={"add_contacts"} button onClick={() => {
-                    setShowAddContact(true)
-                }}>
+                <ListItem key={"add_contacts"} button onClick={() => setShowAddContact(true)}>
                     <ListItemText primary={"Add Contacts"}/>
                 </ListItem>
                 <Divider/>

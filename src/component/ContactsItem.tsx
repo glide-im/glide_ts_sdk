@@ -28,9 +28,9 @@ export const ContactsItem = withRouter((props: Props) => {
     return <>
         <ListItem button key={`${props.contact.Type}-${props.contact.Id}`} onClick={handleClick}>
             <ListItemIcon>
-                <Avatar src={""}/>
+                <Avatar src={props.contact.Avatar}/>
             </ListItemIcon>
-            <ListItemText primary={props.contact.Name}/>
+            <ListItemText primary={`${props.contact.Name}-${props.contact.Id}`}/>
         </ListItem>
 
     </>
