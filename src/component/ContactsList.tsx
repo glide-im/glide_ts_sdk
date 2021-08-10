@@ -8,27 +8,27 @@ import {CreateGroupDialog} from "./CreateGroupDialog";
 
 export function ContactsList() {
 
-    const [contacts, setContacts] = useState([...client.contacts])
+    const contactsList = client.contactsList
+
+    const [contacts, setContacts] = useState([...contactsList.getContacts()])
+
     const [showAddContact, setShowAddContact] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     useEffect(() => {
-        client.setContactChangeListener(contacts => {
-            setContacts([...contacts])
-        })
-        return () => client.setContactChangeListener(null)
-    }, [])
+        contactsList.onContactsChange = () => {
+            setContacts([...contactsList.getContacts()])
+        }
+        return () => client.contactsList.onContactsChange = null
+    }, [contactsList])
 
     const list = contacts?.flatMap(value => {
-            if (value.Id === client.getMyUid()) {
-                return <></>
-            }
             return (<ContactsItem contact={value}/>)
         }
     )
 
     const refresh = () => {
-        client.updateContacts().then()
+        client.contactsList.updateAll().then()
     }
 
     const createGroup = (name: string) => {
@@ -41,7 +41,7 @@ export function ContactsList() {
 
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
-            client.addFriend(id).then()
+            client.contactsList.addFriend(id).then()
         } else {
             client.joinGroup(id).then()
         }
@@ -66,9 +66,9 @@ export function ContactsList() {
                 </IconButton>
             </Box>
             <Divider/>
-            <List style={{overflow: "auto"}}>
+            <List style={{overflow: "auto", maxHeight: "600px"}}>
                 <ListItem key={"add_contacts"} button onClick={() => setShowAddContact(true)}>
-                    <ListItemText primary={"Add Contacts"}/>
+                    <ListItemText primary={"Add ContactsList"}/>
                 </ListItem>
                 <Divider/>
 

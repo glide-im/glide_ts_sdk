@@ -150,10 +150,31 @@ export class Chat implements IChat {
 }
 
 export class ChatMessage implements IChatMessage {
+
     public Mid: number = -1
     public Message: string = ""
     public Cid: number
     public MessageType: number
     public SendAt: number
     public Sender: number
+
+
+    public static create(src: IChatMessage): ChatMessage {
+        const ret = new ChatMessage()
+        ret.Mid = src.Mid
+        ret.Message = src.Message
+        ret.Cid = src.Cid
+        ret.MessageType = src.MessageType
+        ret.SendAt = src.SendAt
+        ret.Sender = src.Sender
+        return ret
+    }
+
+    public getMessageExtra(): string {
+        const userInfo = client.getCachedUserInfo(this.Sender);
+        if (userInfo != null) {
+            return userInfo.Nickname + ': ' + this.Message
+        }
+        return this.Sender + ': ' + this.Message
+    }
 }

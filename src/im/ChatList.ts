@@ -147,6 +147,7 @@ export class ChatList {
         this.chats.push(chat)
         this.targetIdMap.set(`${chat.ChatType}-${chat.Target}`, chat)
         this.chatIdMap.set(chat.Cid, chat)
+        this.onChatUpdate(chat)
     }
 
     public get(chatId: number): Chat | null {
@@ -170,7 +171,7 @@ export class ChatList {
     }
 
     private onChatUpdate(chat: Chat) {
-        if (this.currentChat.Cid === chat.Cid) {
+        if ((this.currentChat?.Cid ?? -1) === chat.Cid) {
             this.chatUpdateListener(chat)
         }
         this.get(chat.Cid).update(chat)

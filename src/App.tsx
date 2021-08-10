@@ -7,6 +7,7 @@ import {ChatList} from "./component/ChatList";
 import {ContactsList} from "./component/ContactsList";
 import {Ws} from "./im/ws";
 import {SnackBar} from "./component/SnackBar";
+import MessageStack from "./component/MessageSnackbar";
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
     return (
         <div className="App">
             <SnackBar/>
+            <MessageStack/>
             <Container color={"text.disabled"} style={{height: "100vh"}}>
                 <BrowserRouter>
                     <Grid container color={"text.disabled"} style={{height: "100vh", width: "1000px", margin: "auto"}}

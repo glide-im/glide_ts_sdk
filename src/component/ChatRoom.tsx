@@ -3,6 +3,7 @@ import {useEffect, useRef, useState} from "react";
 import {ChatMessageComp} from "./Message";
 import {Chat, ChatMessage} from "../im/chat";
 import {Send} from "@material-ui/icons";
+import {GroupMemberList} from "./GroupMemberList";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -20,6 +21,7 @@ export function ChatRoom(props: { chat: Chat | null }) {
     console.log("ChatRoom", "enter chat room, ", props.chat?.UcId)
     const messageListEle = useRef<HTMLUListElement>()
     const [messages, setMessages] = useState(props.chat?.getMessage() ?? [])
+    const isGroupChat = ((props?.chat?.ChatType ?? 1) === 2)
 
     useEffect(() => {
         if (props.chat === null) {
@@ -33,13 +35,14 @@ export function ChatRoom(props: { chat: Chat | null }) {
         props.chat.setMessageListener(onMessage)
         setMessages(() => [...props.chat.getMessage()])
         return () => props.chat.setMessageListener(null)
-    }, [props.chat])
+    }, [props.chat, isGroupChat])
 
     const sendMessage = (msg: string) => {
         if (props.chat && msg.trim().length !== 0) {
             props.chat.sendMessage(msg)
         }
     }
+    const memberList = isGroupChat ? <><GroupMemberList chat={props.chat}/> <Divider/></> : <></>
 
     return (
         <Box>
@@ -49,8 +52,9 @@ export function ChatRoom(props: { chat: Chat | null }) {
                 </Typography>
             </Box>
             <Divider/>
-            <Box style={{height: "490px"}}>
-                <List ref={messageListEle} disablePadding style={{overflow: "auto", maxHeight: "490px"}}
+            {memberList}
+            <Box height={(isGroupChat ? "470px" : "510px")}>
+                <List ref={messageListEle} disablePadding style={{overflow: "auto", maxHeight: "100%"}}
                       className={"BeautyScrollBar"}>
                     {
                         messages.flatMap(value =>
@@ -62,8 +66,8 @@ export function ChatRoom(props: { chat: Chat | null }) {
                 </List>
             </Box>
             <Divider/>
-            <Box style={{height: "120px", padding: "10px"}}>
-                <textarea style={{height: "80px", width: "96%", border: "none", outline: "none", resize: "none"}}
+            <Box style={{height: "100px", padding: "10px"}}>
+                <textarea style={{height: "60px", width: "96%", border: "none", outline: "none", resize: "none"}}
                           onKeyPress={(e) => {
                               if (e.key === "Enter") {
                                   e.preventDefault()

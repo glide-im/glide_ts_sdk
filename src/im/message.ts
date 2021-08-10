@@ -1,3 +1,5 @@
+import {Group} from "./group";
+
 const MaskActionApi = 1 << 20
 
 export const ActionUserLogin = MaskActionApi | 1
@@ -72,11 +74,16 @@ export interface Friend {
     AddTime: number
 }
 
-export interface Contacts {
+export interface IContacts {
     Id: number
     Name: string
     Avatar: string
     Type: number
+}
+
+export interface Relation {
+    Groups: Group[]
+    Friends: UserInfo[]
 }
 
 export interface IGroup {
@@ -94,7 +101,7 @@ export interface IGroupMember {
     Id: number
     Uid: number
     Type: number
-    Avatar: number
+    Avatar: string
     Remark: string
     Mute: boolean
     JoinAt: number
@@ -135,6 +142,11 @@ export interface SendChatMessage {
     MessageType: number
     Message: string
     SendAt: number
+}
+
+export interface GroupAddMember {
+    Gid: number
+    Members: IGroupMember[]
 }
 
 export interface GroupMessage {

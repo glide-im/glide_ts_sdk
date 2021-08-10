@@ -1,12 +1,12 @@
 import {Avatar, ListItem, ListItemIcon, ListItemText} from "@material-ui/core";
 import {client} from "../im/client";
 import React from "react";
-import {Contacts} from "../im/message";
+import {IContacts} from "../im/message";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 
 
 interface Props extends RouteComponentProps {
-    contact: Contacts
+    contact: IContacts
     onClick?: (id: number) => void
 }
 
