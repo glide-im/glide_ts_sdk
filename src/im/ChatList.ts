@@ -12,10 +12,10 @@ export class ChatList {
     private chatUpdateListener: (chat: Chat) => void = (() => null)
     private chatListUpdateListener: (chats: Chat[]) => void = (() => null)
 
-    public async asyncUpdate(): Promise<Chat[]> {
+    public update(): Promise<Chat[]> {
+        console.log("ChatList/update")
         return Ws.request<IChat[]>(ActionUserChatList)
             .then(value => {
-                console.log("ChatList/update", "update")
                 for (let chat of value) {
                     if (this.contain(chat.Cid)) {
                         this.get(chat.Cid).update(chat)
@@ -42,32 +42,13 @@ export class ChatList {
             .then(() => {
                 return Promise.resolve(this.chats)
             })
-    }
-
-    public update() {
-        Ws.sendMessage<IChat[]>(ActionUserChatList, "", ((success, result, msg) => {
-            if (!success) {
-                console.log("get chat list error", msg)
-            }
-            console.log("ChatList/update", "update")
-            for (let chat of result) {
-                if (this.contain(chat.Cid)) {
-                    this.get(chat.Cid).update(chat)
-                } else {
-                    const c = Chat.create(chat)
-                    c.init(() => null)
-                    this.add(c)
-                }
-            }
-
-            if (this.currentChat == null && this.chats.length > 0) {
-                this.currentChat = this.chats[0]
-            }
-            this.chatListUpdateListener(this.chats)
-        }))
+            .finally(() => {
+                console.log('ChatList/update', 'completed')
+            })
     }
 
     public startChat(id: number, type: number): Promise<Chat> {
+        console.log("ChatList/startChat")
         return Ws.request<IChat>(ActionUserNewChat, {Id: id, Type: type})
             .then(value => {
                 const chat = this.newChat(value.Cid)
@@ -76,6 +57,9 @@ export class ChatList {
                 this.setCurrentChat(chat)
                 return Promise.resolve(chat)
             })
+            .finally(() => {
+                console.log('ChatList/startChat', 'completed')
+            })
     }
 
     public setChatListUpdateListener(l: (chats: Chat[]) => void) {
@@ -83,6 +67,7 @@ export class ChatList {
     }
 
     public onChatMessage(message: ChatMessage) {
+        console.log('ChatList/onChatMessage')
         if (!this.contain(message.Cid)) {
             const chat = new Chat()
             chat.Cid = message.Cid

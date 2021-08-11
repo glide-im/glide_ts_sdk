@@ -6,36 +6,35 @@ import {client} from "./client";
 export class ContactsList {
 
     public onContactsChange: () => void | null = null
-    private allContacts: IContacts[] = []
 
     private groups = new Map<number, Group>()
     private friends = new Map<number, UserInfo>()
 
     public updateAll(): Promise<any> {
-        console.log("ContactsList/init")
+        console.log("ContactsList/updateAll")
         this.groups.clear()
         this.friends.clear()
-        this.allContacts = []
 
         return Ws.request<Relation>(ActionUserRelation)
             .then(value => {
                 for (let friend of value.Friends) {
                     this.friends.set(friend.Uid, friend)
                 }
+                const member: number[] = []
                 for (let group of value.Groups) {
+                    member.push(...group.Members.map(m => m.Uid))
                     this.groups.set(group.Gid, group)
                 }
+                return client.getUserInfo(member)
             })
-            .catch(reason => client.catchPromiseReject(reason))
             .finally(() => {
-                console.log("ContactsList/init", "completed!")
+                console.log("ContactsList/updateAll", "completed!")
             })
     }
 
     public addFriend(uid: number, remark?: string): Promise<Friend> {
         console.log("ContactsList/addFriend", uid, remark)
         return Ws.request<Friend>(ActionUserAddFriend, {Uid: uid, Remark: remark})
-            .catch(reason => client.catchPromiseReject(reason))
             .finally(() => {
                 console.log("ContactsList/addFriend", "completed!")
                 this.updateAll().then()
@@ -47,12 +46,15 @@ export class ContactsList {
         if (this.onContactsChange) {
             this.onContactsChange()
         }
-        this.allContacts.push(g.toContacts())
         this.groups.set(g.Gid, g)
     }
 
     public getGroup(gid): Group | null {
         return this.groups.get(gid) ?? null
+    }
+
+    public getFriend(uid): UserInfo | null {
+        return this.friends.get(uid) ?? null
     }
 
     public getAllGroup(): Group[] {
@@ -71,18 +73,19 @@ export class ContactsList {
         return ret
     }
 
-    public getContacts():IContacts[]{
+    public getAllContacts(): IContacts[] {
         const ret: IContacts[] = []
         for (let userInfo of this.getAllFriend()) {
-            ret.push({Avatar: userInfo.Avatar, Id:userInfo.Uid, Name: userInfo.Nickname, Type: 1})
+            ret.push({Avatar: userInfo.Avatar, Id: userInfo.Uid, Name: userInfo.Nickname, Type: 1})
         }
         for (let group of this.getAllGroup()) {
-            ret.push({Avatar: group.Avatar, Id:group.Gid, Name: group.Name, Type: 2})
+            ret.push({Avatar: group.Avatar, Id: group.Gid, Name: group.Name, Type: 2})
         }
         return ret
     }
 
     public clear() {
-        this.allContacts = []
+        this.friends.clear()
+        this.groups.clear()
     }
 }

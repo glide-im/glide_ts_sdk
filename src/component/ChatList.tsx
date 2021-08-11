@@ -22,13 +22,12 @@ export function ChatList() {
         }))
     })
 
-    const list = chatList.flatMap(value => (
-            <ChatItem key={value.Cid + value.UcId} chat={value} onSelect={setChat}/>
-        )
+    const list = chatList.flatMap(value =>
+        (<ChatItem key={value.Cid + value.UcId} chat={value} onSelect={setChat}/>)
     )
 
     const refresh = () => {
-        client.updateChatList().then()
+        client.chatList.update().then()
     }
     return <Box style={{height: "700px"}}>
 

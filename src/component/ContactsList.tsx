@@ -10,14 +10,14 @@ export function ContactsList() {
 
     const contactsList = client.contactsList
 
-    const [contacts, setContacts] = useState([...contactsList.getContacts()])
+    const [contacts, setContacts] = useState([...contactsList.getAllContacts()])
 
     const [showAddContact, setShowAddContact] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     useEffect(() => {
         contactsList.onContactsChange = () => {
-            setContacts([...contactsList.getContacts()])
+            setContacts([...contactsList.getAllContacts()])
         }
         return () => client.contactsList.onContactsChange = null
     }, [contactsList])

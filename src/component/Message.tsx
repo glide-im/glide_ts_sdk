@@ -5,7 +5,7 @@ import {IChatMessage} from "../im/message";
 export function ChatMessageComp(props: { msg: IChatMessage }) {
 
     const sender = client.getCachedUserInfo(props.msg.Sender)
-    const me = (sender?.Uid ?? -11) === client.getMyUid()
+    const me = (sender?.Uid ?? -11) === client.uid
     const avatar = sender?.Avatar ?? ""
 
     const align: "flex-start" | "flex-end" = me ? "flex-end" : "flex-start"

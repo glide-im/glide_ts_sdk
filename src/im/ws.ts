@@ -1,4 +1,5 @@
 import {Message, RespActionFailed} from "./message";
+import {client} from "./client";
 
 export type Listener = (msg: Message) => void
 
@@ -85,7 +86,7 @@ class MyWs {
                 }
             })
         }
-        return new Promise<T>(executor)
+        return new Promise<T>(executor).catch(reason => client.catchPromiseReject(reason).then())
     }
 
     public sendMessage<T>(action: number, data: any, cb?: Callback<T>) {
@@ -129,13 +130,6 @@ class MyWs {
 
     private onMessage(data: MessageEvent) {
         let msg: Message = JSON.parse(data.data)
-        let log: any
-        try {
-            log = JSON.parse(msg.Data)
-        } catch (e) {
-            log = msg.Data
-        }
-        console.log("New Message => ", msg.Action, msg.Seq, log)
         this.listener.forEach((value => value(msg)))
 
         if (this.messageCallbacks.has(msg.Seq)) {

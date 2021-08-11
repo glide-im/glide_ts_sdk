@@ -37,7 +37,6 @@ export function GroupMemberList(props: { chat: Chat }) {
     if (group == null) {
         return <></>
     }
-
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
     const avatars = group.Members
         .map(value => {

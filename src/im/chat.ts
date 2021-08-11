@@ -6,10 +6,12 @@ import {
     ChatHistoryRequest,
     IChat,
     IChatMessage,
-    SendChatMessage
+    SendChatMessage,
+    UserInfo
 } from "./message";
 import {Ws} from "./ws";
 import {client} from "./client";
+import {Group} from "./group";
 
 export class Chat implements IChat {
 
@@ -45,23 +47,31 @@ export class Chat implements IChat {
 
         console.log("Chat/init", this.Cid)
         if (this.UcId <= 0) {
-            Ws.sendMessage<Chat>(
-                ActionUserChatInfo,
-                {Cid: this.Cid},
-                ((success, result, msg) => {
-                    if (!success) {
-                        console.log(msg)
-                        return
-                    }
-                    this.update(result)
+            Ws.request<Chat>(ActionUserChatInfo, {Cid: this.Cid})
+                .then(value => {
+                    this.update(value)
                     this.init(onUpdate)
-                }))
+                })
         }
-        this.Title = client.getChatTitle(this.Target, this.ChatType)
+        this.setTitle()
         this.messages = []
         this.loadHistory(() => {
             onUpdate(this)
         })
+        console.log("Chat/init", 'completed')
+    }
+
+    public getTargetObj(): UserInfo | Group | null {
+        let ret = null
+        switch (this.ChatType) {
+            case 1:
+                ret = client.contactsList.getFriend(this.Target)
+                break
+            case 2:
+                ret = client.contactsList.getGroup(this.Target)
+                break
+        }
+        return ret
     }
 
     public sendMessage(msg: string, onSuc?: (msg) => void) {
@@ -108,20 +118,19 @@ export class Chat implements IChat {
         }
         const req: ChatHistoryRequest = {Cid: this.Cid, Time: time, Type: this.ChatType}
 
-        Ws.request1<ChatMessage[]>(ActionUserChatHistory, req)
+        Ws.request<ChatMessage[]>(ActionUserChatHistory, req)
             .then(value => {
-                if (!value.success) {
-                    console.log(value.msg)
-                    return
-                }
-                value.result.forEach((v) => {
+                value.forEach((v) => {
                     this.messages.push(v)
                 })
                 this.sortMessage()
                 if (this.messages.length > 0) {
                     this.LatestMsg = this.messages[this.messages.length - 1].Message
                 }
-                onSuc(value.result)
+                onSuc(value)
+            })
+            .finally(() => {
+                console.log('Chat/loadHistory', 'completed')
             })
     }
 
@@ -130,7 +139,6 @@ export class Chat implements IChat {
     }
 
     public update(chat: IChat) {
-        console.log("Chat/update", chat.Cid)
         this.Cid = chat.Cid
         this.UcId = chat.UcId
         this.Target = chat.Target
@@ -140,8 +148,20 @@ export class Chat implements IChat {
         this.ReadAt = chat.ReadAt
         this.NewMessageAt = chat.NewMessageAt
         this.LatestMsg = chat.LatestMsg
-        this.Title = client.getChatTitle(this.Target, this.ChatType)
+        this.setTitle()
         this.updateListener(this)
+    }
+
+    private setTitle() {
+        switch (this.ChatType) {
+            case 1:
+                const ui = client.contactsList.getFriend(this.Target) ?? client.getCachedUserInfo(this.Target)
+                this.Title = ui?.Nickname ?? "不是好友"
+                break
+            case 2:
+                this.Title = client.contactsList.getGroup(this.Target)?.Name ?? "未知群"
+                break
+        }
     }
 
     private sortMessage() {

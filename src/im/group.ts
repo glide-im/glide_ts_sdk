@@ -21,6 +21,11 @@ export class Group implements IGroup {
         return ret
     }
 
+    public initMemberInfo():Promise<any>{
+
+        return
+    }
+
     public onNewMember(m: IGroupMember[]) {
         this.Members.push(...m)
         if (this.onUpdate) {
@@ -42,7 +47,7 @@ export class Group implements IGroup {
     public inviteToGroup(gid: number, uid: number[]): Promise<any> {
         return Ws.request<any>(ActionGroupAddMember, {Gid: gid, Uid: uid})
             .then(value => {
-                client.getGroupInfo([gid], true, true).then()
+                // client.getGroupInfo([gid], true, true).then()
                 return value
             })
     }

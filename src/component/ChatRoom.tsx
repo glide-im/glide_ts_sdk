@@ -44,11 +44,19 @@ export function ChatRoom(props: { chat: Chat | null }) {
     }
     const memberList = isGroupChat ? <><GroupMemberList chat={props.chat}/> <Divider/></> : <></>
 
+    if (props.chat == null) {
+        return (
+            <Box>
+
+            </Box>
+        )
+    }
+
     return (
         <Box>
             <Box height={"70px"} paddingLeft={"16px"}>
                 <Typography variant={"h6"} style={{lineHeight: "70px"}}>
-                    {props.chat == null ? "" : props.chat.Title}
+                    {props.chat.Title}
                 </Typography>
             </Box>
             <Divider/>

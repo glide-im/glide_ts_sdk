@@ -32,7 +32,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     let s: 'error' | 'action' | 'disabled'
     switch (state) {
         case State.CONNECTED:
-            if (client.getMyUid() <= 0 && props.location.pathname !== "/") {
+            if (client.uid <= 0 && props.location.pathname !== "/") {
                 props.history.push("/")
             }
             s = "disabled"
