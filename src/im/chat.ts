@@ -43,22 +43,23 @@ export class Chat implements IChat {
         return this.messages[this.messages.length - 1]
     }
 
-    public init(onUpdate: (c: Chat) => void) {
-
+    public init(): Promise<Chat> {
         console.log("Chat/init", this.Cid)
         if (this.UcId <= 0) {
-            Ws.request<Chat>(ActionUserChatInfo, {Cid: this.Cid})
+            return Ws.request<Chat>(ActionUserChatInfo, {Cid: this.Cid})
                 .then(value => {
                     this.update(value)
-                    this.init(onUpdate)
+                    return this.init()
                 })
+                .catch(reason => client.catchPromiseReject(reason))
         }
         this.setTitle()
         this.messages = []
-        this.loadHistory(() => {
-            onUpdate(this)
-        })
-        console.log("Chat/init", 'completed')
+        return this.loadHistory()
+            .then(() => this)
+            .finally(() => {
+                console.log("Chat/init", 'completed')
+            })
     }
 
     public getTargetObj(): UserInfo | Group | null {
@@ -110,7 +111,7 @@ export class Chat implements IChat {
         this.messageListener = l
     }
 
-    public loadHistory(onSuc: (m: ChatMessage[]) => void) {
+    public loadHistory(): Promise<ChatMessage[]> {
         console.log("Chat/loadHistory", this.Cid)
         let time = Date.now();
         if (this.messages.length > 0) {
@@ -118,7 +119,7 @@ export class Chat implements IChat {
         }
         const req: ChatHistoryRequest = {Cid: this.Cid, Time: time, Type: this.ChatType}
 
-        Ws.request<ChatMessage[]>(ActionUserChatHistory, req)
+        return Ws.request<ChatMessage[]>(ActionUserChatHistory, req)
             .then(value => {
                 value.forEach((v) => {
                     this.messages.push(v)
@@ -127,7 +128,7 @@ export class Chat implements IChat {
                 if (this.messages.length > 0) {
                     this.LatestMsg = this.messages[this.messages.length - 1].Message
                 }
-                onSuc(value)
+                return value
             })
             .finally(() => {
                 console.log('Chat/loadHistory', 'completed')

@@ -1,7 +1,7 @@
-import {ActionUserAddFriend, ActionUserRelation, Friend, IContacts, Relation, UserInfo} from "./message";
+import {ActionUserAddFriend, ActionUserRelation, ContactsResponse, IContacts, UserInfo} from "./message";
 import {Group} from "./group";
 import {Ws} from "./ws";
-import {client} from "./client";
+import {client, MessageLevel} from "./client";
 
 export class ContactsList {
 
@@ -15,37 +15,47 @@ export class ContactsList {
         this.groups.clear()
         this.friends.clear()
 
-        return Ws.request<Relation>(ActionUserRelation)
-            .then(value => {
-                for (let friend of value.Friends) {
-                    this.friends.set(friend.Uid, friend)
-                }
-                const member: number[] = []
-                for (let group of value.Groups) {
-                    member.push(...group.Members.map(m => m.Uid))
-                    this.groups.set(group.Gid, group)
-                }
-                return client.getUserInfo(member)
-            })
+        return Ws.request<ContactsResponse>(ActionUserRelation)
+            .then(value => this.updateContactsList(value).then())
             .finally(() => {
+                if (this.onContactsChange) {
+                    this.onContactsChange()
+                }
                 console.log("ContactsList/updateAll", "completed!")
             })
     }
 
-    public addFriend(uid: number, remark?: string): Promise<Friend> {
+    public addFriend(uid: number, remark?: string): Promise<ContactsResponse> {
         console.log("ContactsList/addFriend", uid, remark)
-        return Ws.request<Friend>(ActionUserAddFriend, {Uid: uid, Remark: remark})
+        return Ws.request<ContactsResponse>(ActionUserAddFriend, {Uid: uid, Remark: remark})
+            .then(value => this.updateContactsList(value))
             .finally(() => {
                 console.log("ContactsList/addFriend", "completed!")
-                this.updateAll().then()
+                if (this.onContactsChange) {
+                    this.onContactsChange()
+                }
+            })
+    }
+
+    public onNewContacts(contacts: ContactsResponse) {
+        console.log('ContactsList/onNewContacts')
+        for (let friend of contacts.Friends) {
+            client.showMessage(MessageLevel.LevelInfo, `New Friend: ${friend.Nickname}, Uid=${friend.Uid}`)
+        }
+        for (let group of contacts.Groups) {
+            client.showMessage(MessageLevel.LevelInfo, `New Group: ${group.Name}, Gid=${group.Gid}`)
+        }
+
+        this.updateContactsList(contacts)
+            .then(value => {
+                if (this.onContactsChange) {
+                    this.onContactsChange()
+                }
             })
     }
 
     public onNewGroup(g: Group) {
         console.log('ContactsList/onNewGroup')
-        if (this.onContactsChange) {
-            this.onContactsChange()
-        }
         this.groups.set(g.Gid, g)
     }
 
@@ -87,5 +97,17 @@ export class ContactsList {
     public clear() {
         this.friends.clear()
         this.groups.clear()
+    }
+
+    private updateContactsList(contactsResponse: ContactsResponse): Promise<ContactsResponse> {
+        for (let friend of contactsResponse.Friends) {
+            this.friends.set(friend.Uid, friend)
+        }
+        const member: number[] = []
+        for (let group of contactsResponse.Groups) {
+            member.push(...group.Members.map(m => m.Uid))
+            this.groups.set(group.Gid, Group.create(group))
+        }
+        return client.getUserInfo(member).then(() => contactsResponse)
     }
 }

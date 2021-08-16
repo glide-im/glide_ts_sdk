@@ -1,6 +1,6 @@
 import {ActionGroupAddMember, IContacts, IGroup, IGroupMember} from "./message";
 import {Ws} from "./ws";
-import {client} from "./client";
+import {client, MessageLevel} from "./client";
 
 export class Group implements IGroup {
 
@@ -21,16 +21,20 @@ export class Group implements IGroup {
         return ret
     }
 
-    public initMemberInfo():Promise<any>{
+    public initMemberInfo(): Promise<any> {
 
         return
     }
 
     public onNewMember(m: IGroupMember[]) {
         this.Members.push(...m)
-        if (this.onUpdate) {
-            this.onUpdate()
-        }
+        client.getUserInfo(m.map(value => value.Uid))
+            .then()
+            .finally(() => {
+                if (this.onUpdate) {
+                    this.onUpdate()
+                }
+            })
     }
 
     public update(g: IGroup) {
@@ -47,7 +51,7 @@ export class Group implements IGroup {
     public inviteToGroup(gid: number, uid: number[]): Promise<any> {
         return Ws.request<any>(ActionGroupAddMember, {Gid: gid, Uid: uid})
             .then(value => {
-                // client.getGroupInfo([gid], true, true).then()
+                client.showMessage(MessageLevel.LevelSuccess, `Add Member Success`)
                 return value
             })
     }

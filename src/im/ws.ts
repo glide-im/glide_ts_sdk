@@ -1,4 +1,4 @@
-import {Message, RespActionFailed} from "./message";
+import {ActionFailed, Message} from "./message";
 import {client} from "./client";
 
 export type Listener = (msg: Message) => void
@@ -53,7 +53,7 @@ class MyWs {
             // this.listener.forEach((value => value("ERROR: " + e)))
         }
         this.websocket.onclose = (e) => {
-            console.log("WS CLOSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            console.log("WS CLOSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e)
             // this.listener.forEach((value => value("CLOSED")))
             this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
         }
@@ -135,7 +135,7 @@ class MyWs {
         if (this.messageCallbacks.has(msg.Seq)) {
             let cb = this.messageCallbacks.get(msg.Seq)
 
-            if (msg.Action === RespActionFailed || msg.Action === 0) {
+            if (msg.Action === ActionFailed || msg.Action === 0) {
                 // @ts-ignore
                 cb(false, null, data.data)
             } else {

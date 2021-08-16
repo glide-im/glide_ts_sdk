@@ -33,6 +33,7 @@ export function GroupMemberList(props: { chat: Chat }) {
     }, [props])
 
     const group = client.contactsList.getGroup(props.chat.Target)
+    console.log('GroupMemberList', group)
 
     if (group == null) {
         return <></>

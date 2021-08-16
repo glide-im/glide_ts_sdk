@@ -1,15 +1,16 @@
 import {Group} from "./group";
 
-const MaskActionApi = 1 << 20
+const MaskActionApi: number = 1 << 20
 
 export const ActionUserLogin = MaskActionApi | 1
 export const ActionUserRegister = MaskActionApi | 2
 export const ActionUserGetInfo = MaskActionApi | 3
-export const ActionUserRelation = MaskActionApi | 10
 export const ActionUserEditInfo = MaskActionApi | 4
 export const ActionUserLogout = MaskActionApi | 5
-export const ActionUserSyncMsg = MaskActionApi | 6
+export const ActionUserChatList = MaskActionApi | 6
 export const ActionUserInfo = MaskActionApi | 7
+export const ActionUserAuth = MaskActionApi | 8
+export const ActionUserRelation = MaskActionApi | 10
 export const ActionUserNewChat = MaskActionApi | 11
 export const ActionUserChatHistory = MaskActionApi | 12
 export const ActionUserChatInfo = MaskActionApi | 13
@@ -17,7 +18,7 @@ export const ActionUserAddFriend = MaskActionApi | 14
 
 export const ActionOnlineUser = MaskActionApi | 20
 
-const MaskActionGroupApi = MaskActionApi | (1 << 21)
+export const MaskActionGroupApi = MaskActionApi | (1 << 21)
 
 export const ActionGroupCreate = MaskActionGroupApi | 1
 export const ActionGroupGetMember = MaskActionGroupApi | 2
@@ -28,27 +29,47 @@ export const ActionGroupInfo = MaskActionGroupApi | 6
 export const ActionGroupUpdate = MaskActionGroupApi | 7
 export const ActionGroupAddMember = MaskActionGroupApi | 8
 
-export const MaskRespActionApi = 1 << 20
-export const RespActionFailed = MaskRespActionApi | 1
-export const RespActionSuccess = MaskRespActionApi | 2
-export const RespActionUserUnauthorized = MaskRespActionApi | 3
+export const MaskActionMessage = 1 << 25
+export const ActionGroupMessage = MaskActionMessage | 1
+export const ActionChatMessage = MaskActionMessage | 2
 
-export const ActionUserChatList = MaskActionApi | 6
-export const ActionGroupMessage = 33554433
-export const ActionChatMessage = 33554434
-export const ActionHeartbeat = 1073741825
-export const ActionEcho = 1073741924
+export const MasActionOther = 1 << 30
+export const ActionFailed = MasActionOther | 1
+export const ActionSuccess = MasActionOther | 2
+export const ActionUserUnauthorized = MasActionOther | 3
+export const ActionNotify = MasActionOther | 4
+export const ActionHeartbeat = MasActionOther | 6
+export const ActionEcho = MasActionOther | 100
 
-const MaskRespActionNotify = 1 << 30
-export const RespActionGroupRemoved = MaskRespActionNotify | 1
-export const RespActionGroupApproval = MaskRespActionNotify | 3
-export const RespActionGroupApproved = MaskRespActionNotify | 4
-export const RespActionGroupRefused = MaskRespActionNotify | 5
-export const RespActionEcho = MaskRespActionNotify | 100
-
-export const RespActionFriendApproval = MaskRespActionNotify | 6
-export const RespActionFriendApproved = MaskRespActionNotify | 7
-export const RespActionFriendRefused = MaskRespActionNotify | 8
+export const ActionNameMap = new Map([
+    [ActionUserLogin, "ActionUserLogin"],
+    [ActionUserRegister, "ActionUserRegister"],
+    [ActionUserGetInfo, "ActionUserGetInfo"],
+    [ActionUserEditInfo, "ActionUserEditInfo"],
+    [ActionUserLogout, "ActionUserLogout"],
+    [ActionUserChatList, "ActionUserChatList"],
+    [ActionUserInfo, "ActionUserInfo"],
+    [ActionUserAuth, "ActionUserAuth"],
+    [ActionUserRelation, "ActionUserRelation"],
+    [ActionUserNewChat, "ActionUserNewChat"],
+    [ActionUserChatHistory, "ActionUserChatHistory"],
+    [ActionUserChatInfo, "ActionUserChatInfo"],
+    [ActionUserAddFriend, "ActionUserAddFriend"],
+    [ActionGroupRemoveMember, "ActionGroupRemoveMember"],
+    [ActionGroupAddMember, "ActionGroupAddMember"],
+    [ActionGroupJoin, "ActionGroupJoin"],
+    [ActionGroupGetMember, "ActionGroupGetMember"],
+    [ActionGroupExit, "ActionGroupExit"],
+    [ActionGroupCreate, "ActionGroupCreate"],
+    [ActionGroupUpdate, "ActionGroupUpdate"],
+    [ActionOnlineUser, "ActionOnlineUser"],
+    [MaskActionMessage, "MaskActionMessage"],
+    [ActionGroupMessage, "ActionGroupMessage"],
+    [ActionChatMessage, "ActionChatMessage"],
+    [ActionHeartbeat, "ActionHeartbeat"],
+    [ActionSuccess, "ActionSuccess"],
+    [ActionNotify, "ActionNotify"]
+])
 
 export interface Message {
     Seq: number
@@ -81,7 +102,7 @@ export interface IContacts {
     Type: number
 }
 
-export interface Relation {
+export interface ContactsResponse {
     Groups: Group[]
     Friends: UserInfo[]
 }
@@ -95,6 +116,11 @@ export interface IGroup {
     Notice: string,
     CreateAt: number
     Members: IGroupMember[]
+}
+
+export interface AddGroup {
+    Group: IGroup,
+    UcId: number
 }
 
 export interface IGroupMember {

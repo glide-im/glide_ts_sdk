@@ -1,6 +1,7 @@
 import {Ws} from "./ws";
 import {ActionUserChatList, ActionUserNewChat, IChat} from "./message";
 import {Chat, ChatMessage} from "./chat";
+import {client, MessageLevel} from "./client";
 
 export class ChatList {
 
@@ -26,11 +27,7 @@ export class ChatList {
                 return Promise.resolve(this.chats)
             })
             .then(value => {
-                const chatUpdate = value.map((c) =>
-                    new Promise<Chat>((resolved: (c) => void) => {
-                        c.init(resolved)
-                    })
-                )
+                const chatUpdate = value.map((c) => c.init())
                 return Promise.allSettled(chatUpdate)
             })
             .then(() => {
@@ -48,14 +45,13 @@ export class ChatList {
     }
 
     public startChat(id: number, type: number): Promise<Chat> {
-        console.log("ChatList/startChat")
+        console.log("ChatList/startChat", `id=${id}`, `type=${type}`)
         return Ws.request<IChat>(ActionUserNewChat, {Id: id, Type: type})
             .then(value => {
-                const chat = this.newChat(value.Cid)
-                chat.update(value)
+                const chat = Chat.create(value)
                 this.add(chat)
                 this.setCurrentChat(chat)
-                return Promise.resolve(chat)
+                return chat
             })
             .finally(() => {
                 console.log('ChatList/startChat', 'completed')
@@ -71,16 +67,23 @@ export class ChatList {
         if (!this.contain(message.Cid)) {
             const chat = new Chat()
             chat.Cid = message.Cid
-            chat.init(() => {
-            })
-            this.add(chat)
+            chat.init()
+                .then(() => {
+                    this.add(chat)
+                    this.onChatMessage(message)
+                })
+            return
         }
+        const chat = this.get(message.Cid)
         this.get(message.Cid).onNewMessage(message)
         if (this.currentChat != null && this.currentChat.Cid === message.Cid) {
             this.chatMessageListener(message)
-            this.onChatUpdate(this.get(message.Cid))
+            this.onChatUpdate(chat)
         }
         this.chatListUpdateListener(this.chats)
+        if (message.Sender !== client.uid) {
+            client.showMessage(MessageLevel.LevelInfo, `New Message: ${message.getMessageExtra()}`)
+        }
     }
 
     public getCurrentChat(): Chat | null {
@@ -114,7 +117,7 @@ export class ChatList {
     public newChat(chatId: number): Chat {
         const chat = new Chat()
         chat.Cid = chatId
-        chat.init((c) => {
+        chat.init().then((c) => {
             this.onChatUpdate(c)
         })
         this.add(chat)
@@ -159,6 +162,6 @@ export class ChatList {
         if ((this.currentChat?.Cid ?? -1) === chat.Cid) {
             this.chatUpdateListener(chat)
         }
-        this.get(chat.Cid).update(chat)
+        this.get(chat.Cid)?.update(chat)
     }
 }

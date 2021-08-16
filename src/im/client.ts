@@ -1,6 +1,7 @@
 import {State, Ws} from "./ws";
 import {
     ActionChatMessage,
+    ActionFailed,
     ActionGroupAddMember,
     ActionGroupCreate,
     ActionGroupInfo,
@@ -8,15 +9,16 @@ import {
     ActionGroupMessage,
     ActionGroupUpdate,
     ActionOnlineUser,
+    ActionUserAddFriend,
     ActionUserGetInfo,
     ActionUserLogin,
     ActionUserNewChat,
     ActionUserRegister,
+    ActionUserUnauthorized,
+    AddGroup,
     AuthResponse,
     GroupAddMember,
-    IGroup,
     Message,
-    RespActionFriendApproval,
     UserInfo
 } from "./message";
 import {Chat, ChatMessage} from "./chat";
@@ -24,19 +26,29 @@ import {ChatList} from "./ChatList";
 import {Group} from "./group";
 import {ContactsList} from "./contactsList";
 
+export enum MessageLevel {
+    LevelDefault,
+    LevelInfo,
+    LevelError,
+    LevelSuccess,
+    LevelWarning
+}
+
+export type MessageListener = (level: MessageLevel, msg: string) => void
+
 class Client {
 
     public chatList = new ChatList()
     public contactsList = new ContactsList()
     public uid = -1
-    public messageListener: (msg: Message) => void | null = null
+    public messageListener: MessageListener
 
     private userInfo = new Map<number, UserInfo>()
     private groupInfo = new Map<number, Group>()
     private userStateListener: (loggedIn: boolean) => void | null = null
     private toaster: (msg: string) => void | null = null
 
-    constructor() {
+    public Init() {
         Ws.addStateListener((a, b) => {
             this.onWsStateChanged(a, b)
         })
@@ -44,6 +56,13 @@ class Client {
 
     public register(account: string, password: string): Promise<any> {
         return Ws.request<any>(ActionUserRegister, {Account: account, Password: password})
+            .then(value => {
+                this.showMessage(MessageLevel.LevelSuccess, "Register Success")
+                return value
+            })
+            .catch(reason => {
+                this.showMessage(MessageLevel.LevelError, `Register Failed: ${reason}`)
+            })
     }
 
     public login(account: string, password: string): Promise<AuthResponse> {
@@ -53,6 +72,10 @@ class Client {
         this.contactsList.clear()
         this.uid = -1
         return Ws.request<AuthResponse>(ActionUserLogin, m)
+            .catch(reason => {
+                this.showMessage(MessageLevel.LevelError, `Login Failed, Reason: ${reason}`)
+                return Promise.reject("Login Failed")
+            })
             .then(value => {
                 this.uid = value.Uid
                 Ws.addMessageListener(msg => {
@@ -67,6 +90,7 @@ class Client {
                 if (this.userStateListener) {
                     this.userStateListener(true)
                 }
+                this.showMessage(MessageLevel.LevelSuccess, `Login Success: Uid=${this.uid}`)
                 return this.chatList.update().then(() => value)
             })
             .finally(() => {
@@ -88,15 +112,13 @@ class Client {
             })
     }
 
-    public createGroup(name: string): Promise<IGroup> {
+    public createGroup(name: string): Promise<AddGroup> {
         console.log("client/createGroup", name)
-        return Ws.request<IGroup>(ActionGroupCreate, {Name: name})
+        return Ws.request<AddGroup>(ActionGroupCreate, {Name: name})
             .then(value => {
-                this.contactsList.updateAll().then()
                 console.log("client/createGroup", value)
                 return Promise.resolve(value)
             })
-
             .finally(() => {
                 console.log("client/createGroup", "complete")
             })
@@ -160,6 +182,9 @@ class Client {
     }
 
     public getCachedUserInfo(id: number): UserInfo | null {
+        if (this.contactsList.getFriend(id)) {
+            return this.contactsList.getFriend(id)
+        }
         if (this.userInfo.has(id)) {
             return this.userInfo.get(id)
         }
@@ -188,8 +213,21 @@ class Client {
         return Promise.reject(reason)
     }
 
+    public showMessage(level: MessageLevel, msg: string) {
+        if (this.messageListener) {
+            this.messageListener(level, msg)
+        }
+    }
+
     private onMessage(msg: Message) {
-        this.messageListener(msg)
+        if (msg.Action === ActionFailed) {
+            this.showMessage(MessageLevel.LevelError, msg.Data)
+            return
+        } else if (msg.Action === ActionUserUnauthorized) {
+            this.showMessage(MessageLevel.LevelError, msg.Data)
+            return
+        }
+
         const data = JSON.parse(msg.Data)
         switch (msg.Action) {
             case ActionChatMessage:
@@ -197,11 +235,8 @@ class Client {
                 break
             case ActionGroupMessage:
                 break
-            case RespActionFriendApproval:
-                this.contactsList.updateAll().then()
-                break
-            case ActionGroupJoin:
-                this.contactsList.onNewGroup(data)
+            case ActionUserAddFriend:
+                this.contactsList.onNewContacts(data)
                 break
             case ActionGroupAddMember:
                 const r: GroupAddMember = data
@@ -209,7 +244,7 @@ class Client {
                 group?.onNewMember(r.Members)
                 break
             case ActionUserNewChat:
-                this.chatList.add(data)
+                this.chatList.add(Chat.create(data))
                 break
             case ActionGroupUpdate:
                 break

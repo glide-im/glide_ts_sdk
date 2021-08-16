@@ -1,4 +1,4 @@
-import {Avatar, Box, Grid, IconButton, Snackbar, Typography} from "@material-ui/core";
+import {Avatar, Box, Grid, IconButton, Typography} from "@material-ui/core";
 import React, {useEffect, useState} from "react";
 import {AccountBox, AddBox, ChatBubble, ViewList} from "@material-ui/icons";
 import {State, Ws} from "../im/ws";
@@ -11,8 +11,6 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const [state, setState] = useState(State.CONNECTED)
     const [showDialog, setShowDialog] = useState(false)
-    const [snack, setSnack] = useState(false)
-    const [snackMsg, setSnackMsg] = useState("")
     const [uid, setUid] = useState(-1)
 
     useEffect(() => {
@@ -53,16 +51,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const auth = function (reg: boolean, p: { account: string, password: string }) {
         if (reg) {
-            client.register(p.account, p.account)
-                .then(v => {
-                    setSnackMsg("register success")
-                    setSnack(true)
-                    setShowDialog(false)
-                })
-                .catch((r) => {
-                    setSnackMsg(r)
-                    setSnack(true)
-                })
+            client.register(p.account, p.account).then()
         } else {
             client.login(p.account, p.account)
                 .then(value => {
@@ -83,10 +72,6 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     }
 
     return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
-
-        <Snackbar open={snack} autoHideDuration={4000} onClose={() => {
-            setSnack(false)
-        }} message={snackMsg}/>
         <MyDialog open={showDialog} onClose={() => {
             setShowDialog(!showDialog)
         }} onSubmit={auth}/>

@@ -6,30 +6,30 @@ import {Chat, ChatMessage} from "../im/chat";
 export function ChatItem(props: { chat: Chat, onSelect: (c: Chat) => void }) {
 
     console.log("ChatItem", "load chat item UcId=", props.chat.UcId)
-    const [chat, setChat] = useState(props.chat)
+    const [chat, setChat] = useState({obj: props.chat})
 
     useEffect(() => {
-        chat.setUpdateListener(c => {
+        chat.obj.setUpdateListener(c => {
             console.log("ChatItem", "chat updated")
-            setChat(c)
+            setChat({obj: c})
         })
-        return () => chat.setUpdateListener(() => null)
+        return () => chat.obj.setUpdateListener(() => null)
     }, [chat])
 
     const onChatUpdate = (chat: Chat) => {
-        setChat(chat)
+        setChat({obj: chat})
     }
     const onChatMessage = (msg: ChatMessage) => {
 
     }
 
     const onItemClick = () => {
-        const c = client.chatList.get(chat.Cid)
+        const c = client.chatList.get(chat.obj.Cid)
         client.chatList.setCurrentChat(c, onChatUpdate, onChatMessage)
         props.onSelect(client.chatList.getCurrentChat())
     }
 
-    const lastMsg = chat.getLastMessage()
+    const lastMsg = chat.obj.getLastMessage()
     let hint = " "
 
     if (lastMsg != null) {
@@ -39,13 +39,13 @@ export function ChatItem(props: { chat: Chat, onSelect: (c: Chat) => void }) {
         }
     }
 
-    return <div key={chat.Cid}>
-        <ListItem button selected={client.chatList.getCurrentChat() === chat} style={{cursor: "pointer"}}
+    return <div key={chat.obj.Cid}>
+        <ListItem button selected={client.chatList.getCurrentChat() === chat.obj} style={{cursor: "pointer"}}
                   onClick={onItemClick}>
             <ListItemIcon>
-                <Avatar src={chat.getTargetObj()?.Avatar ?? ""}/>
+                <Avatar src={chat.obj.getTargetObj()?.Avatar ?? ""}/>
             </ListItemIcon>
-            <ListItemText primary={!chat.Title ? "-" : chat.Title} secondary={hint}/>
+            <ListItemText primary={!chat.obj.Title ? "-" : chat.obj.Title} secondary={hint}/>
         </ListItem>
     </div>
 }

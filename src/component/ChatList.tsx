@@ -16,11 +16,11 @@ export function ChatList() {
         client.chatList.setChatListUpdateListener((chats => {
             console.log("ChatList", "chat list update", chats)
             setChatList(() => [...chats])
-            if (chat == null) {
+            if (chat !== client.chatList.getCurrentChat()) {
                 setChat(client.chatList.getCurrentChat())
             }
         }))
-    })
+    }, [chat])
 
     const list = chatList.flatMap(value =>
         (<ChatItem key={value.Cid + value.UcId} chat={value} onSelect={setChat}/>)

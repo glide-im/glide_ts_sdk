@@ -67,7 +67,7 @@ export function ChatRoom(props: { chat: Chat | null }) {
                     {
                         messages.flatMap(value =>
                             (<ListItem key={`${value.Mid}`}>
-                                <ChatMessageComp msg={value}/>
+                                <ChatMessageComp msg={value} isGroup={isGroupChat}/>
                             </ListItem>)
                         )
                     }

@@ -1,13 +1,20 @@
 import {SnackbarProvider, useSnackbar, VariantType} from "notistack";
-import {client} from "../im/client";
+import {client, MessageLevel} from "../im/client";
+
+const vt = new Map<MessageLevel, VariantType>([
+    [MessageLevel.LevelDefault, 'default'],
+    [MessageLevel.LevelInfo, 'info'],
+    [MessageLevel.LevelError, 'error'],
+    [MessageLevel.LevelSuccess, 'success'],
+    [MessageLevel.LevelWarning, 'warning']
+])
 
 function Notistask() {
     const {enqueueSnackbar} = useSnackbar();
 
-    client.messageListener = (m) => {
-        const data = m.Data
-        let t: VariantType = 'success'
-        enqueueSnackbar(`${m.Action} => ${data}`, {variant: t})
+    client.messageListener = (level, msg) => {
+        let t: VariantType = vt.get(level)
+        enqueueSnackbar(msg, {variant: t})
     }
 
     return <></>

@@ -8,11 +8,13 @@ import {ContactsList} from "./component/ContactsList";
 import {Ws} from "./im/ws";
 import {SnackBar} from "./component/SnackBar";
 import MessageStack from "./component/MessageSnackbar";
+import {client} from "./im/client";
 
 function App() {
 
     useEffect(() => {
         Ws.connect()
+        client.Init()
     }, [])
 
     return (
