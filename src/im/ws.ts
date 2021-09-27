@@ -67,7 +67,7 @@ class MyWs {
         }
     }
 
-    public request1<T>(action: number, data?: any): Promise<Result<T>> {
+    public request1<T>(action: string, data?: any): Promise<Result<T>> {
         const resolved = (resolve: (r: Result<T>) => void) => {
             this.sendMessage<T>(action, data, (success, result, msg) => {
                 resolve({msg: msg, result: result, success: success})
@@ -76,7 +76,7 @@ class MyWs {
         return new Promise<Result<T>>(resolved)
     }
 
-    public request<T>(action: number, data?: any): Promise<T> {
+    public request<T>(action: string, data?: any): Promise<T> {
         const executor = (resolve: (r: T) => void, reject: (reason: string) => void) => {
             this.sendMessage<T>(action, data, (success, result, msg) => {
                 if (success) {
@@ -89,7 +89,7 @@ class MyWs {
         return new Promise<T>(executor).catch(reason => client.catchPromiseReject(reason).then())
     }
 
-    public sendMessage<T>(action: number, data: any, cb?: Callback<T>) {
+    public sendMessage<T>(action: string, data: any, cb?: Callback<T>) {
         if (this.websocket?.OPEN !== 1) {
             return
         }
@@ -135,7 +135,7 @@ class MyWs {
         if (this.messageCallbacks.has(msg.Seq)) {
             let cb = this.messageCallbacks.get(msg.Seq)
 
-            if (msg.Action === ActionFailed || msg.Action === 0) {
+            if (msg.Action === ActionFailed || msg.Action === "") {
                 // @ts-ignore
                 cb(false, null, data.data)
             } else {

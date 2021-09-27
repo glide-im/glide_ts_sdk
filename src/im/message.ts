@@ -1,79 +1,43 @@
 import {Group} from "./group";
 
-const MaskActionApi: number = 1 << 20
 
-export const ActionUserLogin = MaskActionApi | 1
-export const ActionUserRegister = MaskActionApi | 2
-export const ActionUserGetInfo = MaskActionApi | 3
-export const ActionUserEditInfo = MaskActionApi | 4
-export const ActionUserLogout = MaskActionApi | 5
-export const ActionUserChatList = MaskActionApi | 6
-export const ActionUserInfo = MaskActionApi | 7
-export const ActionUserAuth = MaskActionApi | 8
-export const ActionUserRelation = MaskActionApi | 10
-export const ActionUserNewChat = MaskActionApi | 11
-export const ActionUserChatHistory = MaskActionApi | 12
-export const ActionUserChatInfo = MaskActionApi | 13
-export const ActionUserAddFriend = MaskActionApi | 14
+export const ActionUserLogin = "api.user.login"
+export const ActionUserRegister = "api.user.register"
+export const ActionUserGetInfo = "api.user.info"
+export const ActionUserEditInfo = ""
+export const ActionUserLogout = ""
+export const ActionUserChatList = "api.chat.list"
+export const ActionUserInfo = ""
+export const ActionUserAuth = ""
+export const ActionUserRelation = "api.user.relation"
+export const ActionUserNewChat = "api.chat.new"
+export const ActionUserChatHistory = "api.chat.history"
+export const ActionUserChatInfo = "api.chat.info"
+export const ActionUserAddFriend = "api.contacts.add"
 
-export const ActionOnlineUser = MaskActionApi | 20
+export const ActionOnlineUser = "api.user.online"
 
-export const MaskActionGroupApi = MaskActionApi | (1 << 21)
+export const ActionGroupCreate = "api.group.create"
+export const ActionGroupGetMember = "api.group.member"
+export const ActionGroupJoin = "api.group.join"
+export const ActionGroupExit = "api.group.exit"
+export const ActionGroupRemoveMember = "api.group.member.add"
+export const ActionGroupInfo = "api.group.info"
+export const ActionGroupUpdate = "api.group.update"
+export const ActionGroupAddMember = "api.group.member.add"
 
-export const ActionGroupCreate = MaskActionGroupApi | 1
-export const ActionGroupGetMember = MaskActionGroupApi | 2
-export const ActionGroupJoin = MaskActionGroupApi | 3
-export const ActionGroupExit = MaskActionGroupApi | 4
-export const ActionGroupRemoveMember = MaskActionGroupApi | 5
-export const ActionGroupInfo = MaskActionGroupApi | 6
-export const ActionGroupUpdate = MaskActionGroupApi | 7
-export const ActionGroupAddMember = MaskActionGroupApi | 8
+export const ActionGroupMessage = "api.message.group"
+export const ActionChatMessage = "api.message.chat"
 
-export const MaskActionMessage = 1 << 25
-export const ActionGroupMessage = MaskActionMessage | 1
-export const ActionChatMessage = MaskActionMessage | 2
-
-export const MasActionOther = 1 << 30
-export const ActionFailed = MasActionOther | 1
-export const ActionSuccess = MasActionOther | 2
-export const ActionUserUnauthorized = MasActionOther | 3
-export const ActionNotify = MasActionOther | 4
-export const ActionHeartbeat = MasActionOther | 6
-export const ActionEcho = MasActionOther | 100
-
-export const ActionNameMap = new Map([
-    [ActionUserLogin, "ActionUserLogin"],
-    [ActionUserRegister, "ActionUserRegister"],
-    [ActionUserGetInfo, "ActionUserGetInfo"],
-    [ActionUserEditInfo, "ActionUserEditInfo"],
-    [ActionUserLogout, "ActionUserLogout"],
-    [ActionUserChatList, "ActionUserChatList"],
-    [ActionUserInfo, "ActionUserInfo"],
-    [ActionUserAuth, "ActionUserAuth"],
-    [ActionUserRelation, "ActionUserRelation"],
-    [ActionUserNewChat, "ActionUserNewChat"],
-    [ActionUserChatHistory, "ActionUserChatHistory"],
-    [ActionUserChatInfo, "ActionUserChatInfo"],
-    [ActionUserAddFriend, "ActionUserAddFriend"],
-    [ActionGroupRemoveMember, "ActionGroupRemoveMember"],
-    [ActionGroupAddMember, "ActionGroupAddMember"],
-    [ActionGroupJoin, "ActionGroupJoin"],
-    [ActionGroupGetMember, "ActionGroupGetMember"],
-    [ActionGroupExit, "ActionGroupExit"],
-    [ActionGroupCreate, "ActionGroupCreate"],
-    [ActionGroupUpdate, "ActionGroupUpdate"],
-    [ActionOnlineUser, "ActionOnlineUser"],
-    [MaskActionMessage, "MaskActionMessage"],
-    [ActionGroupMessage, "ActionGroupMessage"],
-    [ActionChatMessage, "ActionChatMessage"],
-    [ActionHeartbeat, "ActionHeartbeat"],
-    [ActionSuccess, "ActionSuccess"],
-    [ActionNotify, "ActionNotify"]
-])
+export const ActionFailed = "api.failed"
+export const ActionUserUnauthorized = "api.user.unauthorized"
+export const ActionNotify = "notify"
+export const ActionHeartbeat = "heartbeat"
+export const ActionEcho = "api.app.echo"
 
 export interface Message {
     Seq: number
-    Action: number
+    Action: string
     Data: string
 }
 
