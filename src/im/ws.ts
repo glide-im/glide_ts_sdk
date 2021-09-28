@@ -1,5 +1,6 @@
-import {ActionFailed, Message} from "./message";
+import {ActionFailed, ActionHeartbeat, Message} from "./message";
 import {client} from "./client";
+
 
 export type Listener = (msg: Message) => void
 
@@ -28,6 +29,7 @@ class MyWs {
     private messageCallbacks: Map<number, Callback<any>>
     private seq: number
 
+    private heartbeat: any | null
     private waits: Map<number, () => void> = new Map<number, () => void>()
 
     constructor() {
@@ -45,6 +47,7 @@ class MyWs {
         setTimeout(() => {
             if (!this.websocket?.OPEN) {
                 // this.listener.forEach((value => value("TIMEOUT")))
+                console.log("connect timeout")
             }
         }, 1000 * 3);
 
@@ -65,6 +68,11 @@ class MyWs {
         this.websocket.onmessage = ev => {
             this.onMessage(ev)
         }
+
+        clearInterval(this.heartbeat)
+        this.heartbeat = setInterval(() => {
+            this.sendMessage(ActionHeartbeat, {})
+        }, 9000)
     }
 
     public request1<T>(action: string, data?: any): Promise<Result<T>> {
@@ -135,7 +143,7 @@ class MyWs {
         if (this.messageCallbacks.has(msg.Seq)) {
             let cb = this.messageCallbacks.get(msg.Seq)
 
-            if (msg.Action === ActionFailed || msg.Action === "") {
+            if (msg.Action === ActionFailed) {
                 // @ts-ignore
                 cb(false, null, data.data)
             } else {

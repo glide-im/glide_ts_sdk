@@ -1,4 +1,4 @@
-import {ActionUserAddFriend, ActionUserRelation, ContactsResponse, IContacts, UserInfo} from "./message";
+import {ActionUserAddFriend, ActionContactsGet, ContactsResponse, IContacts, UserInfo} from "./message";
 import {Group} from "./group";
 import {Ws} from "./ws";
 import {client, MessageLevel} from "./client";
@@ -15,7 +15,7 @@ export class ContactsList {
         this.groups.clear()
         this.friends.clear()
 
-        return Ws.request<ContactsResponse>(ActionUserRelation)
+        return Ws.request<ContactsResponse>(ActionContactsGet)
             .then(value => this.updateContactsList(value).then())
             .finally(() => {
                 if (this.onContactsChange) {

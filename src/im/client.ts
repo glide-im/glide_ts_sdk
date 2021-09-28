@@ -7,7 +7,7 @@ import {
     ActionGroupInfo,
     ActionGroupJoin,
     ActionGroupMessage,
-    ActionGroupUpdate,
+    ActionGroupUpdate, ActionNotify,
     ActionOnlineUser,
     ActionUserAddFriend,
     ActionUserGetInfo,
@@ -224,6 +224,9 @@ class Client {
             this.showMessage(MessageLevel.LevelError, msg.Data)
             return
         } else if (msg.Action === ActionUserUnauthorized) {
+            this.showMessage(MessageLevel.LevelError, msg.Data)
+            return
+        } else if (msg.Action === ActionNotify){
             this.showMessage(MessageLevel.LevelError, msg.Data)
             return
         }

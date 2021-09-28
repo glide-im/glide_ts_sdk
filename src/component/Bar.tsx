@@ -68,7 +68,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     const userInfo = client.getCachedUserInfo(uid)
     if (userInfo) {
         avatar = userInfo.Avatar
-        nickname = userInfo.Nickname + "_" + userInfo.Uid
+        nickname = userInfo.Nickname + "\r\n" + userInfo.Uid
     }
 
     return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
