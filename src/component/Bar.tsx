@@ -95,7 +95,17 @@ export const Bar = withRouter((props: RouteComponentProps) => {
                 <ViewList/>
             </IconButton>
             <IconButton onClick={() => {
-                setShowDialog(true)
+                if (uid >= 0) {
+                    client.logout()
+                        .then(v => {
+                            setUid(-1)
+                        })
+                        .catch(v => {
+                            client.showToast(v)
+                        })
+                } else {
+                    setShowDialog(true)
+                }
             }}>
                 <AddBox/>
             </IconButton>

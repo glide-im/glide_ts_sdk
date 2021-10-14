@@ -63,7 +63,6 @@ export class ChatList {
     }
 
     public onChatMessage(message: ChatMessage) {
-        console.log('ChatList/onChatMessage')
         if (!this.contain(message.Cid)) {
             const chat = new Chat()
             chat.Cid = message.Cid
@@ -74,6 +73,7 @@ export class ChatList {
                 })
             return
         }
+        console.log('ChatList/onChatMessage')
         const chat = this.get(message.Cid)
         this.get(message.Cid).onNewMessage(message)
         if (this.currentChat != null && this.currentChat.Cid === message.Cid) {

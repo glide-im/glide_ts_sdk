@@ -23,7 +23,7 @@ export interface Result<T> {
 class MyWs {
 
     private websocket?: WebSocket | null
-    private listener: Listener[]
+    private listener: Listener | null
     private stateChangeListener: StateListener[]
 
     private messageCallbacks: Map<number, Callback<any>>
@@ -35,7 +35,7 @@ class MyWs {
     constructor() {
         this.websocket = null
         this.seq = 1
-        this.listener = []
+        this.listener = null
         this.stateChangeListener = []
         this.messageCallbacks = new Map<number, any>()
     }
@@ -132,13 +132,13 @@ class MyWs {
         this.stateChangeListener.push(l)
     }
 
-    public addMessageListener(fn: Listener) {
-        this.listener.push(fn)
+    public setMessageListener(fn: Listener | null) {
+        this.listener = fn
     }
 
     private onMessage(data: MessageEvent) {
         let msg: Message = JSON.parse(data.data)
-        this.listener.forEach((value => value(msg)))
+        this.listener?.call(this, msg)
 
         if (this.messageCallbacks.has(msg.Seq)) {
             let cb = this.messageCallbacks.get(msg.Seq)

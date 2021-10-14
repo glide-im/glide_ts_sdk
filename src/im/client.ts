@@ -7,11 +7,13 @@ import {
     ActionGroupInfo,
     ActionGroupJoin,
     ActionGroupMessage,
-    ActionGroupUpdate, ActionNotify,
+    ActionGroupUpdate,
+    ActionNotify,
     ActionOnlineUser,
     ActionUserAddFriend,
     ActionUserGetInfo,
     ActionUserLogin,
+    ActionUserLogout,
     ActionUserNewChat,
     ActionUserRegister,
     ActionUserUnauthorized,
@@ -43,6 +45,8 @@ class Client {
     public uid = -1
     public messageListener: MessageListener
 
+    private token = "";
+    private device = 2;
     private userInfo = new Map<number, UserInfo>()
     private groupInfo = new Map<number, Group>()
     private userStateListener: (loggedIn: boolean) => void | null = null
@@ -65,9 +69,17 @@ class Client {
             })
     }
 
+    public logout(): Promise<any> {
+        return Ws.request<any>(ActionUserLogout, {Account: this.uid, Device: this.device, Token: this.token})
+            .then(value => {
+
+                return value
+            })
+    }
+
     public login(account: string, password: string): Promise<AuthResponse> {
         console.log("client/login", account, password)
-        let m = {Account: account, Password: password}
+        let m = {Account: account, Password: password, Device: this.device}
         this.chatList.clear()
         this.contactsList.clear()
         this.uid = -1
@@ -78,7 +90,8 @@ class Client {
             })
             .then(value => {
                 this.uid = value.Uid
-                Ws.addMessageListener(msg => {
+                this.token = value.Token
+                Ws.setMessageListener(msg => {
                     this.onMessage(msg)
                 })
                 return this.contactsList.updateAll().then(() => value)
@@ -226,7 +239,7 @@ class Client {
         } else if (msg.Action === ActionUserUnauthorized) {
             this.showMessage(MessageLevel.LevelError, msg.Data)
             return
-        } else if (msg.Action === ActionNotify){
+        } else if (msg.Action === ActionNotify) {
             this.showMessage(MessageLevel.LevelError, msg.Data)
             return
         }
