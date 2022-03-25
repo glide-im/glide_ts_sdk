@@ -13,7 +13,7 @@ export const ActionContactsGet = "api.contacts.get"
 export const ActionUserNewChat = "api.chat.new"
 export const ActionUserChatHistory = "api.chat.history"
 export const ActionUserChatInfo = "api.chat.info"
-export const ActionUserAddFriend = "api.contacts.add"
+export const ActionUserAddFriend = "api.contacts.put"
 
 export const ActionOnlineUser = "api.user.online"
 

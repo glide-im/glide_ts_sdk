@@ -22,28 +22,28 @@ export interface Result<T> {
 
 class MyWs {
 
-    private websocket?: WebSocket | null
-    private listener: Listener | null
-    private stateChangeListener: StateListener[]
+    private websocket?: WebSocket | null;
+    private listener: Listener | null;
+    private stateChangeListener: StateListener[];
 
-    private messageCallbacks: Map<number, Callback<any>>
-    private seq: number
+    private messageCallbacks: Map<number, Callback<any>>;
+    private seq: number;
 
-    private heartbeat: any | null
-    private waits: Map<number, () => void> = new Map<number, () => void>()
+    private heartbeat: any | null;
+    private waits: Map<number, () => void> = new Map<number, () => void>();
 
     constructor() {
-        this.websocket = null
-        this.seq = 1
-        this.listener = null
-        this.stateChangeListener = []
+        this.websocket = null;
+        this.seq = 1;
+        this.listener = null;
+        this.stateChangeListener = [];
         this.messageCallbacks = new Map<number, any>()
     }
 
     public connect() {
 
-        this.stateChangeListener.forEach((value => value(State.CONNECTING, "")))
-        this.websocket = new WebSocket("ws://127.0.0.1:8080/ws")
+        this.stateChangeListener.forEach((value => value(State.CONNECTING, "")));
+        this.websocket = new WebSocket("ws://127.0.0.1:8080/ws");
         setTimeout(() => {
             if (!this.websocket?.OPEN) {
                 // this.listener.forEach((value => value("TIMEOUT")))
@@ -54,22 +54,22 @@ class MyWs {
         this.websocket.onerror = (e) => {
             console.log("WS ERROR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e)
             // this.listener.forEach((value => value("ERROR: " + e)))
-        }
+        };
         this.websocket.onclose = (e) => {
-            console.log("WS CLOSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e)
+            console.log("WS CLOSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e);
             // this.listener.forEach((value => value("CLOSED")))
             this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
-        }
+        };
         this.websocket.onopen = (e) => {
-            console.log("WS OPEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            console.log("WS OPEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             // this.listener.forEach((value => value("CONNECTED")))
             this.stateChangeListener.forEach((value => value(State.CONNECTED, "connected")))
-        }
+        };
         this.websocket.onmessage = ev => {
             this.onMessage(ev)
-        }
+        };
 
-        clearInterval(this.heartbeat)
+        clearInterval(this.heartbeat);
         this.heartbeat = setInterval(() => {
             this.sendMessage(ActionHeartbeat, {})
         }, 9000)
@@ -80,7 +80,7 @@ class MyWs {
             this.sendMessage<T>(action, data, (success, result, msg) => {
                 resolve({msg: msg, result: result, success: success})
             })
-        }
+        };
         return new Promise<Result<T>>(resolved)
     }
 
@@ -93,7 +93,7 @@ class MyWs {
                     reject(msg)
                 }
             })
-        }
+        };
         return new Promise<T>(executor).catch(reason => client.catchPromiseReject(reason).then())
     }
 
@@ -101,7 +101,7 @@ class MyWs {
         if (this.websocket?.OPEN !== 1) {
             return
         }
-        let dat = ""
+        let dat = "";
         try {
             dat = JSON.stringify(data)
         } catch (e) {
@@ -114,7 +114,7 @@ class MyWs {
             Action: action,
             Data: dat,
             Seq: this.seq++
-        }
+        };
         if (cb) {
             this.messageCallbacks.set(m.Seq, cb)
         }
@@ -137,11 +137,11 @@ class MyWs {
     }
 
     private onMessage(data: MessageEvent) {
-        let msg: Message = JSON.parse(data.data)
-        this.listener?.call(this, msg)
+        let msg: Message = JSON.parse(data.data);
+        this.listener?.call(this, msg);
 
         if (this.messageCallbacks.has(msg.Seq)) {
-            let cb = this.messageCallbacks.get(msg.Seq)
+            let cb = this.messageCallbacks.get(msg.Seq);
 
             if (msg.Action === ActionFailed) {
                 // @ts-ignore
@@ -160,4 +160,4 @@ class MyWs {
     }
 }
 
-export const Ws = new MyWs()
+export const Ws = new MyWs();

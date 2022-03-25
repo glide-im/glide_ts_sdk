@@ -40,17 +40,17 @@ export type MessageListener = (level: MessageLevel, msg: string) => void
 
 class Client {
 
-    public chatList = new ChatList()
-    public contactsList = new ContactsList()
-    public uid = -1
-    public messageListener: MessageListener
+    public chatList = new ChatList();
+    public contactsList = new ContactsList();
+    public uid = -1;
+    public messageListener: MessageListener;
 
     private token = "";
     private device = 2;
-    private userInfo = new Map<number, UserInfo>()
-    private groupInfo = new Map<number, Group>()
-    private userStateListener: (loggedIn: boolean) => void | null = null
-    private toaster: (msg: string) => void | null = null
+    private userInfo = new Map<number, UserInfo>();
+    private groupInfo = new Map<number, Group>();
+    private userStateListener: (loggedIn: boolean) => void | null = null;
+    private toaster: (msg: string) => void | null = null;
 
     public Init() {
         Ws.addStateListener((a, b) => {
@@ -61,7 +61,7 @@ class Client {
     public register(account: string, password: string): Promise<any> {
         return Ws.request<any>(ActionUserRegister, {Account: account, Password: password})
             .then(value => {
-                this.showMessage(MessageLevel.LevelSuccess, "Register Success")
+                this.showMessage(MessageLevel.LevelSuccess, "Register Success");
                 return value
             })
             .catch(reason => {
@@ -78,22 +78,22 @@ class Client {
     }
 
     public login(account: string, password: string): Promise<AuthResponse> {
-        console.log("client/login", account, password)
-        let m = {Account: account, Password: password, Device: this.device}
-        this.chatList.clear()
-        this.contactsList.clear()
-        this.uid = -1
+        console.log("client/login", account, password);
+        let m = {Account: account, Password: password, Device: this.device};
+        this.chatList.clear();
+        this.contactsList.clear();
+        this.uid = -1;
         return Ws.request<AuthResponse>(ActionUserLogin, m)
             .catch(reason => {
-                this.showMessage(MessageLevel.LevelError, `Login Failed, Reason: ${reason}`)
+                this.showMessage(MessageLevel.LevelError, `Login Failed, Reason: ${reason}`);
                 return Promise.reject("Login Failed")
             })
             .then(value => {
-                this.uid = value.Uid
-                this.token = value.Token
+                this.uid = value.Uid;
+                this.token = value.Token;
                 Ws.setMessageListener(msg => {
                     this.onMessage(msg)
-                })
+                });
                 return this.contactsList.updateAll().then(() => value)
             })
             .then(value => {
@@ -103,7 +103,7 @@ class Client {
                 if (this.userStateListener) {
                     this.userStateListener(true)
                 }
-                this.showMessage(MessageLevel.LevelSuccess, `Login Success: Uid=${this.uid}`)
+                this.showMessage(MessageLevel.LevelSuccess, `Login Success: Uid=${this.uid}`);
                 return this.chatList.update().then(() => value)
             })
             .finally(() => {
@@ -112,24 +112,24 @@ class Client {
     }
 
     public joinGroup(gid: number): Promise<Chat> {
-        console.log("client/joinGroup", gid)
+        console.log("client/joinGroup", gid);
         return Ws.request<Chat>(ActionGroupJoin, {Gid: gid})
             .then(value => {
-                this.chatList.add(Chat.create(value))
+                this.chatList.add(Chat.create(value));
                 return value
             })
             .finally(() => {
-                console.log("client/joinGroup", "completed!")
-                this.contactsList.updateAll().then()
+                console.log("client/joinGroup", "completed!");
+                this.contactsList.updateAll().then();
                 this.chatList.update().then()
             })
     }
 
     public createGroup(name: string): Promise<AddGroup> {
-        console.log("client/createGroup", name)
+        console.log("client/createGroup", name);
         return Ws.request<AddGroup>(ActionGroupCreate, {Name: name})
             .then(value => {
-                console.log("client/createGroup", value)
+                console.log("client/createGroup", value);
                 return Promise.resolve(value)
             })
             .finally(() => {
@@ -142,25 +142,25 @@ class Client {
             .then(u => {
                 u.forEach((v) => {
                     this.userInfo.set(v.Uid, v)
-                })
+                });
                 callback(u)
             })
 
     }
 
     public getGroupInfo(gid: number[], update = false, memberInfo = true): Promise<Group[]> {
-        console.log("client/getGroupInfo", gid, update)
+        console.log("client/getGroupInfo", gid, update);
         const ids = update ? gid : gid.filter(value => {
             return !this.groupInfo.has(value)
-        })
+        });
         if (ids.length === 0) {
             return Promise.resolve([])
         }
         return Ws.request<Group[]>(ActionGroupInfo, {Gid: gid})
             .then(value => {
-                let allMembers: number[] = []
+                let allMembers: number[] = [];
                 for (let group of value) {
-                    this.groupInfo.set(group.Gid, group)
+                    this.groupInfo.set(group.Gid, group);
                     allMembers = allMembers.concat(group.Members.map(m => m.Uid))
                 }
                 return this.getUserInfo(allMembers).then(() => {
@@ -175,10 +175,10 @@ class Client {
     }
 
     public getUserInfo(uid: number[], update: boolean = false): Promise<UserInfo[]> {
-        console.log("client/getUserInfo", uid, update)
+        console.log("client/getUserInfo", uid, update);
         const ids = update ? uid : uid.filter(value => {
             return !this.userInfo.has(value)
-        })
+        });
         if (ids.length === 0) {
             return Promise.resolve([])
         }
@@ -234,34 +234,34 @@ class Client {
 
     private onMessage(msg: Message) {
         if (msg.Action === ActionFailed) {
-            this.showMessage(MessageLevel.LevelError, msg.Data)
+            this.showMessage(MessageLevel.LevelError, msg.Data);
             return
         } else if (msg.Action === ActionUserUnauthorized) {
-            this.showMessage(MessageLevel.LevelError, msg.Data)
+            this.showMessage(MessageLevel.LevelError, msg.Data);
             return
         } else if (msg.Action === ActionNotify) {
-            this.showMessage(MessageLevel.LevelError, msg.Data)
+            this.showMessage(MessageLevel.LevelError, msg.Data);
             return
         }
 
-        const data = JSON.parse(msg.Data)
+        const data = JSON.parse(msg.Data);
         switch (msg.Action) {
             case ActionChatMessage:
-                this.chatList.onChatMessage(ChatMessage.create(data))
-                break
+                this.chatList.onChatMessage(ChatMessage.create(data));
+                break;
             case ActionGroupMessage:
-                break
+                break;
             case ActionUserAddFriend:
-                this.contactsList.onNewContacts(data)
-                break
+                this.contactsList.onNewContacts(data);
+                break;
             case ActionGroupAddMember:
-                const r: GroupAddMember = data
-                const group = this.contactsList.getGroup(r.Gid)
-                group?.onNewMember(r.Members)
-                break
+                const r: GroupAddMember = data;
+                const group = this.contactsList.getGroup(r.Gid);
+                group.onNewMember(r.Members);
+                break;
             case ActionUserNewChat:
-                this.chatList.add(Chat.create(data))
-                break
+                this.chatList.add(Chat.create(data));
+                break;
             case ActionGroupUpdate:
                 break
         }
@@ -272,14 +272,14 @@ class Client {
             if (this.userStateListener) {
                 this.userStateListener(false)
             }
-            this.uid = -1
-            this.chatList.clear()
+            this.uid = -1;
+            this.chatList.clear();
             this.contactsList.clear()
         }
     }
 }
 
-export const client = new Client()
+export const client = new Client();
 
 
 
