@@ -1,9 +1,9 @@
-import {Box, Divider, IconButton, List, ListItem, Typography} from "@material-ui/core";
+import {Box, Divider, IconButton, List, ListItem, Typography} from "@mui/material";
 import {useEffect, useRef, useState} from "react";
 import {ChatMessageComp} from "./Message";
 import {Chat, ChatMessage} from "../im/chat";
-import {Send} from "@material-ui/icons";
 import {GroupMemberList} from "./GroupMemberList";
+import { Send } from "@mui/icons-material";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {

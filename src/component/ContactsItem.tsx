@@ -1,4 +1,4 @@
-import {Avatar, ListItem, ListItemIcon, ListItemText} from "@material-ui/core";
+import {Avatar, ListItem, ListItemIcon, ListItemText} from "@mui/material";
 import {client} from "../im/client";
 import React from "react";
 import {IContacts} from "../im/message";

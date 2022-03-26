@@ -9,8 +9,8 @@ import {
     DialogContentText,
     DialogTitle,
     TextField
-} from "@material-ui/core";
-import {Add} from "@material-ui/icons";
+} from "@mui/material";
+import {Add} from "@mui/icons-material";
 import {useEffect, useState} from "react";
 import {client} from "../im/client";
 

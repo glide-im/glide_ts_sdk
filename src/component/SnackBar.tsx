@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {client} from "../im/client";
-import {Snackbar} from "@material-ui/core";
+import {Snackbar} from "@mui/material";
 
 export function SnackBar() {
 

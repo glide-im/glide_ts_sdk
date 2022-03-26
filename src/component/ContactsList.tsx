@@ -1,7 +1,7 @@
-import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@material-ui/core";
+import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {client} from "../im/client";
-import {GroupAdd, Refresh} from "@material-ui/icons";
+import {GroupAdd, Refresh} from "@mui/icons-material";
 import {AddContactDialog} from "./AddContactDialog";
 import {ContactsItem} from "./ContactsItem";
 import {CreateGroupDialog} from "./CreateGroupDialog";

@@ -6,7 +6,7 @@ import {
     DialogContentText,
     DialogTitle,
     TextField
-} from "@material-ui/core";
+} from "@mui/material";
 import {useRef, useState} from "react";
 
 

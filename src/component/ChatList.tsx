@@ -1,9 +1,9 @@
-import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@material-ui/core";
+import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {client} from "../im/client";
-import {Refresh} from "@material-ui/icons";
 import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
+import {Refresh} from "@mui/icons-material";
 
 export function ChatList() {
 

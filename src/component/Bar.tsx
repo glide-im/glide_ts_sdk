@@ -1,10 +1,12 @@
-import {Avatar, Box, Grid, IconButton, Typography} from "@material-ui/core";
+import {Avatar, Box, Grid, IconButton, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
-import {AccountBox, AddBox, ChatBubble, ViewList} from "@material-ui/icons";
 import {State, Ws} from "../im/ws";
 import {MyDialog} from "./SignDialog";
 import {client} from "../im/client";
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Chat, PersonSearch} from "@mui/icons-material";
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 
 export const Bar = withRouter((props: RouteComponentProps) => {
@@ -39,9 +41,9 @@ export const Bar = withRouter((props: RouteComponentProps) => {
             s = "action"
             break;
         case State.CLOSED:
-            if (props.location.pathname !== "/disconnected") {
-                props.history.push("/disconnected")
-            }
+            // if (props.location.pathname !== "/disconnected") {
+            //     props.history.push("/disconnected")
+            // }
             if (uid !== -1) {
                 setUid(-1)
             }
@@ -71,44 +73,60 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         nickname = userInfo.Nickname + "\r\n" + userInfo.Uid
     }
 
+    const onMessageClick = () => {
+        props.history.push("/message")
+    }
+
+    const onFriendsClick = () => {
+        props.history.push("/friends")
+    }
+
+    const onSearchClick = () => {
+
+    }
+
+    const onExitClick = () => {
+
+    }
+
     return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
         <MyDialog open={showDialog} onClose={() => {
             setShowDialog(!showDialog)
         }} onSubmit={auth}/>
 
         <Grid justifyContent={"center"} container color={"primary.dark"}>
-            <Box m={2}>
-                <Avatar src={avatar}/>
-                <Typography align={"center"} variant={"subtitle2"}>{nickname}</Typography>
-            </Box>
-            <IconButton onClick={changeState}>
-                <AccountBox color={s}/>
-            </IconButton>
-            <IconButton onClick={() => {
-                props.history.push("/message")
-            }}>
-                <ChatBubble/>
-            </IconButton>
-            <IconButton onClick={() => {
-                props.history.push("/friends")
-            }}>
-                <ViewList/>
-            </IconButton>
-            <IconButton onClick={() => {
-                if (uid >= 0) {
-                    client.logout()
-                        .then(v => {
-                            setUid(-1)
-                        })
-                        .catch(v => {
-                            client.showToast(v)
-                        })
-                } else {
-                    setShowDialog(true)
-                }
-            }}>
-                <AddBox/>
-            </IconButton>
+
+            <Grid container justifyContent={"center"} marginTop={"16px"}>
+                <Box m={2}>
+                    <Avatar src={avatar}/>
+                    <Typography align={"center"} variant={"subtitle2"}>{nickname}</Typography>
+                </Box>
+            </Grid>
+
+            <Grid container justifyContent={"center"}>
+                <IconButton onClick={onMessageClick}>
+                    <Chat/>
+                </IconButton>
+            </Grid>
+
+            <Grid container justifyContent={"center"}>
+                <IconButton onClick={onFriendsClick}>
+                    <PeopleAltIcon/>
+                </IconButton>
+            </Grid>
+
+            <Grid container justifyContent={"center"}>
+                <IconButton onClick={onSearchClick}>
+                    <PersonSearch/>
+                </IconButton>
+            </Grid>
+
+            <Grid container justifyContent={"center"}>
+                <IconButton onClick={onExitClick}>
+                    <ExitToAppIcon/>
+                </IconButton>
+            </Grid>
+
         </Grid>
     </Box>
 })

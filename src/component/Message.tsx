@@ -1,4 +1,4 @@
-import {Avatar, Box, Grid, Typography} from "@material-ui/core";
+import {Avatar, Box, Grid, Typography} from "@mui/material";
 import {client} from "../im/client";
 import {IChatMessage} from "../im/message";
 
