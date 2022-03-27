@@ -4,7 +4,7 @@ import {State, Ws} from "../im/ws";
 import {MyDialog} from "./SignDialog";
 import {client} from "../im/client";
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Link, RouteComponentProps, withRouter} from "react-router-dom";
 import {Chat, PersonSearch} from "@mui/icons-material";
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
@@ -33,7 +33,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     switch (state) {
         case State.CONNECTED:
             if (client.uid <= 0 && props.location.pathname !== "/") {
-                props.history.push("/")
+                // props.history.push("/")
             }
             s = "disabled"
             break;
@@ -73,21 +73,24 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         nickname = userInfo.Nickname + "\r\n" + userInfo.Uid
     }
 
-    const onMessageClick = () => {
-        props.history.push("/message")
-    }
-
-    const onFriendsClick = () => {
-        props.history.push("/friends")
-    }
-
-    const onSearchClick = () => {
-
-    }
-
     const onExitClick = () => {
-
+        props.history.push("/auth")
     }
+
+    const menu = [
+        {
+            icon: <Chat/>,
+            path: "./message",
+        },
+        {
+            icon: <PeopleAltIcon/>,
+            path: "./friends",
+        },
+        {
+            icon: <PersonSearch/>,
+            path: "./search",
+        },
+    ]
 
     return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
         <MyDialog open={showDialog} onClose={() => {
@@ -103,30 +106,21 @@ export const Bar = withRouter((props: RouteComponentProps) => {
                 </Box>
             </Grid>
 
-            <Grid container justifyContent={"center"}>
-                <IconButton onClick={onMessageClick}>
-                    <Chat/>
-                </IconButton>
-            </Grid>
-
-            <Grid container justifyContent={"center"}>
-                <IconButton onClick={onFriendsClick}>
-                    <PeopleAltIcon/>
-                </IconButton>
-            </Grid>
-
-            <Grid container justifyContent={"center"}>
-                <IconButton onClick={onSearchClick}>
-                    <PersonSearch/>
-                </IconButton>
-            </Grid>
+            {menu.map(item => {
+                return <Grid container justifyContent={"center"} key={item.path}>
+                    <Link to={item.path}>
+                        <IconButton>
+                            {item.icon}
+                        </IconButton>
+                    </Link>
+                </Grid>
+            })}
 
             <Grid container justifyContent={"center"}>
                 <IconButton onClick={onExitClick}>
                     <ExitToAppIcon/>
                 </IconButton>
             </Grid>
-
         </Grid>
     </Box>
 })

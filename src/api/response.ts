@@ -1,5 +1,5 @@
 export interface Response<T> {
-    msg: string
-    code: number
-    data: T
+    Msg: string
+    Code: number
+    Data: T
 }

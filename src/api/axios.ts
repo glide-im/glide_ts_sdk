@@ -1,4 +1,5 @@
 import axios, {AxiosInstance, AxiosPromise, AxiosResponse} from "axios";
+import {Response} from "./response";
 
 const instance: AxiosInstance = axios.create({
     timeout: 1000,
@@ -22,8 +23,13 @@ function resolve<T>(axiosPromise: AxiosPromise): Promise<T> {
                 reject(`HTTP${r.status} ${r.statusText}`);
                 return
             }
-            const data = r.data as T;
-            resolve(data)
+            const data = r.data as Response<T>;
+
+            if (data.Code !== 100) {
+                reject(`${data.Code}, ${data.Msg}`);
+                return
+            }
+            resolve(data.Data)
         }).catch((reason) => {
             reject(reason)
         })

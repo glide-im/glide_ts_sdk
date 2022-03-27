@@ -11,12 +11,11 @@ export function login<T>(account: string, password: string): Promise<AuthRespons
 }
 
 export function register<T>(account: string, password: string): Promise<AuthResponse> {
-    const param: SignInRequest = {
+    const param = {
         Account: account,
-        Device: 2,
         Password: password
     };
-    return post("auth/signup", param)
+    return post("auth/register", param)
 }
 
 export function getContacts(): Promise<ContactsResponse[]> {

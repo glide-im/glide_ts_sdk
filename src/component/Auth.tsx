@@ -1,9 +1,9 @@
 import React, {useRef} from "react";
 import {Avatar, Box, Button, Grid, Link, Paper, TextField, Typography} from "@mui/material";
 import {login} from "../api/api";
-import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Link as RtLink, RouteComponentProps, withRouter} from "react-router-dom";
 
-export const Auth = withRouter((props: RouteComponentProps) =>  {
+export const Auth = withRouter((props: RouteComponentProps) => {
 
     const accountInput = useRef<HTMLInputElement>(null)
     const passwordInput = useRef<HTMLInputElement>(null)
@@ -12,21 +12,19 @@ export const Auth = withRouter((props: RouteComponentProps) =>  {
         const account = accountInput.current.value;
         const password = passwordInput.current.value;
 
-        props.history.push("/");
-
-        return;
         login(account, password)
             .then((resp) => {
                 console.log(resp);
+                props.history.push("/im");
             })
             .catch((reason) => {
-                console.log(reason);
+                alert(reason);
             });
     }
 
     return (
         <Grid container justifyContent={"center"}>
-            <Paper variant={"outlined"} >
+            <Paper variant={"outlined"}>
                 <Box width={"400px"} padding={"16px"}>
                     <Grid container justifyContent={"center"} marginTop={"20px"}>
                         <Avatar sizes={"100px"}/>
@@ -35,17 +33,26 @@ export const Auth = withRouter((props: RouteComponentProps) =>  {
                         Sign In
                     </Typography>
 
-                    <TextField inputRef={accountInput}  required autoFocus margin="dense" id="account" label="Account" type="text"
+                    <TextField inputRef={accountInput} required autoFocus margin="dense" id="account" label="Account"
+                               type="text"
                                fullWidth/>
-                    <TextField inputRef={passwordInput} required margin="dense" id="password" label="Password" type="text"
+                    <TextField inputRef={passwordInput} required margin="dense" id="password" label="Password"
+                               type="password"
                                fullWidth/>
                 </Box>
                 <Grid container padding={"0px 16px 32px 16px"}>
                     <Grid item xs={12}>
                         <Grid container justifyContent={"right"}>
-                            <Link href="/reset">Forgot Password?</Link>
-                            <span>&nbsp;&nbsp;or&nbsp;&nbsp;</span>
-                            <Link href="/signup">Register</Link>
+
+                            <RtLink to={"./reset"}>
+                                <Link>Forgot Password?</Link>
+                            </RtLink>
+                            <Typography variant={"body1"}>
+                                &nbsp;&nbsp;or&nbsp;&nbsp;
+                            </Typography>
+                            <RtLink to={"./signup"}>
+                                <Link>Register</Link>
+                            </RtLink>
                         </Grid>
                     </Grid>
                     <Grid item xs={12} marginTop={"60px"}>

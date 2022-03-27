@@ -20,10 +20,10 @@ export function Register() {
 
         register(account, password)
             .then((resp) => {
-                console.log(resp);
+
             })
             .catch((reason) => {
-                console.log(reason);
+                alert(reason)
             });
     }
 
