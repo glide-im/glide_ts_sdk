@@ -1,4 +1,4 @@
-import {Chat} from "../im/chat";
+import {OldSession} from "../im/oldSession";
 import {
     Avatar,
     Box,
@@ -15,7 +15,7 @@ import {useEffect, useState} from "react";
 import {client} from "../im/client";
 
 
-export function GroupMemberList(props: { chat: Chat }) {
+export function GroupMemberList(props: { chat: OldSession }) {
 
     const [showAddMember, setShowAddMember] = useState(false)
     const [, update] = useState(1)

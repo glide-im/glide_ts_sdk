@@ -12,13 +12,14 @@ import {
 import {Ws} from "./ws";
 import {client} from "./client";
 import {Group} from "./group";
+import {SessionBean} from "../api/model";
 
-export class Chat implements IChat {
+export class OldSession {
 
     public Avatar: string;
     public UcId: number = -1
     public ChatType: number;
-    public Cid: number;
+    public ID: string;
     public LatestMsg: string;
     public NewMessageAt: any;
     public ReadAt: any;
@@ -28,11 +29,12 @@ export class Chat implements IChat {
 
     private messages: ChatMessage[] = []
     private messageListener: (m: ChatMessage) => void = (() => null)
-    private updateListener: (c: Chat) => void = (() => null)
+    private updateListener: (c: OldSession) => void = (() => null)
 
-    public static create(c: IChat): Chat {
-        const ret = new Chat()
-        ret.update(c)
+    public static create(c: SessionBean): OldSession {
+        const ret = new OldSession()
+        ret.ID = c.Uid1 + "-" + c.Uid2
+        ret.ChatType = 1
         return ret
     }
 
@@ -43,12 +45,12 @@ export class Chat implements IChat {
         return this.messages[this.messages.length - 1]
     }
 
-    public init(): Promise<Chat> {
-        console.log("Chat/init", this.Cid)
+    public init(): Promise<OldSession> {
+        console.log("Chat/init", this.ID)
         if (this.UcId <= 0) {
-            return Ws.request<Chat>(ActionUserChatInfo, {Cid: this.Cid})
+            return Ws.request<OldSession>(ActionUserChatInfo, {Cid: this.ID})
                 .then(value => {
-                    this.update(value)
+                    // this.update(value)
                     return this.init()
                 })
                 .catch(reason => client.catchPromiseReject(reason))
@@ -78,7 +80,7 @@ export class Chat implements IChat {
     public sendMessage(msg: string, onSuc?: (msg) => void) {
         console.log("Chat/sendMessage", msg)
         let m2: SendChatMessage = {
-            Cid: this.Cid,
+            Cid: this.ID,
             UcId: this.UcId,
             Message: msg,
             MessageType: 1,
@@ -103,7 +105,7 @@ export class Chat implements IChat {
         }
     }
 
-    public setUpdateListener(o: (m: Chat) => void) {
+    public setUpdateListener(o: (m: OldSession) => void) {
         this.updateListener = o
     }
 
@@ -112,12 +114,12 @@ export class Chat implements IChat {
     }
 
     public loadHistory(): Promise<ChatMessage[]> {
-        console.log("Chat/loadHistory", this.Cid)
+        console.log("Chat/loadHistory", this.ID)
         let time = Date.now();
         if (this.messages.length > 0) {
             time = this.messages[this.messages.length - 1].SendAt
         }
-        const req: ChatHistoryRequest = {Cid: this.Cid, Time: time, Type: this.ChatType}
+        const req: ChatHistoryRequest = {Cid: this.ID, Time: time, Type: this.ChatType}
 
         return Ws.request<ChatMessage[]>(ActionUserChatHistory, req)
             .then(value => {
@@ -140,7 +142,7 @@ export class Chat implements IChat {
     }
 
     public update(chat: IChat) {
-        this.Cid = chat.Cid
+        this.ID = chat.Cid
         this.UcId = chat.UcId
         this.Target = chat.Target
         this.ChatType = chat.ChatType
@@ -174,7 +176,7 @@ export class ChatMessage implements IChatMessage {
 
     public Mid: number = -1
     public Message: string = ""
-    public Cid: number
+    public Cid: string = ""
     public MessageType: number
     public SendAt: number
     public Sender: number

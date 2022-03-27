@@ -7,6 +7,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import {Link, RouteComponentProps, withRouter} from "react-router-dom";
 import {Chat, PersonSearch} from "@mui/icons-material";
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import {setCookie} from "../utils/Cookies";
 
 
 export const Bar = withRouter((props: RouteComponentProps) => {
@@ -74,13 +75,14 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     }
 
     const onExitClick = () => {
-        props.history.push("/auth")
+        setCookie("token", "", -1)
+        props.history.replace("/auth")
     }
 
     const menu = [
         {
             icon: <Chat/>,
-            path: "./message",
+            path: "./session",
         },
         {
             icon: <PeopleAltIcon/>,

@@ -1,7 +1,7 @@
 import {Box, Divider, IconButton, List, ListItem, Typography} from "@mui/material";
 import {useEffect, useRef, useState} from "react";
 import {ChatMessageComp} from "./Message";
-import {Chat, ChatMessage} from "../im/chat";
+import {OldSession, ChatMessage} from "../im/oldSession";
 import {GroupMemberList} from "./GroupMemberList";
 import { Send } from "@mui/icons-material";
 
@@ -16,7 +16,7 @@ function scrollBottom(ele: HTMLUListElement | null) {
     }
 }
 
-export function ChatRoom(props: { chat: Chat | null }) {
+export function ChatRoom(props: { chat: OldSession | null }) {
 
     console.log("ChatRoom", "enter chat room, ", props.chat?.UcId)
     const messageListEle = useRef<HTMLUListElement>()

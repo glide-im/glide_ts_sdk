@@ -98,7 +98,7 @@ export interface IGroupMember {
 }
 
 export interface IChat {
-    Cid: number
+    Cid: string
     UcId: number
     Target: number
     ChatType: number
@@ -118,7 +118,7 @@ export interface NewChat {
 
 export interface IChatMessage {
     Mid: number
-    Cid: number
+    Cid: string
     Sender: number
     MessageType: number
     Message: string
@@ -126,7 +126,7 @@ export interface IChatMessage {
 }
 
 export interface SendChatMessage {
-    Cid: number
+    Cid: string
     UcId: number
     TargetId: number
     MessageType: number
@@ -148,7 +148,7 @@ export interface GroupMessage {
 }
 
 export interface ChatHistoryRequest {
-    Cid: number
+    Cid: string
     Time: number
     Type: number
 }

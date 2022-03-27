@@ -1,19 +1,19 @@
 import {Ws} from "./ws";
 import {ActionUserChatList, ActionUserNewChat, IChat} from "./message";
-import {Chat, ChatMessage} from "./chat";
+import {OldSession, ChatMessage} from "./oldSession";
 import {client, MessageLevel} from "./client";
 
 export class ChatList {
 
-    private chatIdMap: Map<number, Chat> = new Map<number, Chat>()
-    private targetIdMap: Map<string, Chat> = new Map<string, Chat>()
-    private chats: Chat[] = []
+    private chatIdMap: Map<string, OldSession> = new Map<string, OldSession>()
+    private targetIdMap: Map<string, OldSession> = new Map<string, OldSession>()
+    private chats: OldSession[] = []
     private chatMessageListener: (message: ChatMessage) => void = (() => null)
-    private currentChat: Chat | null = null
-    private chatUpdateListener: (chat: Chat) => void = (() => null)
-    private chatListUpdateListener: (chats: Chat[]) => void = (() => null)
+    private currentChat: OldSession | null = null
+    private chatUpdateListener: (chat: OldSession) => void = (() => null)
+    private chatListUpdateListener: (chats: OldSession[]) => void = (() => null)
 
-    public update(): Promise<Chat[]> {
+    public update(): Promise<OldSession[]> {
         console.log("ChatList/update")
         return Ws.request<IChat[]>(ActionUserChatList)
             .then(value => {
@@ -21,7 +21,7 @@ export class ChatList {
                     if (this.contain(chat.Cid)) {
                         this.get(chat.Cid).update(chat)
                     } else {
-                        this.add(Chat.create(chat))
+                        // this.add(Session.create(chat))
                     }
                 }
                 return Promise.resolve(this.chats)
@@ -44,28 +44,29 @@ export class ChatList {
             })
     }
 
-    public startChat(id: number, type: number): Promise<Chat> {
+    public startChat(id: number, type: number): Promise<OldSession> {
         console.log("ChatList/startChat", `id=${id}`, `type=${type}`)
         return Ws.request<IChat>(ActionUserNewChat, {Id: id, Type: type})
             .then(value => {
-                const chat = Chat.create(value)
-                this.add(chat)
-                this.setCurrentChat(chat)
-                return chat
+                // const chat = Session.create(value)
+                // this.add(chat)
+                // this.setCurrentChat(chat)
+                // return chat
+                return null
             })
             .finally(() => {
                 console.log('ChatList/startChat', 'completed')
             })
     }
 
-    public setChatListUpdateListener(l: (chats: Chat[]) => void) {
+    public setChatListUpdateListener(l: (chats: OldSession[]) => void) {
         this.chatListUpdateListener = l
     }
 
     public onChatMessage(message: ChatMessage) {
         if (!this.contain(message.Cid)) {
-            const chat = new Chat()
-            chat.Cid = message.Cid
+            const chat = new OldSession()
+            chat.ID = message.Cid
             chat.init()
                 .then(() => {
                     this.add(chat)
@@ -76,7 +77,7 @@ export class ChatList {
         console.log('ChatList/onChatMessage')
         const chat = this.get(message.Cid)
         this.get(message.Cid).onNewMessage(message)
-        if (this.currentChat != null && this.currentChat.Cid === message.Cid) {
+        if (this.currentChat != null && this.currentChat.ID === message.Cid) {
             this.chatMessageListener(message)
             this.onChatUpdate(chat)
         }
@@ -86,16 +87,16 @@ export class ChatList {
         }
     }
 
-    public getCurrentChat(): Chat | null {
+    public getCurrentChat(): OldSession | null {
         return this.currentChat
     }
 
-    public getAllChat(): Chat[] {
+    public getAllChat(): OldSession[] {
         return this.chats
     }
 
-    public setCurrentChat(chat: Chat | null,
-                          updateListener?: (chat: Chat) => void,
+    public setCurrentChat(chat: OldSession | null,
+                          updateListener?: (chat: OldSession) => void,
                           chatMsgListener?: (message: ChatMessage) => void) {
         this.currentChat = chat
         if (updateListener) {
@@ -106,7 +107,7 @@ export class ChatList {
         }
     }
 
-    public getChatByTarget(id: number, type: number = 1): Chat | null {
+    public getChatByTarget(id: number, type: number = 1): OldSession | null {
         const key = `${type}-${id}`
         if (this.targetIdMap.has(key)) {
             return this.targetIdMap.get(key)
@@ -114,9 +115,9 @@ export class ChatList {
         return null
     }
 
-    public newChat(chatId: number): Chat {
-        const chat = new Chat()
-        chat.Cid = chatId
+    public newChat(chatId: string): OldSession {
+        const chat = new OldSession()
+        chat.ID = chatId
         chat.init().then((c) => {
             this.onChatUpdate(c)
         })
@@ -124,21 +125,21 @@ export class ChatList {
         return chat
     }
 
-    public addAll(chat: Chat[]) {
+    public addAll(chat: OldSession[]) {
         chat.forEach(value => this.add(value))
     }
 
-    public add(chat: Chat) {
-        if (this.chatIdMap.has(chat.Cid)) {
+    public add(chat: OldSession) {
+        if (this.chatIdMap.has(chat.ID)) {
             return
         }
         this.chats.push(chat)
         this.targetIdMap.set(`${chat.ChatType}-${chat.Target}`, chat)
-        this.chatIdMap.set(chat.Cid, chat)
+        this.chatIdMap.set(chat.ID, chat)
         this.onChatUpdate(chat)
     }
 
-    public get(chatId: number): Chat | null {
+    public get(chatId: string): OldSession | null {
         if (this.contain(chatId)) {
             return this.chatIdMap.get(chatId)
         } else {
@@ -149,19 +150,19 @@ export class ChatList {
     public clear() {
         this.currentChat = null
         this.chats = []
-        this.chatIdMap = new Map<number, Chat>()
-        this.targetIdMap = new Map<string, Chat>()
+        this.chatIdMap = new Map<string, OldSession>()
+        this.targetIdMap = new Map<string, OldSession>()
         this.chatListUpdateListener([])
     }
 
-    public contain(chatId: number): boolean {
+    public contain(chatId: string): boolean {
         return this.chatIdMap.has(chatId)
     }
 
-    private onChatUpdate(chat: Chat) {
-        if ((this.currentChat?.Cid ?? -1) === chat.Cid) {
+    private onChatUpdate(chat: OldSession) {
+        if ((this.currentChat?.ID ?? -1) === chat.ID) {
             this.chatUpdateListener(chat)
         }
-        this.get(chat.Cid)?.update(chat)
+        // this.get(chat.ID)?.update(chat)
     }
 }

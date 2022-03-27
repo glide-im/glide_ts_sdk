@@ -6,6 +6,10 @@ const instance: AxiosInstance = axios.create({
     baseURL: "http://localhost:8081/api/"
 });
 
+export const setHeader = (key: string, value: string) => {
+    instance.defaults.headers.common[key] = value;
+};
+
 export function get<T>(path: string): Promise<T> {
     const req = get_(path);
     return resolve(req)

@@ -2,11 +2,20 @@ import React, {useRef} from "react";
 import {Avatar, Box, Button, Grid, Link, Paper, TextField, Typography} from "@mui/material";
 import {login} from "../api/api";
 import {Link as RtLink, RouteComponentProps, withRouter} from "react-router-dom";
+import {getCookie, setCookie} from "../utils/Cookies";
+import {setHeader} from "../api/axios";
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 
     const accountInput = useRef<HTMLInputElement>(null)
     const passwordInput = useRef<HTMLInputElement>(null)
+
+    const token = getCookie("token");
+
+    if (token) {
+        props.history.push("/im");
+        return <></>
+    }
 
     const submit = () => {
         const account = accountInput.current.value;
@@ -14,7 +23,8 @@ export const Auth = withRouter((props: RouteComponentProps) => {
 
         login(account, password)
             .then((resp) => {
-                console.log(resp);
+                setCookie("token", resp.Token, 1);
+                setHeader("Authorization", "Bearer " + resp.Token);
                 props.history.push("/im");
             })
             .catch((reason) => {

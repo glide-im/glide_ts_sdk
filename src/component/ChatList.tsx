@@ -1,36 +1,57 @@
-import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Divider,
+    Grid,
+    IconButton,
+    List,
+    ListItem,
+    ListItemText,
+    Typography
+} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {client} from "../im/client";
 import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
 import {Refresh} from "@mui/icons-material";
+import {getRecentSession} from "../api/api";
+import {Session} from "../im/session";
+import {SessionBean} from "../api/model";
+
+const emptySession: Session[] = [];
 
 export function ChatList() {
 
-    const [chatList, setChatList] = useState(client.chatList.getAllChat())
-    const [chat, setChat] = useState(client.chatList.getCurrentChat())
+    const [chatList, setChatList] = useState(emptySession)
+    const [chat, setChat] = useState(null)
 
-    console.log("ChatList", "enter chat list cid=", chat?.Cid, "len=", chatList.length)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        client.chatList.setChatListUpdateListener((chats => {
-            console.log("ChatList", "chat list update", chats)
-            setChatList(() => [...chats])
-            if (chat !== client.chatList.getCurrentChat()) {
-                setChat(client.chatList.getCurrentChat())
-            }
-        }))
-    }, [chat])
+        Promise
+            .resolve(() => setLoading(true))
+            .then(() => getRecentSession())
+            .then(res => res.map(item => Session.fromSessionBean(item)))
+            .then(res => {
+                const sessionBean: SessionBean = {
+                    CreateAt: 0, LastMid: 1, Uid1: 2, Uid2: 3, Unread: 0, UpdateAt: 0
+                }
+                res.push(Session.fromSessionBean(sessionBean))
+                setChatList(res)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    }, [])
 
-    const list = chatList.flatMap(value =>
-        (<ChatItem key={value.Cid + value.UcId} chat={value} onSelect={setChat}/>)
+    const list = chatList.flatMap((value: Session) =>
+        (<ChatItem key={value.ID} chat={value} onSelect={setChat}/>)
     )
 
     const refresh = () => {
-        client.chatList.update().then()
+
     }
     return <Box style={{height: "700px"}}>
-
         <Grid alignItems={"center"} container style={{}}>
             <Grid item md={4} style={{height: "700px"}}>
                 <Box m={2}>
@@ -40,12 +61,18 @@ export function ChatList() {
                     </IconButton>
                 </Box>
                 <Divider/>
-                <List style={{overflow: "auto"}}>
-                    {list}
-                    <ListItem>
-                        <ListItemText primary={" "}/>
-                    </ListItem>
-                </List>
+                {loading ?
+                    <Box sx={{display: "flex", justifyContent: "center", paddingTop: "50%"}}>
+                        <CircularProgress/>
+                    </Box>
+                    :
+                    <List style={{overflow: "auto"}}>
+                        {loading ? <CircularProgress/> : list}
+                        <ListItem>
+                            <ListItemText primary={" "}/>
+                        </ListItem>
+                    </List>
+                }
             </Grid>
             <Grid item md={8} style={{height: "700px"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>

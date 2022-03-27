@@ -23,7 +23,7 @@ import {
     Message,
     UserInfo
 } from "./message";
-import {Chat, ChatMessage} from "./chat";
+import {OldSession, ChatMessage} from "./oldSession";
 import {ChatList} from "./ChatList";
 import {Group} from "./group";
 import {ContactsList} from "./contactsList";
@@ -111,11 +111,11 @@ class Client {
             })
     }
 
-    public joinGroup(gid: number): Promise<Chat> {
+    public joinGroup(gid: number): Promise<OldSession> {
         console.log("client/joinGroup", gid);
-        return Ws.request<Chat>(ActionGroupJoin, {Gid: gid})
+        return Ws.request<OldSession>(ActionGroupJoin, {Gid: gid})
             .then(value => {
-                this.chatList.add(Chat.create(value));
+                // this.chatList.add(Session.create(value));
                 return value
             })
             .finally(() => {
@@ -260,7 +260,7 @@ class Client {
                 group.onNewMember(r.Members);
                 break;
             case ActionUserNewChat:
-                this.chatList.add(Chat.create(data));
+                this.chatList.add(OldSession.create(data));
                 break;
             case ActionGroupUpdate:
                 break
