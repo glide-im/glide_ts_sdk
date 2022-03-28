@@ -1,9 +1,8 @@
 import {Box, Divider, IconButton, List, ListItem, Typography} from "@mui/material";
 import {useEffect, useRef, useState} from "react";
-import {ChatMessageComp} from "./Message";
-import {OldSession, ChatMessage} from "../im/oldSession";
-import {GroupMemberList} from "./GroupMemberList";
-import { Send } from "@mui/icons-material";
+import {ChatMessage} from "../im/chat_message";
+import {Send} from "@mui/icons-material";
+import {Session} from "../im/session";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -16,41 +15,42 @@ function scrollBottom(ele: HTMLUListElement | null) {
     }
 }
 
-export function ChatRoom(props: { chat: OldSession | null }) {
+export function ChatRoom(props: { chat: Session | null }) {
 
-    console.log("ChatRoom", "enter chat room, ", props.chat?.UcId)
+    const session = props.chat
     const messageListEle = useRef<HTMLUListElement>()
-    const [messages, setMessages] = useState(props.chat?.getMessage() ?? [])
-    const isGroupChat = ((props?.chat?.ChatType ?? 1) === 2)
+    const [messages, setMessages] = useState(session?.GetAllMessage() ?? [])
+    const isGroupChat = (session?.Type === 2)
 
     useEffect(() => {
-        if (props.chat === null) {
+        if (session == null) {
             return
         }
         const onMessage = (m: ChatMessage) => {
-            console.log("ChatRoom", "onNewMessage", m)
-            setMessages(() => [...props.chat.getMessage()])
+            setMessages(session.GetAllMessage())
             scrollBottom(messageListEle.current)
         }
-        props.chat.setMessageListener(onMessage)
-        setMessages(() => [...props.chat.getMessage()])
-        return () => props.chat.setMessageListener(null)
-    }, [props.chat, isGroupChat])
+        session.setMessageListener(onMessage)
+        return () => session.setMessageListener(null)
+    }, [session])
+
+    if (session == null) {
+        return <Box>Nothing</Box>
+    }
 
     const sendMessage = (msg: string) => {
         if (props.chat && msg.trim().length !== 0) {
-            props.chat.sendMessage(msg)
+            session.sendTextMessage(msg)
+                .then((res) => {
+                    setMessages([...messages, res])
+                    scrollBottom(messageListEle.current)
+                })
+                .catch((err) => {
+                    console.error("send message", err)
+                })
         }
     }
-    const memberList = isGroupChat ? <><GroupMemberList chat={props.chat}/> <Divider/></> : <></>
-
-    if (props.chat == null) {
-        return (
-            <Box>
-
-            </Box>
-        )
-    }
+    // const memberList = isGroupChat ? <><GroupMemberList chat={props.chat}/> <Divider/></> : <></>
 
     return (
         <Box>
@@ -60,14 +60,14 @@ export function ChatRoom(props: { chat: OldSession | null }) {
                 </Typography>
             </Box>
             <Divider/>
-            {memberList}
+            {/*{memberList}*/}
             <Box height={(isGroupChat ? "470px" : "510px")}>
                 <List ref={messageListEle} disablePadding style={{overflow: "auto", maxHeight: "100%"}}
                       className={"BeautyScrollBar"}>
                     {
                         messages.flatMap(value =>
                             (<ListItem key={`${value.Mid}`}>
-                                <ChatMessageComp msg={value} isGroup={isGroupChat}/>
+                                {/*<ChatMessageComp msg={value} isGroup={isGroupChat}/>*/}
                             </ListItem>)
                         )
                     }

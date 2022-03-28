@@ -26,7 +26,7 @@ export function ChatItem(props: { chat: Session, onSelect: (c: Session) => void 
     const onItemClick = () => {
         // const c = client.chatList.get(chat.ID)
         // client.chatList.setCurrentChat(c, onChatUpdate, onChatMessage)
-        // props.onSelect(client.chatList.getCurrentChat())
+        props.onSelect(chat.obj)
     }
 
     return <div key={chat.obj.ID}>

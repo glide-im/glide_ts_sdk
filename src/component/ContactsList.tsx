@@ -32,17 +32,17 @@ export function ContactsList() {
     }
 
     const createGroup = (name: string) => {
-        client.createGroup(name)
-            .then()
+        // client.createGroup(name)
+        //     .then()
         setShowCreateGroup(false)
     }
 
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
-            client.contactsList.addFriend(id)
-                .then()
+            // client.contactsList.addFriend(id)
+            //     .then()
         } else {
-            client.joinGroup(id).then()
+            // client.joinGroup(id).then()
         }
         setShowAddContact(false)
     }

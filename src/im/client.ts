@@ -52,29 +52,9 @@ class Client {
     private userStateListener: (loggedIn: boolean) => void | null = null;
     private toaster: (msg: string) => void | null = null;
 
-    public Init() {
-        Ws.addStateListener((a, b) => {
-            this.onWsStateChanged(a, b)
-        })
-    }
 
-    public register(account: string, password: string): Promise<any> {
-        return Ws.request<any>(ActionUserRegister, {Account: account, Password: password})
-            .then(value => {
-                this.showMessage(MessageLevel.LevelSuccess, "Register Success");
-                return value
-            })
-            .catch(reason => {
-                this.showMessage(MessageLevel.LevelError, `Register Failed: ${reason}`)
-            })
-    }
+    public auth(){
 
-    public logout(): Promise<any> {
-        return Ws.request<any>(ActionUserLogout, {Account: this.uid, Device: this.device, Token: this.token})
-            .then(value => {
-
-                return value
-            })
     }
 
     public login(account: string, password: string): Promise<AuthResponse> {
@@ -104,7 +84,7 @@ class Client {
                     this.userStateListener(true)
                 }
                 this.showMessage(MessageLevel.LevelSuccess, `Login Success: Uid=${this.uid}`);
-                return this.chatList.update().then(() => value)
+                return value
             })
             .finally(() => {
                 console.log("client/login", "complete")
@@ -120,8 +100,8 @@ class Client {
             })
             .finally(() => {
                 console.log("client/joinGroup", "completed!");
-                this.contactsList.updateAll().then();
-                this.chatList.update().then()
+                // this.contactsList.updateAll().then();
+                // this.chatList.update().then()
             })
     }
 

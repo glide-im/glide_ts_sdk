@@ -1,4 +1,5 @@
 import {SessionBean} from "../api/model";
+import {ChatMessage} from "./chat_message";
 
 export class Session {
 
@@ -9,13 +10,29 @@ export class Session {
     public LastMessageSender: string;
     public LastMessage: string;
     public UnreadCount: number;
+    public Type: number;
 
     constructor() {
 
     }
 
+    public sendTextMessage(msg: string): Promise<ChatMessage> {
+        return new Promise<ChatMessage>((resolve, reject) => {
+            let chatMessage = new ChatMessage()
+            resolve(chatMessage);
+        });
+    }
+
     public setUpdateListener(listener: (session: Session) => void) {
 
+    }
+
+    public setMessageListener(listener: (message: ChatMessage) => void) {
+
+    }
+
+    public GetAllMessage(): ChatMessage[] {
+        return [];
     }
 
     public GetLastMessage(): string {

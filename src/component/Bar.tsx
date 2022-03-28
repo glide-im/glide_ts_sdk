@@ -54,14 +54,9 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const auth = function (reg: boolean, p: { account: string, password: string }) {
         if (reg) {
-            client.register(p.account, p.account).then()
+
         } else {
-            client.login(p.account, p.account)
-                .then(value => {
-                    setUid(value.Uid)
-                    props.history.push("/message")
-                    setShowDialog(false)
-                })
+
         }
     }
 
