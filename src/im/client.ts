@@ -25,6 +25,7 @@ import {OldSession} from "./oldSession";
 import {ChatList} from "./ChatList";
 import {Group} from "./group";
 import {ContactsList} from "./contactsList";
+import {delCookie, getCookie, setCookie} from "../utils/Cookies";
 
 export enum MessageLevel {
     LevelDefault,
@@ -35,6 +36,44 @@ export enum MessageLevel {
 }
 
 export type MessageListener = (level: MessageLevel, msg: string) => void
+
+class Account {
+    private uid_: string;
+    private token_: string;
+
+    constructor() {
+        this.uid_ = getCookie("uid") ?? "";
+        this.token_ = getCookie("token") ?? "";
+    }
+
+    public setAuth(uid: number, token: string) {
+        this.uid_ = uid.toString();
+        this.token_ = token;
+        setCookie("uid", uid.toString(), 1);
+        setCookie("token", token, 1);
+    }
+
+    public clearAuth() {
+        this.uid_ = "";
+        this.token_ = "";
+        delCookie("uid");
+        delCookie("token");
+    }
+
+    public isAuthenticated(): boolean {
+        return this.uid_ && this.uid_ !== "" && this.token_ && this.token_ !== "";
+    }
+
+    public getUID(): string {
+        return this.uid_;
+    }
+
+    public getToken(): string {
+        return this.token_;
+    }
+}
+
+export const IMAccount = new Account();
 
 class Client {
 
@@ -72,7 +111,7 @@ class Client {
                 Ws.setMessageListener(msg => {
                     this.onMessage(msg)
                 });
-                return this.contactsList.updateAll().then(() => value)
+                return value
             })
             .then(value => {
                 return this.getUserInfo([this.uid]).then(() => value)
@@ -230,7 +269,7 @@ class Client {
             case ActionGroupMessage:
                 break;
             case ActionUserAddFriend:
-                this.contactsList.onNewContacts(data);
+                //this.contactsList.onNewContacts(data);
                 break;
             case ActionGroupAddMember:
                 const r: GroupAddMember = data;

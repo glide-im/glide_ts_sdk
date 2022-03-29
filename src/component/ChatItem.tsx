@@ -1,7 +1,6 @@
 import {Avatar, ListItem, ListItemIcon, ListItemText} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {Session} from "../im/session";
-import {ChatMessage} from "../im/oldSession";
 
 export function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
@@ -16,13 +15,6 @@ export function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c
         return () => chat.obj.setUpdateListener(() => null)
     }, [chat])
 
-    const onChatUpdate = (chat: Session) => {
-        setChat({obj: chat})
-    }
-    const onChatMessage = (msg: ChatMessage) => {
-
-    }
-
     const onItemClick = () => {
         // const c = client.chatList.get(chat.ID)
         // client.chatList.setCurrentChat(c, onChatUpdate, onChatMessage)
@@ -31,7 +23,7 @@ export function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c
 
     return <div key={chat.obj.ID}>
         <ListItem button style={{cursor: "pointer"}}
-                  onClick={onItemClick}>
+                  onClick={onItemClick} selected={props.selected}>
             <ListItemIcon>
                 <Avatar src={""}/>
             </ListItemIcon>

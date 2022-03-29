@@ -7,14 +7,15 @@ import MessageStack from "./component/MessageSnackbar";
 import {Auth} from "./component/Auth";
 import {Register} from "./component/Register";
 import {MainPanel} from "./component/MainPanel";
-import {getCookie} from "./utils/Cookies";
 import {auth} from "./api/api";
 import {setHeader} from "./api/axios";
+import {IMAccount} from "./im/client";
 
 function App() {
 
-    const token = getCookie("token");
-    const [isAuthenticated, setIsAuthenticated] = React.useState(token !== "");
+    const token = IMAccount.getToken();
+
+    const [isAuthenticated, setIsAuthenticated] = React.useState(IMAccount.isAuthenticated());
     const [isLoading, setIsLoading] = React.useState(token !== "");
 
     useEffect(() => {

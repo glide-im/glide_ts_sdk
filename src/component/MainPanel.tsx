@@ -3,21 +3,18 @@ import {Bar} from "./Bar";
 import {Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter} from "react-router-dom";
 import {ChatList} from "./ChatList";
 import {ContactsList} from "./ContactsList";
-import React, {useEffect} from "react";
-import {getCookie} from "../utils/Cookies";
+import React from "react";
+import {IMAccount} from "../im/client";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
-    useEffect(() => {
-        const token = getCookie("token");
-        if (token === "") {
-            props.history.replace("/auth");
-        }
-    }, []);
+    if (!IMAccount.isAuthenticated()) {
+        console.log("redirect to login");
+        props.history.push("/auth");
+        return <></>
+    }
 
     const match = useRouteMatch();
-
-    console.log(match);
 
     return (
         <Grid container style={{boxShadow: "grey 6px 7px 15px 0px"}}>

@@ -1,40 +1,35 @@
-import {ActionContactsGet, ActionUserAddFriend, ContactsResponse, IContacts, UserInfo} from "./message";
+import {ContactsResponse, IContacts, UserInfo} from "./message";
 import {Group} from "./group";
-import {Ws} from "./ws";
 import {client, MessageLevel} from "./client";
+import {addContacts, getContacts} from "../api/api";
+import {ContactsBean} from "../api/model";
 
 export class ContactsList {
 
     public onContactsChange: () => void | null = null;
 
-    private groups = new Map<number, Group>();
-    private friends = new Map<number, UserInfo>();
 
-    public updateAll(): Promise<any> {
-        console.log("ContactsList/updateAll");
-        this.groups.clear();
-        this.friends.clear();
+    public refresh() {
+        getContacts().then(contacts => {
 
-        return Ws.request<ContactsResponse>(ActionContactsGet)
-            .then(value => this.updateContactsList(value).then())
-            .finally(() => {
-                if (this.onContactsChange) {
-                    this.onContactsChange()
+            contacts.forEach(c => {
+                if (c.Type === 1) {
+
+                } else {
+
                 }
-                console.log("ContactsList/updateAll", "completed!")
-            })
+            });
+        });
     }
 
-    public addFriend(uid: number, remark?: string): Promise<ContactsResponse> {
+    public setContactsAddListener(listener: () => void | null) {
+        this.onContactsChange = listener;
+    }
+
+    public addFriend(uid: number, remark?: string): Promise<ContactsBean> {
         console.log("ContactsList/addFriend", uid, remark);
-        return Ws.request<ContactsResponse>(ActionUserAddFriend, {Uid: uid, Remark: remark})
-            .then(value => this.updateContactsList(value))
-            .finally(() => {
-                console.log("ContactsList/addFriend", "completed!");
-                if (this.onContactsChange) {
-                    this.onContactsChange()
-                }
-            })
+
+        return addContacts(uid)
     }
 
     public onNewContacts(contacts: ContactsResponse) {
@@ -54,33 +49,20 @@ export class ContactsList {
             })
     }
 
-    public onNewGroup(g: Group) {
-        console.log('ContactsList/onNewGroup');
-        this.groups.set(g.Gid, g)
-    }
-
     public getGroup(gid): Group | null {
-        return this.groups.get(gid) ?? null
+        return null
     }
 
     public getFriend(uid): UserInfo | null {
-        return this.friends.get(uid) ?? null
+        return null
     }
 
     public getAllGroup(): Group[] {
-        const ret: Group[] = [];
-        this.groups.forEach(value => {
-            ret.push(value)
-        });
-        return ret
+        return []
     }
 
     public getAllFriend(): UserInfo[] {
-        const ret: UserInfo[] = [];
-        this.friends.forEach(value => {
-            ret.push(value)
-        });
-        return ret
+        return []
     }
 
     public getAllContacts(): IContacts[] {
@@ -95,19 +77,13 @@ export class ContactsList {
     }
 
     public clear() {
-        this.friends.clear();
-        this.groups.clear()
+
     }
 
     private updateContactsList(contactsResponse: ContactsResponse): Promise<ContactsResponse> {
-        for (let friend of contactsResponse.Friends) {
-            this.friends.set(friend.Uid, friend)
-        }
-        const member: number[] = [];
-        for (let group of contactsResponse.Groups) {
-            member.push(...group.Members.map(m => m.Uid));
-            this.groups.set(group.Gid, Group.create(group))
-        }
-        return client.getUserInfo(member).then(() => contactsResponse)
+
+        return Promise.reject("Not Implemented")
     }
 }
+
+export const IMContactsList = new ContactsList();

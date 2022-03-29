@@ -2,12 +2,11 @@ import {Avatar, Box, Grid, IconButton, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {State, Ws} from "../im/ws";
 import {MyDialog} from "./SignDialog";
-import {client} from "../im/client";
+import {client, IMAccount} from "../im/client";
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import {Link, RouteComponentProps, withRouter} from "react-router-dom";
 import {Chat, PersonSearch} from "@mui/icons-material";
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import {setCookie} from "../utils/Cookies";
 
 
 export const Bar = withRouter((props: RouteComponentProps) => {
@@ -70,7 +69,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     }
 
     const onExitClick = () => {
-        setCookie("token", "", -1)
+        IMAccount.clearAuth()
         props.history.replace("/auth")
     }
 
@@ -97,9 +96,14 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         <Grid justifyContent={"center"} container color={"primary.dark"}>
 
             <Grid container justifyContent={"center"} marginTop={"16px"}>
+                <Box mt={2}><Avatar src={avatar}/></Box>
+            </Grid>
+
+            <Grid container justifyContent={"center"}>
                 <Box m={2}>
-                    <Avatar src={avatar}/>
-                    <Typography align={"center"} variant={"subtitle2"}>{nickname}</Typography>
+                    <Typography align={"center"} variant={"subtitle2"} color={"ghostwhite"}>
+                        {nickname} {IMAccount.getUID()}
+                    </Typography>
                 </Box>
             </Grid>
 

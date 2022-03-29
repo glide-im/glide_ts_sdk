@@ -5,6 +5,7 @@ import {GroupAdd, Refresh} from "@mui/icons-material";
 import {AddContactDialog} from "./AddContactDialog";
 import {ContactsItem} from "./ContactsItem";
 import {CreateGroupDialog} from "./CreateGroupDialog";
+import {IMContactsList} from "../im/contactsList";
 
 export function ContactsList() {
 
@@ -16,10 +17,10 @@ export function ContactsList() {
     const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     useEffect(() => {
-        client.contactsList.onContactsChange = () => {
+        IMContactsList.setContactsAddListener(() => {
             setContacts([...contactsList.getAllContacts()])
-        }
-        return () => client.contactsList.onContactsChange = null
+        })
+        return () => IMContactsList.setContactsAddListener(null)
     }, [contactsList])
 
     const list = contacts?.flatMap(value => {
@@ -28,7 +29,7 @@ export function ContactsList() {
     )
 
     const refresh = () => {
-        client.contactsList.updateAll().then()
+
     }
 
     const createGroup = (name: string) => {
@@ -39,8 +40,13 @@ export function ContactsList() {
 
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
-            // client.contactsList.addFriend(id)
-            //     .then()
+            IMContactsList.addFriend(id, "")
+                .then((r)=>{
+                    console.log(r)
+                })
+                .catch((e)=>{
+                    console.log(e)
+                })
         } else {
             // client.joinGroup(id).then()
         }

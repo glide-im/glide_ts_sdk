@@ -2,15 +2,15 @@ import React, {useRef} from "react";
 import {Avatar, Box, Button, Grid, Link, Paper, TextField, Typography} from "@mui/material";
 import {login} from "../api/api";
 import {Link as RtLink, RouteComponentProps, withRouter} from "react-router-dom";
-import {getCookie, setCookie} from "../utils/Cookies";
 import {setHeader} from "../api/axios";
+import {IMAccount} from "../im/client";
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 
     const accountInput = useRef<HTMLInputElement>(null)
     const passwordInput = useRef<HTMLInputElement>(null)
 
-    const token = getCookie("token");
+    const token = IMAccount.getToken()
 
     if (token) {
         props.history.push("/im");
@@ -23,7 +23,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
 
         login(account, password)
             .then((resp) => {
-                setCookie("token", resp.Token, 1);
+                IMAccount.setAuth(resp.Uid, resp.Token);
                 setHeader("Authorization", "Bearer " + resp.Token);
                 props.history.push("/im");
             })

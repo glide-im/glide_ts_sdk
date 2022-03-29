@@ -29,6 +29,14 @@ export function getContacts(): Promise<ContactsBean[]> {
     return post("contacts/list")
 }
 
+export function addContacts(uid: number): Promise<ContactsBean> {
+    const param = {
+        Uid: uid,
+        Remark: "",
+    };
+    return post("contacts/add", param)
+}
+
 export function getProfile(): Promise<UserInfoBean> {
     return post("user/profile")
 }

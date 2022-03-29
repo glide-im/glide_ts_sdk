@@ -110,3 +110,5 @@ export class ChatList {
         // this.get(chat.ID)?.update(chat)
     }
 }
+
+export const IMChatList = new ChatList()

@@ -14,12 +14,12 @@ import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
-import {client} from "../im/client";
+import {IMChatList} from "../im/ChatList";
 
 const emptySession: Session[] = [];
 
 function getSessions(): Promise<Session[]> {
-    return client.chatList.getSessions()
+    return IMChatList.getSessions()
         .then(sessions => {
             console.log("getSessions", sessions);
             return sessions;
@@ -73,7 +73,8 @@ export function ChatList() {
                 <Divider/>
                 {
                     loading ? <Progress/> :
-                        msg ? <Progress showProgress={false} msg={msg}/> : <SessionList sessions={sessions} onSelect={setSelectedSid}/>
+                        msg ? <Progress showProgress={false} msg={msg}/> :
+                            <SessionList sessions={sessions} onSelect={setSelectedSid}/>
                 }
             </Grid>
             <Grid item md={8} style={{height: "700px"}}>
