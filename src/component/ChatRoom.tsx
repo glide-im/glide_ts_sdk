@@ -1,8 +1,8 @@
 import {Box, Divider, IconButton, List, ListItem, Typography} from "@mui/material";
 import {useEffect, useRef, useState} from "react";
-import {ChatMessage} from "../im/chat_message";
 import {Send} from "@mui/icons-material";
-import {Session} from "../im/session";
+import {ChatMessage} from "../im/chat_message";
+import {client} from "../im/client";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -15,9 +15,9 @@ function scrollBottom(ele: HTMLUListElement | null) {
     }
 }
 
-export function ChatRoom(props: { chat: Session | null }) {
+export function ChatRoom(props: { sid: string }) {
 
-    const session = props.chat
+    const session = client.chatList.get(props.sid)
     const messageListEle = useRef<HTMLUListElement>()
     const [messages, setMessages] = useState(session?.GetAllMessage() ?? [])
     const isGroupChat = (session?.Type === 2)
@@ -26,11 +26,10 @@ export function ChatRoom(props: { chat: Session | null }) {
         if (session == null) {
             return
         }
-        const onMessage = (m: ChatMessage) => {
-            setMessages(session.GetAllMessage())
+        session.setMessageListener((m: ChatMessage) => {
+            setMessages([...session.GetAllMessage(), m])
             scrollBottom(messageListEle.current)
-        }
-        session.setMessageListener(onMessage)
+        })
         return () => session.setMessageListener(null)
     }, [session])
 
@@ -39,7 +38,7 @@ export function ChatRoom(props: { chat: Session | null }) {
     }
 
     const sendMessage = (msg: string) => {
-        if (props.chat && msg.trim().length !== 0) {
+        if (session && msg.trim().length !== 0) {
             session.sendTextMessage(msg)
                 .then((res) => {
                     setMessages([...messages, res])
@@ -56,7 +55,7 @@ export function ChatRoom(props: { chat: Session | null }) {
         <Box>
             <Box height={"70px"} paddingLeft={"16px"}>
                 <Typography variant={"h6"} style={{lineHeight: "70px"}}>
-                    {props.chat.Title}
+                    {session.Title}
                 </Typography>
             </Box>
             <Divider/>

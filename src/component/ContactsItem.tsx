@@ -13,16 +13,7 @@ interface Props extends RouteComponentProps {
 export const ContactsItem = withRouter((props: Props) => {
 
     const handleClick = () => {
-        const chat = client.chatList.getChatByTarget(props.contact.Id, props.contact.Type)
-        if (!chat) {
-            client.chatList.startChat(props.contact.Id, props.contact.Type)
-                .then(() => {
-                    props.history.push("/message")
-                })
-        } else {
-            client.chatList.setCurrentChat(chat)
-            props.history.push("/message")
-        }
+
     }
 
     return <>

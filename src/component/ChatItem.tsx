@@ -3,7 +3,7 @@ import React, {useEffect, useState} from "react";
 import {Session} from "../im/session";
 import {ChatMessage} from "../im/oldSession";
 
-export function ChatItem(props: { chat: Session, onSelect: (c: Session) => void }) {
+export function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
     console.log("ChatItem", "load chat item UcId=", props.chat.ID);
     const [chat, setChat] = useState({obj: props.chat})

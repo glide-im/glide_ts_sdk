@@ -12,8 +12,15 @@ export class Session {
     public UnreadCount: number;
     public Type: number;
 
-    constructor() {
-
+    public static fromSessionBean(sb: SessionBean): Session {
+        let session = new Session();
+        session.ID = sb.Uid1 + "_" + sb.Uid2;
+        session.Title = session.ID;
+        session.UpdateAt = "-";
+        session.LastMessageSender = "-";
+        session.LastMessage = '-';
+        session.UnreadCount = 0;
+        return session;
     }
 
     public sendTextMessage(msg: string): Promise<ChatMessage> {
@@ -35,18 +42,15 @@ export class Session {
         return [];
     }
 
-    public GetLastMessage(): string {
-        return this.LastMessage;
+    public sendMessage(message: ChatMessage) {
+
     }
 
-    public static fromSessionBean(sb: SessionBean): Session {
-        let session = new Session();
-        session.ID = sb.Uid1 + "_" + sb.Uid2;
-        session.Title = session.ID;
-        session.UpdateAt = "-";
-        session.LastMessageSender = "-";
-        session.LastMessage = '-';
-        session.UnreadCount = 0;
-        return session;
+    public getMessages(): ChatMessage[] {
+        return [];
+    }
+
+    public GetLastMessage(): string {
+        return this.LastMessage;
     }
 }

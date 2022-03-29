@@ -14,62 +14,51 @@ import {ChatRoom} from "./ChatRoom";
 import {ChatItem} from "./ChatItem";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
-import {SessionBean} from "../api/model";
-import {getRecentSession} from "../api/api";
-import {useParams, useRouteMatch} from "react-router-dom";
+import {client} from "../im/client";
 
 const emptySession: Session[] = [];
 
 function getSessions(): Promise<Session[]> {
-    return getRecentSession()
-        .then(s => {
-            const res = s.map(item => Session.fromSessionBean(item))
-            const sessionBean: SessionBean = {
-                CreateAt: 0, LastMid: 1, Uid1: 2, Uid2: 3, Unread: 0, UpdateAt: 0
-            }
-            res.push(Session.fromSessionBean(sessionBean))
-            return res
-        }).catch(err => {
-            return err.toString()
+    return client.chatList.getSessions()
+        .then(sessions => {
+            console.log("getSessions", sessions);
+            return sessions;
         })
 }
 
 export function ChatList() {
 
-    const [chatList, setChatList] = useState(emptySession)
-    const [chat, setChat] = useState(null)
+    const [sessions, setSessions] = useState(emptySession)
+    const [selectedSid, setSelectedSid] = useState(null)
 
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const [msg, setMsg] = useState(null)
 
     // const { sid }  = useParams()
     // console.log(sid)
 
-    useEffect(() => {
-
+    const update = function () {
         setLoading(true)
-        getSessions().then(res => {
-            console.log(res)
-            setChatList(res)
-            setLoading(false)
-        }).catch(err => {
-            setError(err)
-            // setLoading(false)
-        })
+        getSessions()
+            .then(res => {
+                if (res.length === 0) {
+                    setMsg("Empty")
+                }
+                setSessions(res)
+                setLoading(false)
+            })
+            .catch(err => {
+                setMsg(err)
+                setLoading(false)
+            })
+    }
+
+    useEffect(() => {
+        update()
     }, [])
 
-    const list = chatList.flatMap((value: Session) =>
-        (<ChatItem key={value.ID} chat={value} onSelect={setChat}/>)
-    )
-
     const refresh = () => {
-        setLoading(true)
-        getSessions().then(res => {
-            setChatList(res)
-            setLoading(false)
-        }).catch(err => {
-            setError(err)
-        })
+        update()
     }
 
     return <Box style={{height: "700px"}}>
@@ -82,24 +71,45 @@ export function ChatList() {
                     </IconButton>
                 </Box>
                 <Divider/>
-                {loading ?
-                    <Box sx={{display: "flex", justifyContent: "center", paddingTop: "50%"}}>
-                        {error ? <Typography variant={"caption"}>{error}</Typography> : <CircularProgress/>}
-                    </Box>
-                    :
-                    <List style={{overflow: "auto"}}>
-                        {loading ? <CircularProgress/> : list}
-                        <ListItem>
-                            <ListItemText primary={" "}/>
-                        </ListItem>
-                    </List>
+                {
+                    loading ? <Progress/> :
+                        msg ? <Progress showProgress={false} msg={msg}/> : <SessionList sessions={sessions} onSelect={setSelectedSid}/>
                 }
             </Grid>
             <Grid item md={8} style={{height: "700px"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
-                <ChatRoom chat={chat}/>
+                <ChatRoom sid={selectedSid}/>
             </Grid>
         </Grid>
 
+    </Box>
+}
+
+function SessionList(props: { sessions: Session[], onSelect?: (sid: string) => void }) {
+
+    const [selectedSid, setSelectedSid] = useState("")
+
+    const list = props.sessions.flatMap((value: Session) =>
+        (<ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={(s) => {
+            setSelectedSid(s.ID)
+            props.onSelect && props.onSelect(s.ID)
+        }}/>)
+    )
+
+    return <>
+        <List style={{overflow: "auto"}}>
+            {list}
+            <ListItem>
+                <ListItemText primary={" "}/>
+            </ListItem>
+        </List>
+    </>
+}
+
+function Progress(props: { showProgress?: boolean, msg?: string }) {
+
+    return <Box sx={{display: "flex", justifyContent: "center", paddingTop: "50%"}}>
+        {props.showProgress !== false ? <CircularProgress/> : <></>}
+        {props.msg ? <Typography variant={"caption"}>{props.msg}</Typography> : <></>}
     </Box>
 }

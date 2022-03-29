@@ -13,9 +13,7 @@ import {
     ActionUserAddFriend,
     ActionUserGetInfo,
     ActionUserLogin,
-    ActionUserLogout,
     ActionUserNewChat,
-    ActionUserRegister,
     ActionUserUnauthorized,
     AddGroup,
     AuthResponse,
@@ -23,7 +21,7 @@ import {
     Message,
     UserInfo
 } from "./message";
-import {OldSession, ChatMessage} from "./oldSession";
+import {OldSession} from "./oldSession";
 import {ChatList} from "./ChatList";
 import {Group} from "./group";
 import {ContactsList} from "./contactsList";
@@ -53,7 +51,7 @@ class Client {
     private toaster: (msg: string) => void | null = null;
 
 
-    public auth(){
+    public auth() {
 
     }
 
@@ -227,7 +225,7 @@ class Client {
         const data = JSON.parse(msg.Data);
         switch (msg.Action) {
             case ActionChatMessage:
-                this.chatList.onChatMessage(ChatMessage.create(data));
+                // this.chatList.onChatMessage(ChatMessage.create(data));
                 break;
             case ActionGroupMessage:
                 break;
