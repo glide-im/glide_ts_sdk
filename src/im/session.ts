@@ -14,6 +14,8 @@ export class Session {
     public Type: number;
     public To: number;
 
+    private messages = new Map<string, ChatMessage>();
+
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
         console.log(IMAccount.getUID(), sb.Uid1, sb.Uid2, sb.Uid1 === IMAccount.getUID());
@@ -33,10 +35,13 @@ export class Session {
     }
 
     public sendTextMessage(msg: string): Promise<ChatMessage> {
-        return new Promise<ChatMessage>((resolve, reject) => {
-            let chatMessage = new ChatMessage()
-            resolve(chatMessage);
-        });
+
+        let chatMessage = new ChatMessage();
+        chatMessage.Content = msg
+        chatMessage.Sender = IMAccount.getUID();
+        chatMessage.Mid = new Date().toString();
+        this.messages.set(chatMessage.Mid, chatMessage);
+        return Promise.resolve(chatMessage);
     }
 
     public setUpdateListener(listener: (session: Session) => void) {
@@ -47,16 +52,12 @@ export class Session {
 
     }
 
-    public GetAllMessage(): ChatMessage[] {
-        return [];
-    }
-
     public sendMessage(message: ChatMessage) {
 
     }
 
     public getMessages(): ChatMessage[] {
-        return [];
+        return Array.from(this.messages.values());
     }
 
     public GetLastMessage(): string {

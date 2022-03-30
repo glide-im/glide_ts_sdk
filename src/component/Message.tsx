@@ -2,7 +2,7 @@ import {Avatar, Box, Grid, Typography} from "@mui/material";
 import {client} from "../im/client";
 import {ChatMessage} from "../im/chat_message";
 
-export function ChatMessageComp(props: { msg: ChatMessage, isGroup: boolean }) {
+export function ChatMessageComp(props: { msg: ChatMessage}) {
 
     const sender = client.getCachedUserInfo(props.msg.Sender);
     const me = (sender?.Uid ?? -11) === client.uid
@@ -12,7 +12,7 @@ export function ChatMessageComp(props: { msg: ChatMessage, isGroup: boolean }) {
     const m = <Grid item md={1}><Avatar src={avatar}/></Grid>
 
     let name = <></>
-    if (props.isGroup && !me) {
+    if (props.msg.IsGroup && !me) {
         name = <Box style={{padding: '0 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
                 {sender.Nickname}

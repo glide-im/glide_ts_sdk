@@ -1,4 +1,5 @@
 import {
+    Avatar,
     Box,
     CircularProgress,
     Divider,
@@ -6,12 +7,12 @@ import {
     IconButton,
     List,
     ListItem,
+    ListItemIcon,
     ListItemText,
     Typography
 } from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {ChatRoom} from "./ChatRoom";
-import {ChatItem} from "./ChatItem";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
 import {IMChatList} from "../im/ChatList";
@@ -24,12 +25,10 @@ export function ChatList() {
     const {sid} = useParams<{ sid: string }>();
 
     const [sessions, setSessions] = useState(emptySession)
-
-    const [loadSate, setLoadSate] = useState(
-        {
-            loading: true,
-            msg: null
-        })
+    const [loadSate, setLoadSate] = useState({
+        loading: true,
+        msg: null
+    })
 
     const update = function () {
 
@@ -126,4 +125,33 @@ function Progress(props: { showProgress?: boolean, msg?: string }) {
         {props.showProgress !== false ? <CircularProgress/> : <></>}
         {props.msg ? <Typography variant={"caption"}>{props.msg}</Typography> : <></>}
     </Box>
+}
+
+function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
+
+    const [chat, setChat] = useState({obj: props.chat})
+
+    useEffect(() => {
+        chat.obj.setUpdateListener(c => {
+            console.log("ChatItem", "chat updated")
+            setChat({obj: c})
+        })
+        return () => chat.obj.setUpdateListener(() => null)
+    }, [chat])
+
+    const onItemClick = () => {
+        // const c = client.chatList.get(chat.ID)
+        // client.chatList.setCurrentChat(c, onChatUpdate, onChatMessage)
+        props.onSelect(chat.obj)
+    }
+
+    return <div key={chat.obj.ID}>
+        <ListItem button style={{cursor: "pointer"}}
+                  onClick={onItemClick} selected={props.selected}>
+            <ListItemIcon>
+                <Avatar src={""}/>
+            </ListItemIcon>
+            <ListItemText primary={!chat.obj.Title ? "-" : chat.obj.Title} secondary={"-"}/>
+        </ListItem>
+    </div>
 }

@@ -1,4 +1,3 @@
-import {OldSession} from "../im/oldSession";
 import {
     Avatar,
     Box,
@@ -13,9 +12,10 @@ import {
 import {Add} from "@mui/icons-material";
 import {useEffect, useState} from "react";
 import {client} from "../im/client";
+import {Session} from "../im/session";
 
 
-export function GroupMemberList(props: { chat: OldSession }) {
+export function GroupMemberList(props: { session: Session }) {
 
     const [showAddMember, setShowAddMember] = useState(false)
     const [, update] = useState(1)
@@ -25,8 +25,8 @@ export function GroupMemberList(props: { chat: OldSession }) {
 
     }, [props])
 
-
-
+    // TODO
+    return <></>
 
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
     const avatars = []

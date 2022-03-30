@@ -6,6 +6,7 @@ export class ChatMessage {
     public Content: string;
     public Mid: string;
     public SendAt: string;
+    public IsGroup: boolean;
 
     public static create(m: Message): ChatMessage {
         return new ChatMessage();
