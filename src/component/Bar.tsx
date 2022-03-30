@@ -7,6 +7,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import {Link, RouteComponentProps, withRouter} from "react-router-dom";
 import {Chat, PersonSearch} from "@mui/icons-material";
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import {green} from "@mui/material/colors";
 
 
 export const Bar = withRouter((props: RouteComponentProps) => {
@@ -75,16 +76,16 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const menu = [
         {
-            icon: <Chat/>,
-            path: "./session",
+            icon: <Chat color={"action"}/>,
+            path: "/im/session",
         },
         {
             icon: <PeopleAltIcon/>,
-            path: "./friends",
+            path: "/im/friends",
         },
         {
             icon: <PersonSearch/>,
-            path: "./search",
+            path: "/im/search",
         },
     ]
 

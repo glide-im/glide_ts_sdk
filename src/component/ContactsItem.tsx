@@ -1,27 +1,27 @@
 import {Avatar, ListItem, ListItemIcon, ListItemText} from "@mui/material";
-import {client} from "../im/client";
 import React from "react";
-import {IContacts} from "../im/message";
 import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Contacts} from "../im/contacts";
 
 
 interface Props extends RouteComponentProps {
-    contact: IContacts
+    contact: Contacts;
     onClick?: (id: number) => void
 }
 
 export const ContactsItem = withRouter((props: Props) => {
 
+    const c = props.contact;
     const handleClick = () => {
-
+        props.history.push(`./session/${c.getSID()}`);
     }
 
     return <>
-        <ListItem button key={`${props.contact.Type}-${props.contact.Id}`} onClick={handleClick}>
+        <ListItem button key={`${c.type}-${c.id}`} onClick={handleClick}>
             <ListItemIcon>
-                <Avatar src={props.contact.Avatar}/>
+                <Avatar src={c.avatar}/>
             </ListItemIcon>
-            <ListItemText primary={`${props.contact.Name}-${props.contact.Id}`}/>
+            <ListItemText primary={c.name}/>
         </ListItem>
 
     </>

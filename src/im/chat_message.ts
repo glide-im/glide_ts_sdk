@@ -2,7 +2,7 @@ import {Message} from "./message";
 
 export class ChatMessage {
 
-    public Sender: string;
+    public Sender: number;
     public Content: string;
     public Mid: string;
     public SendAt: string;

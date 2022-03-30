@@ -22,24 +22,14 @@ export function GroupMemberList(props: { chat: OldSession }) {
 
     useEffect(() => {
 
-        const g = client.contactsList.getGroup(props.chat.Target)
-        if (g == null) {
-            return
-        }
-        g.onUpdate = () => {
-            update(1)
-        }
-        return () => g.onUpdate = null
+
     }, [props])
 
-    const group = client.contactsList.getGroup(props.chat.Target)
-    console.log('GroupMemberList', group)
 
-    if (group == null) {
-        return <></>
-    }
+
+
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
-    const avatars = group.Members
+    const avatars = []
         .map(value => {
                 const u = client.getCachedUserInfo(value.Uid)
                 return <li style={style} key={value.Uid}>
@@ -54,7 +44,7 @@ export function GroupMemberList(props: { chat: OldSession }) {
     }
     const addMember = (id: number) => {
         if (id > 0) {
-            group.inviteToGroup(group.Gid, [id]).then()
+            // group.inviteToGroup(group.Gid, [id]).then()
         }
         setShowAddMember(false)
     }

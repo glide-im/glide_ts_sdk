@@ -5,6 +5,7 @@ import {ChatList} from "./ChatList";
 import {ContactsList} from "./ContactsList";
 import React from "react";
 import {IMAccount} from "../im/client";
+import {IMChatList} from "../im/ChatList";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
@@ -23,10 +24,13 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
             </Grid>
             <Grid item xs={11} style={{height: "700px"}}>
                 <Switch>
-                    <Route path={`${match.url}/session`} children={<ChatList/>}/>
+                    <Route path={`${match.url}/session/:sid`} children={<ChatList/>}/>
                     <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
+                    <Route path={`${match.url}/session`} exact={true}>
+                        <Redirect to={`${match.url}/session/${IMChatList.currentSid}`}/>
+                    </Route>
                     <Route path={`${match.url}/`} exact={true}>
-                        <Redirect to={`${match.url}/session`}/>
+                        <Redirect to={`${match.url}/session/0`}/>
                     </Route>
                 </Switch>
             </Grid>

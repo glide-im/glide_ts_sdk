@@ -2,7 +2,8 @@ import {Box, Divider, IconButton, List, ListItem, Typography} from "@mui/materia
 import {useEffect, useRef, useState} from "react";
 import {Send} from "@mui/icons-material";
 import {ChatMessage} from "../im/chat_message";
-import {client} from "../im/client";
+import {IMChatList} from "../im/ChatList";
+import {ChatMessageComp} from "./Message";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -17,7 +18,8 @@ function scrollBottom(ele: HTMLUListElement | null) {
 
 export function ChatRoom(props: { sid: string }) {
 
-    const session = client.chatList.get(props.sid)
+    const session = IMChatList.get(props.sid);
+
     const messageListEle = useRef<HTMLUListElement>()
     const [messages, setMessages] = useState(session?.GetAllMessage() ?? [])
     const isGroupChat = (session?.Type === 2)
@@ -34,7 +36,11 @@ export function ChatRoom(props: { sid: string }) {
     }, [session])
 
     if (session == null) {
-        return <Box>Nothing</Box>
+        return <Box mt={"50%"}>
+            <Typography variant="h6" textAlign={"center"}>
+                No Session
+            </Typography>
+        </Box>
     }
 
     const sendMessage = (msg: string) => {
@@ -66,7 +72,7 @@ export function ChatRoom(props: { sid: string }) {
                     {
                         messages.flatMap(value =>
                             (<ListItem key={`${value.Mid}`}>
-                                {/*<ChatMessageComp msg={value} isGroup={isGroupChat}/>*/}
+                                <ChatMessageComp msg={value} isGroup={isGroupChat}/>
                             </ListItem>)
                         )
                     }

@@ -1,11 +1,10 @@
 import {Avatar, Box, Grid, Typography} from "@mui/material";
 import {client} from "../im/client";
-import {IChatMessage} from "../im/message";
+import {ChatMessage} from "../im/chat_message";
 
+export function ChatMessageComp(props: { msg: ChatMessage, isGroup: boolean }) {
 
-export function ChatMessageComp(props: { msg: IChatMessage, isGroup: boolean }) {
-
-    const sender = client.getCachedUserInfo(props.msg.Sender)
+    const sender = client.getCachedUserInfo(props.msg.Sender);
     const me = (sender?.Uid ?? -11) === client.uid
     const avatar = sender?.Avatar ?? ""
 
@@ -36,7 +35,7 @@ export function ChatMessageComp(props: { msg: IChatMessage, isGroup: boolean }) 
                 padding: "6px",
                 borderRadius: "6px"
             }}>
-                <Typography variant={"body1"} component={'span'}>{`${props.msg.Message}`}</Typography>
+                <Typography variant={"body1"} component={'span'}>{`${props.msg.Content}`}</Typography>
             </Box>
         </Grid>
         {me ? m : <div/>}

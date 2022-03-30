@@ -64,19 +64,6 @@ export class OldSession {
             })
     }
 
-    public getTargetObj(): UserInfo | Group | null {
-        let ret = null
-        switch (this.ChatType) {
-            case 1:
-                ret = client.contactsList.getFriend(this.Target)
-                break
-            case 2:
-                ret = client.contactsList.getGroup(this.Target)
-                break
-        }
-        return ret
-    }
-
     public sendMessage(msg: string, onSuc?: (msg) => void) {
         console.log("Chat/sendMessage", msg)
         let m2: SendChatMessage = {
@@ -156,15 +143,7 @@ export class OldSession {
     }
 
     private setTitle() {
-        switch (this.ChatType) {
-            case 1:
-                const ui = client.contactsList.getFriend(this.Target) ?? client.getCachedUserInfo(this.Target)
-                this.Title = ui?.Nickname ?? "不是好友"
-                break
-            case 2:
-                this.Title = client.contactsList.getGroup(this.Target)?.Name ?? "未知群"
-                break
-        }
+
     }
 
     private sortMessage() {

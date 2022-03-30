@@ -24,7 +24,7 @@ import {
 import {OldSession} from "./oldSession";
 import {ChatList} from "./ChatList";
 import {Group} from "./group";
-import {ContactsList} from "./contactsList";
+import {ContactsList} from "./contacts_list";
 import {delCookie, getCookie, setCookie} from "../utils/Cookies";
 
 export enum MessageLevel {
@@ -64,8 +64,8 @@ class Account {
         return this.uid_ && this.uid_ !== "" && this.token_ && this.token_ !== "";
     }
 
-    public getUID(): string {
-        return this.uid_;
+    public getUID(): number {
+        return parseInt(this.uid_);
     }
 
     public getToken(): string {
@@ -77,8 +77,6 @@ export const IMAccount = new Account();
 
 class Client {
 
-    public chatList = new ChatList();
-    public contactsList = new ContactsList();
     public uid = -1;
     public messageListener: MessageListener;
 
@@ -97,8 +95,6 @@ class Client {
     public login(account: string, password: string): Promise<AuthResponse> {
         console.log("client/login", account, password);
         let m = {Account: account, Password: password, Device: this.device};
-        this.chatList.clear();
-        this.contactsList.clear();
         this.uid = -1;
         return Ws.request<AuthResponse>(ActionUserLogin, m)
             .catch(reason => {
@@ -212,9 +208,6 @@ class Client {
     }
 
     public getCachedUserInfo(id: number): UserInfo | null {
-        if (this.contactsList.getFriend(id)) {
-            return this.contactsList.getFriend(id)
-        }
         if (this.userInfo.has(id)) {
             return this.userInfo.get(id)
         }
@@ -273,11 +266,11 @@ class Client {
                 break;
             case ActionGroupAddMember:
                 const r: GroupAddMember = data;
-                const group = this.contactsList.getGroup(r.Gid);
-                group.onNewMember(r.Members);
+                // const group = this.contactsList.getGroup(r.Gid);
+                // group.onNewMember(r.Members);
                 break;
             case ActionUserNewChat:
-                this.chatList.add(OldSession.create(data));
+                // this.chatList.add(OldSession.create(data));
                 break;
             case ActionGroupUpdate:
                 break
@@ -290,8 +283,6 @@ class Client {
                 this.userStateListener(false)
             }
             this.uid = -1;
-            this.chatList.clear();
-            this.contactsList.clear()
         }
     }
 }

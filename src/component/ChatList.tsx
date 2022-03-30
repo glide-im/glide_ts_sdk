@@ -15,41 +15,45 @@ import {ChatItem} from "./ChatItem";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
 import {IMChatList} from "../im/ChatList";
+import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 
 const emptySession: Session[] = [];
 
-function getSessions(): Promise<Session[]> {
-    return IMChatList.getSessions()
-        .then(sessions => {
-            console.log("getSessions", sessions);
-            return sessions;
-        })
-}
-
 export function ChatList() {
 
+    const {sid} = useParams<{ sid: string }>();
+
     const [sessions, setSessions] = useState(emptySession)
-    const [selectedSid, setSelectedSid] = useState(null)
 
-    const [loading, setLoading] = useState(true)
-    const [msg, setMsg] = useState(null)
-
-    // const { sid }  = useParams()
-    // console.log(sid)
+    const [loadSate, setLoadSate] = useState(
+        {
+            loading: true,
+            msg: null
+        })
 
     const update = function () {
-        setLoading(true)
-        getSessions()
+
+        IMChatList.setChatListUpdateListener(function (list: Session[]) {
+            setSessions(list)
+        })
+
+        IMChatList.getSessions()
             .then(res => {
+                const s = {
+                    loading: false,
+                    msg: null
+                }
                 if (res.length === 0) {
-                    setMsg("Empty")
+                    s.msg = "Empty"
                 }
                 setSessions(res)
-                setLoading(false)
+                setLoadSate(s)
             })
             .catch(err => {
-                setMsg(err)
-                setLoading(false)
+                setLoadSate({
+                    loading: false,
+                    msg: err
+                })
             })
     }
 
@@ -72,29 +76,38 @@ export function ChatList() {
                 </Box>
                 <Divider/>
                 {
-                    loading ? <Progress/> :
-                        msg ? <Progress showProgress={false} msg={msg}/> :
-                            <SessionList sessions={sessions} onSelect={setSelectedSid}/>
+                    loadSate.loading ? <Progress/> :
+                        loadSate.msg ? <Progress showProgress={false} msg={loadSate.msg}/> :
+                            <SessionList selected={sid} sessions={sessions}/>
                 }
             </Grid>
             <Grid item md={8} style={{height: "700px"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
-                <ChatRoom sid={selectedSid}/>
+                <ChatRoom sid={sid}/>
             </Grid>
         </Grid>
 
     </Box>
 }
 
-function SessionList(props: { sessions: Session[], onSelect?: (sid: string) => void }) {
+interface SessionListProps extends RouteComponentProps {
+    selected: string,
+    sessions: Session[],
+    onSelect?: (sid: string) => void
+}
 
-    const [selectedSid, setSelectedSid] = useState("")
+export const SessionList = withRouter((props: SessionListProps) => {
+
+    const [selectedSid, setSelectedSid] = useState(props.selected)
+    IMChatList.currentSid = props.selected;
+    const onSelect = (s: Session) => {
+        setSelectedSid(s.ID)
+        IMChatList.currentSid = s.ID
+        props.history.replace(`/im/session/${s.ID}`)
+    }
 
     const list = props.sessions.flatMap((value: Session) =>
-        (<ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={(s) => {
-            setSelectedSid(s.ID)
-            props.onSelect && props.onSelect(s.ID)
-        }}/>)
+        (<ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={onSelect}/>)
     )
 
     return <>
@@ -105,7 +118,7 @@ function SessionList(props: { sessions: Session[], onSelect?: (sid: string) => v
             </ListItem>
         </List>
     </>
-}
+});
 
 function Progress(props: { showProgress?: boolean, msg?: string }) {
 

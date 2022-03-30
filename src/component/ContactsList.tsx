@@ -1,29 +1,34 @@
 import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
-import {client} from "../im/client";
 import {GroupAdd, Refresh} from "@mui/icons-material";
 import {AddContactDialog} from "./AddContactDialog";
 import {ContactsItem} from "./ContactsItem";
 import {CreateGroupDialog} from "./CreateGroupDialog";
-import {IMContactsList} from "../im/contactsList";
+import {IMContactsList} from "../im/contacts_list";
 
 export function ContactsList() {
 
-    const contactsList = client.contactsList
-
-    const [contacts, setContacts] = useState([...contactsList.getAllContacts()])
+    const [contacts, setContacts] = useState([])
 
     const [showAddContact, setShowAddContact] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     useEffect(() => {
+
+        IMContactsList.loadContacts()
+            .then((r) => {
+                setContacts([...r])
+            })
+            .catch((e) => {
+                console.error(e)
+            })
         IMContactsList.setContactsAddListener(() => {
-            setContacts([...contactsList.getAllContacts()])
+            setContacts([...IMContactsList.getAllContacts()])
         })
         return () => IMContactsList.setContactsAddListener(null)
-    }, [contactsList])
+    }, [])
 
-    const list = contacts?.flatMap(value => {
+    const list = contacts.flatMap(value => {
             return (<ContactsItem contact={value}/>)
         }
     )
@@ -41,10 +46,10 @@ export function ContactsList() {
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
             IMContactsList.addFriend(id, "")
-                .then((r)=>{
+                .then((r) => {
                     console.log(r)
                 })
-                .catch((e)=>{
+                .catch((e) => {
                     console.log(e)
                 })
         } else {
@@ -78,6 +83,7 @@ export function ContactsList() {
                 <Divider/>
 
                 {list}
+
             </List>
         </Grid>
         <Grid item md={8}>

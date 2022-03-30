@@ -2,24 +2,18 @@ import {ContactsResponse, IContacts, UserInfo} from "./message";
 import {Group} from "./group";
 import {client, MessageLevel} from "./client";
 import {addContacts, getContacts} from "../api/api";
+import {Contacts} from "./contacts";
 import {ContactsBean} from "../api/model";
 
 export class ContactsList {
 
     public onContactsChange: () => void | null = null;
 
-
-    public refresh() {
-        getContacts().then(contacts => {
-
-            contacts.forEach(c => {
-                if (c.Type === 1) {
-
-                } else {
-
-                }
+    public loadContacts(): Promise<Contacts[]> {
+        return getContacts()
+            .then(contacts => {
+                return contacts.map(c => Contacts.create(c));
             });
-        });
     }
 
     public setContactsAddListener(listener: () => void | null) {
