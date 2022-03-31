@@ -2,13 +2,17 @@ import axios, {AxiosInstance, AxiosPromise} from "axios";
 import {Response} from "./response";
 
 const instance: AxiosInstance = axios.create({
-    timeout: 1000,
-    baseURL: "http://localhost:8081/api/"
+    timeout: 3000,
+    baseURL: "http://192.168.1.123:8081/api/"
 });
 
-export const setHeader = (key: string, value: string) => {
+const setAuthHeader = (key: string, value: string) => {
     instance.defaults.headers.common[key] = value;
 };
+
+export function setApiToken(token: string) {
+    setAuthHeader("Authorization", "Bearer " + token);
+}
 
 export function get<T>(path: string): Promise<T> {
     const req = get_(path);

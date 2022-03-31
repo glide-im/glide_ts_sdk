@@ -12,7 +12,7 @@ export function ChatRoom(props: { sid: string }) {
     console.log("ChatRoom", props, session)
 
     const [messages, setMessages] = useState([])
-    const isGroupChat = (session?.Type === 2)
+    const isGroup = (session?.Type === 2)
 
     useEffect(() => {
         if (session == null) {
@@ -54,9 +54,9 @@ export function ChatRoom(props: { sid: string }) {
         </Box>
         <Divider/>
 
-        {isGroupChat && (<Box><GroupMemberList session={session}/><Divider/></Box>)}
+        {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}
 
-        <Box height={(isGroupChat ? "470px" : "510px")}>
+        <Box height={(isGroup ? "470px" : "510px")}>
             <MessageListC messages={messages}/>
         </Box>
         <Divider/>

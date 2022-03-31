@@ -12,7 +12,8 @@ export interface ContactsBean {
 
 export interface UserInfoBean {
     Uid: number
-    Nickname: string,
+    Account: string
+    Nickname: string
     Avatar: string
 }
 

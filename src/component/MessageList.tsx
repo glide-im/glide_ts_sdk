@@ -1,7 +1,7 @@
 import React, {CSSProperties, useEffect, useMemo, useRef} from "react";
 import {ChatMessage} from "../im/chat_message";
 import {Avatar, Box, Grid, List, ListItem, Typography} from "@mui/material";
-import {client} from "../im/client";
+import {Glide} from "../im/glide";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -66,7 +66,7 @@ const messageBoxStyle = function (): CSSProperties {
 function ChatMessageC(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    const sender = client.getCachedUserInfo(msg.Sender);
+    const sender = Glide.getUserInfo(msg.Sender)
     const me = (Math.floor(Math.random() * 10) > 5)// (sender?.Uid ?? 0) === IMAccount.getUID()
 
     let name = <></>
@@ -77,7 +77,7 @@ function ChatMessageC(props: { msg: ChatMessage }) {
     if (!me) {
         direction = "row"
         avatar = <Grid item xs={1} justifyContent={"center"}>
-            <Avatar src={sender?.Avatar ?? ""}/>
+            <Avatar src={sender?.avatar ?? ""}/>
         </Grid>
 
     }
@@ -85,7 +85,7 @@ function ChatMessageC(props: { msg: ChatMessage }) {
     if (msg.IsGroup && !me) {
         name = <Box style={{padding: '0px 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
-                {12}
+                {msg.Sender}
             </Typography>
         </Box>
     }

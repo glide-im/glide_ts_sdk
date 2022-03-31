@@ -1,7 +1,7 @@
 import {AuthBean, ContactsBean, SessionBean, UserInfoBean} from "./model";
 import {post} from "./axios";
 
-export function login(account: string, password: string): Promise<AuthBean> {
+function login(account: string, password: string): Promise<AuthBean> {
     const param = {
         Account: account,
         Device: 2,
@@ -10,14 +10,14 @@ export function login(account: string, password: string): Promise<AuthBean> {
     return post("auth/signin", param)
 }
 
-export function auth(token: string): Promise<AuthBean> {
+function auth(token: string): Promise<AuthBean> {
     const param = {
         Token: token
     };
     return post("auth/token", param)
 }
 
-export function register(account: string, password: string): Promise<AuthBean> {
+function register(account: string, password: string): Promise<AuthBean> {
     const param = {
         Account: account,
         Password: password
@@ -25,11 +25,11 @@ export function register(account: string, password: string): Promise<AuthBean> {
     return post("auth/register", param)
 }
 
-export function getContacts(): Promise<ContactsBean[]> {
+function getContacts(): Promise<ContactsBean[]> {
     return post("contacts/list")
 }
 
-export function addContacts(uid: number): Promise<ContactsBean> {
+function addContacts(uid: number): Promise<ContactsBean> {
     const param = {
         Uid: uid,
         Remark: "",
@@ -37,18 +37,30 @@ export function addContacts(uid: number): Promise<ContactsBean> {
     return post("contacts/add", param)
 }
 
-export function getProfile(): Promise<UserInfoBean> {
+function getProfile(): Promise<UserInfoBean> {
     return post("user/profile")
 }
 
-export function getUserInfo(uids: number[]): Promise<UserInfoBean[]> {
+function getUserInfo(uids: number[]): Promise<UserInfoBean[]> {
     return post("user/info")
 }
 
-export function getRecentSession(): Promise<SessionBean[]> {
+function getRecentSession(): Promise<SessionBean[]> {
     return post("session/recent")
 }
 
-export function getOrCreateSession(to: number): Promise<SessionBean> {
+function getOrCreateSession(to: number): Promise<SessionBean> {
     return post("session/get", {To: to})
 }
+
+export const Api = {
+    getUserInfo,
+    getProfile,
+    getRecentSession,
+    getOrCreateSession,
+    addContacts,
+    getContacts,
+    register,
+    auth,
+    login
+} as const;

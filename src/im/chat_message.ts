@@ -1,4 +1,4 @@
-import {Message} from "./message";
+import {CommonMessage} from "./message";
 
 export class ChatMessage {
 
@@ -8,7 +8,7 @@ export class ChatMessage {
     public SendAt: string;
     public IsGroup: boolean;
 
-    public static create(m: Message): ChatMessage {
+    public static create(m: CommonMessage): ChatMessage {
         return new ChatMessage();
     }
 }

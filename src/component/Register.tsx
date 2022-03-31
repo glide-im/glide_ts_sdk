@@ -1,6 +1,6 @@
 import React, {useRef} from "react";
 import {Avatar, Box, Button, Grid, TextField, Typography} from "@mui/material";
-import {register} from "../api/api";
+import {Api} from "../api/api";
 
 export function Register() {
 
@@ -18,7 +18,7 @@ export function Register() {
             return;
         }
 
-        register(account, password)
+        Api.register(account, password)
             .then((resp) => {
 
             })

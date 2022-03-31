@@ -3,13 +3,10 @@ import './App.css';
 import {Box, CircularProgress, Container, Grid} from "@mui/material";
 import {HashRouter, Redirect, Route, Switch} from "react-router-dom";
 import {SnackBar} from "./component/SnackBar";
-import MessageStack from "./component/MessageSnackbar";
 import {Auth} from "./component/Auth";
 import {Register} from "./component/Register";
 import {MainPanel} from "./component/MainPanel";
-import {auth} from "./api/api";
-import {setHeader} from "./api/axios";
-import {IMAccount} from "./im/client";
+import {IMAccount} from "./im/account";
 
 function App() {
 
@@ -20,24 +17,25 @@ function App() {
 
     useEffect(() => {
         if (isAuthenticated) {
-            auth(token).then(res => {
-                setHeader("Authorization", "Bearer " + token);
-                setIsAuthenticated(true);
-            }).catch(err => {
-                setIsAuthenticated(false);
-            }).finally(() => {
-                setIsLoading(false);
-            });
+            IMAccount.auth()
+                .then(() => {
+                    setIsAuthenticated(true);
+                })
+                .catch(err => {
+                    console.log(err);
+                    setIsAuthenticated(false);
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
         }
-        // Ws.connect()
-        // client.Init()
-    }, [])
+    }, [isAuthenticated, token])
 
 
     return (
         <div className="App">
             <SnackBar/>
-            <MessageStack/>
+            {/*<MessageStack/>*/}
             <Container color={"text.disabled"} style={{height: "100vh"}}>
                 <HashRouter>
                     <Grid container color={"text.disabled"} style={{height: "100vh", width: "1000px", margin: "auto"}}

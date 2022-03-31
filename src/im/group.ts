@@ -1,8 +1,5 @@
-import {ActionGroupAddMember, IContacts, IGroup, IGroupMember} from "./message";
-import {Ws} from "./ws";
-import {client, MessageLevel} from "./client";
 
-export class Group implements IGroup {
+export class Group {
 
     public Avatar: string;
     public CreateAt: number;
@@ -11,11 +8,11 @@ export class Group implements IGroup {
     public Name: string;
     public Notice: string;
     public Owner: number;
-    public Members: IGroupMember[]
+    public Members:[]
 
     public onUpdate: () => void | null = null
 
-    public static create(g: IGroup): Group {
+    public static create(g:any): Group {
         const ret = new Group()
         ret.update(g)
         return ret
@@ -26,18 +23,12 @@ export class Group implements IGroup {
         return
     }
 
-    public onNewMember(m: IGroupMember[]) {
-        this.Members.push(...m)
-        client.getUserInfo(m.map(value => value.Uid))
-            .then()
-            .finally(() => {
-                if (this.onUpdate) {
-                    this.onUpdate()
-                }
-            })
+    public onNewMember() {
+
+
     }
 
-    public update(g: IGroup) {
+    public update(g: any) {
         this.Avatar = g.Avatar
         this.CreateAt = g.CreateAt
         this.Gid = g.Gid
@@ -48,17 +39,7 @@ export class Group implements IGroup {
         this.Members = g.Members
     }
 
-    public inviteToGroup(gid: number, uid: number[]): Promise<any> {
-        return Ws.request<any>(ActionGroupAddMember, {Gid: gid, Uid: uid})
-            .then(value => {
-                client.showMessage(MessageLevel.LevelSuccess, `Add Member Success`)
-                return value
-            })
-    }
+    public inviteToGroup(gid: number, uid: number[]) {
 
-    public toContacts(): IContacts {
-        return {
-            Avatar: this.Avatar, Id: this.Gid, Name: this.Name, Type: 2
-        }
     }
 }

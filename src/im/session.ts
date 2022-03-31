@@ -1,6 +1,6 @@
 import {SessionBean} from "../api/model";
 import {ChatMessage} from "./chat_message";
-import {IMAccount} from "./client";
+import {IMAccount} from "./account";
 
 export class Session {
 
@@ -41,6 +41,9 @@ export class Session {
         chatMessage.Sender = IMAccount.getUID();
         chatMessage.Mid = new Date().toString();
         this.messages.set(chatMessage.Mid, chatMessage);
+
+
+
         return Promise.resolve(chatMessage);
     }
 

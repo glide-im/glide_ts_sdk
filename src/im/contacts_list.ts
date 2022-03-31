@@ -1,16 +1,14 @@
-import {ContactsResponse, IContacts, UserInfo} from "./message";
 import {Group} from "./group";
-import {client, MessageLevel} from "./client";
-import {addContacts, getContacts} from "../api/api";
+import {Api} from "../api/api";
 import {Contacts} from "./contacts";
-import {ContactsBean} from "../api/model";
+import {ContactsBean, UserInfoBean} from "../api/model";
 
 export class ContactsList {
 
     public onContactsChange: () => void | null = null;
 
     public loadContacts(): Promise<Contacts[]> {
-        return getContacts()
+        return Api.getContacts()
             .then(contacts => {
                 return contacts.map(c => Contacts.create(c));
             });
@@ -23,31 +21,15 @@ export class ContactsList {
     public addFriend(uid: number, remark?: string): Promise<ContactsBean> {
         console.log("ContactsList/addFriend", uid, remark);
 
-        return addContacts(uid)
+        return Api.addContacts(uid)
     }
 
-    public onNewContacts(contacts: ContactsResponse) {
-        console.log('ContactsList/onNewContacts');
-        for (let friend of contacts.Friends) {
-            client.showMessage(MessageLevel.LevelInfo, `New Friend: ${friend.Nickname}, Uid=${friend.Uid}`)
-        }
-        for (let group of contacts.Groups) {
-            client.showMessage(MessageLevel.LevelInfo, `New Group: ${group.Name}, Gid=${group.Gid}`)
-        }
-
-        this.updateContactsList(contacts)
-            .then(value => {
-                if (this.onContactsChange) {
-                    this.onContactsChange()
-                }
-            })
-    }
 
     public getGroup(gid): Group | null {
         return null
     }
 
-    public getFriend(uid): UserInfo | null {
+    public getFriend(uid): UserInfoBean | null {
         return null
     }
 
@@ -55,18 +37,18 @@ export class ContactsList {
         return []
     }
 
-    public getAllFriend(): UserInfo[] {
+    public getAllFriend(): UserInfoBean[] {
         return []
     }
 
-    public getAllContacts(): IContacts[] {
-        const ret: IContacts[] = [];
-        for (let userInfo of this.getAllFriend()) {
-            ret.push({Avatar: userInfo.Avatar, Id: userInfo.Uid, Name: userInfo.Nickname, Type: 1})
-        }
-        for (let group of this.getAllGroup()) {
-            ret.push({Avatar: group.Avatar, Id: group.Gid, Name: group.Name, Type: 2})
-        }
+    public getAllContacts(): Contacts[] {
+        const ret: Contacts[] = [];
+        // for (let userInfo of this.getAllFriend()) {
+        //     ret.push({Avatar: userInfo.Avatar, Id: userInfo.Uid, Name: userInfo.Nickname, Type: 1})
+        // }
+        // for (let group of this.getAllGroup()) {
+        //     ret.push({Avatar: group.Avatar, Id: group.Gid, Name: group.Name, Type: 2})
+        // }
         return ret
     }
 
@@ -74,10 +56,6 @@ export class ContactsList {
 
     }
 
-    private updateContactsList(contactsResponse: ContactsResponse): Promise<ContactsResponse> {
-
-        return Promise.reject("Not Implemented")
-    }
 }
 
 export const IMContactsList = new ContactsList();

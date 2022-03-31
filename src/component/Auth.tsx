@@ -1,9 +1,7 @@
 import React, {useRef} from "react";
 import {Avatar, Box, Button, Grid, Link, Paper, TextField, Typography} from "@mui/material";
-import {login} from "../api/api";
 import {Link as RtLink, RouteComponentProps, withRouter} from "react-router-dom";
-import {setHeader} from "../api/axios";
-import {IMAccount} from "../im/client";
+import {IMAccount} from "../im/account";
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 
@@ -21,10 +19,8 @@ export const Auth = withRouter((props: RouteComponentProps) => {
         const account = accountInput.current.value;
         const password = passwordInput.current.value;
 
-        login(account, password)
-            .then((resp) => {
-                IMAccount.setAuth(resp.Uid, resp.Token);
-                setHeader("Authorization", "Bearer " + resp.Token);
+        IMAccount.login(account, password)
+            .then(() => {
                 props.history.push("/im");
             })
             .catch((reason) => {

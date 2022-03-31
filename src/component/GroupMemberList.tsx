@@ -10,30 +10,19 @@ import {
     TextField
 } from "@mui/material";
 import {Add} from "@mui/icons-material";
-import {useEffect, useState} from "react";
-import {client} from "../im/client";
-import {Session} from "../im/session";
+import {useState} from "react";
+import {Glide} from "../im/glide";
 
+export function GroupMemberList(props: { id: number }) {
 
-export function GroupMemberList(props: { session: Session }) {
-
-    const [showAddMember, setShowAddMember] = useState(false)
-    const [, update] = useState(1)
-
-    useEffect(() => {
-
-
-    }, [props])
-
-    // TODO
-    return <></>
+    const [showAddMember, setShowAddMember] = useState(true)
 
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
     const avatars = []
         .map(value => {
-                const u = client.getCachedUserInfo(value.Uid)
+                const u = Glide.getUserInfo(value.Uid)
                 return <li style={style} key={value.Uid}>
-                    <Avatar src={u?.Avatar ?? ""} alt={u?.Nickname ?? ""}
+                    <Avatar src={u?.avatar ?? ""} alt={u?.name ?? ""}
                             style={{height: '30px', width: '30px', border: '1px solid gray'}}/>
                 </li>
             }

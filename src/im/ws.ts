@@ -1,8 +1,6 @@
-import {ActionFailed, ActionHeartbeat, Message} from "./message";
-import {client} from "./client";
+import {Actions, CommonMessage} from "./message";
 
-
-export type Listener = (msg: Message) => void
+export type Listener = (msg: CommonMessage) => void
 
 export type StateListener = (state: State, msg: string) => void
 
@@ -20,10 +18,15 @@ export interface Result<T> {
     msg: string
 }
 
-class MyWs {
+const heartbeatInterval = 10000
+const connectionTimeout = 3000
+
+type MessageCallBack = (m: CommonMessage) => void
+
+class WebSocketClient {
 
     private websocket?: WebSocket | null;
-    private listener: Listener | null;
+
     private stateChangeListener: StateListener[];
 
     private messageCallbacks: Map<number, Callback<any>>;
@@ -32,47 +35,65 @@ class MyWs {
     private heartbeat: any | null;
     private waits: Map<number, () => void> = new Map<number, () => void>();
 
+    private ackCallBacks = new Map<number, MessageCallBack>();
+    private apiCallbacks = new Map<number, MessageCallBack>();
+
     constructor() {
         this.websocket = null;
         this.seq = 1;
-        this.listener = null;
         this.stateChangeListener = [];
         this.messageCallbacks = new Map<number, any>()
     }
 
-    public connect() {
+    private static slog(where: string, msg: string) {
+        console.log(`[WebSocket] ${where}: ${msg}`)
+    }
 
+    public connect(ws: string, callback: (success: boolean, msg: string) => void) {
+
+        let cb = callback;
         this.stateChangeListener.forEach((value => value(State.CONNECTING, "")));
-        this.websocket = new WebSocket("ws://127.0.0.1:8080/ws");
+        this.websocket = new WebSocket(ws);
         setTimeout(() => {
             if (!this.websocket?.OPEN) {
-                // this.listener.forEach((value => value("TIMEOUT")))
-                console.log("connect timeout")
+                if (cb != null) {
+                    cb(false, "timeout");
+                    cb = null;
+                }
+                this.websocket.close();
             }
-        }, 1000 * 3);
+        }, connectionTimeout);
 
         this.websocket.onerror = (e) => {
-            console.log("WS ERROR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e)
-            // this.listener.forEach((value => value("ERROR: " + e)))
+            WebSocketClient.slog("onerror", "" + e)
+            if (cb != null) {
+                cb(false, `ws connect failed ${e.type}`)
+                cb = null
+            }
         };
         this.websocket.onclose = (e) => {
-            console.log("WS CLOSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", e);
-            // this.listener.forEach((value => value("CLOSED")))
+            WebSocketClient.slog("onclose", "" + e)
             this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
         };
         this.websocket.onopen = (e) => {
-            console.log("WS OPEN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            // this.listener.forEach((value => value("CONNECTED")))
+            WebSocketClient.slog("onopen", "" + e)
             this.stateChangeListener.forEach((value => value(State.CONNECTED, "connected")))
+
+            if (cb != null) {
+                cb(true, `ok`)
+                cb = null
+            }
         };
         this.websocket.onmessage = ev => {
-            this.onMessage(ev)
+            this.onReceive(ev)
         };
 
         clearInterval(this.heartbeat);
         this.heartbeat = setInterval(() => {
-            this.sendMessage(ActionHeartbeat, {})
-        }, 9000)
+            if (this.websocket.readyState === WebSocket.OPEN) {
+                this.sendMessage(Actions.Heartbeat, {})
+            }
+        }, heartbeatInterval)
     }
 
     public request1<T>(action: string, data?: any): Promise<Result<T>> {
@@ -94,7 +115,7 @@ class MyWs {
                 }
             })
         };
-        return new Promise<T>(executor).catch(reason => client.catchPromiseReject(reason).then())
+        return new Promise<T>(executor)
     }
 
     public sendMessage<T>(action: string, data: any, cb?: Callback<T>) {
@@ -110,7 +131,7 @@ class MyWs {
             }
             return;
         }
-        let m: Message = {
+        let m: CommonMessage = {
             Action: action,
             Data: dat,
             Seq: this.seq++
@@ -122,7 +143,7 @@ class MyWs {
     }
 
     public close() {
-        if (this.websocket === null) {
+        if (this.websocket === null || this.websocket.readyState === WebSocket.CLOSED) {
             return
         }
         this.websocket?.close(3001, "bye")
@@ -132,32 +153,61 @@ class MyWs {
         this.stateChangeListener.push(l)
     }
 
-    public setMessageListener(fn: Listener | null) {
-        this.listener = fn
+    public sendMessage2(){
+
     }
 
-    private onMessage(data: MessageEvent) {
-        let msg: Message = JSON.parse(data.data);
-        this.listener?.call(this, msg);
+    private wait(seq: number, cb: () => void) {
+        this.waits.set(seq, cb)
+    }
 
-        if (this.messageCallbacks.has(msg.Seq)) {
-            let cb = this.messageCallbacks.get(msg.Seq);
-
-            if (msg.Action === ActionFailed) {
-                // @ts-ignore
-                cb(false, null, data.data)
-            } else {
-                if (msg.Data.length === 0) {
-                    // @ts-ignore
-                    cb(true, msg.Data, "body empty")
-                } else {
-                    // @ts-ignore
-                    cb(true, JSON.parse(msg.Data), "ok")
-                }
+    private send(data: any): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (this.websocket === undefined || this.websocket.readyState !== WebSocket.OPEN) {
+                reject("not connected")
+                return
             }
-            this.messageCallbacks.delete(msg.Seq)
+            const json = JSON.stringify(data);
+            this.websocket.send(json)
+            resolve("ok")
+        })
+    }
+
+    private onApiMessage(msg: CommonMessage) {
+
+    }
+
+    private onIMMessage(msg: CommonMessage) {
+
+    }
+
+    private onAckMessage(msg: CommonMessage) {
+
+    }
+
+    private onNotifyMessage(msg: CommonMessage) {
+
+    }
+
+    private onReceive(data: MessageEvent) {
+        const msg: CommonMessage = JSON.parse(data.data) as CommonMessage;
+        if (msg.Action.startsWith("api")) {
+            this.onApiMessage(msg)
+            return
+        }
+        if (msg.Action.startsWith("message")) {
+            this.onIMMessage(msg)
+            return
+        }
+        if (msg.Action.startsWith("ack")) {
+            this.onAckMessage(msg)
+            return
+        }
+        if (msg.Action.startsWith("notify")) {
+            this.onNotifyMessage(msg)
+            return
         }
     }
 }
 
-export const Ws = new MyWs();
+export const Ws = new WebSocketClient();

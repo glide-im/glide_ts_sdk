@@ -1,8 +1,7 @@
 import {ChatMessage} from "./chat_message";
-import {client, MessageLevel} from "./client";
 import {Session} from "./session";
-import {getRecentSession} from "../api/api";
 import {SessionBean} from "../api/model";
+import {Api} from "../api/api";
 
 export class ChatList {
 
@@ -25,7 +24,7 @@ export class ChatList {
             return Promise.resolve(Array.from(this.sessionMap.values()))
         }
         this.sessionMap = new Map<string, Session>()
-        return getRecentSession()
+        return Api.getRecentSession()
             .then(s => {
                 const res = s.map(item => Session.fromSessionBean(item))
 
@@ -49,9 +48,6 @@ export class ChatList {
             return
         }
 
-        if (message.Sender !== client.uid) {
-            client.showMessage(MessageLevel.LevelInfo, `New Message: ${message.Content}`)
-        }
     }
 
     public add(chat: Session) {

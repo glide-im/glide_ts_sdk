@@ -1,5 +1,5 @@
 import {ContactsBean} from "../api/model";
-import {IMAccount} from "./client";
+import {IMAccount} from "./account";
 
 export class Contacts {
 
