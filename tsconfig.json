@@ -1,5 +1,10 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/",
+    "declaration": true,
+    "sourceMap": false,
     "target": "es5",
     "lib": [
       "dom",
@@ -20,6 +25,10 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
   "include": [
     "src"
   ]
