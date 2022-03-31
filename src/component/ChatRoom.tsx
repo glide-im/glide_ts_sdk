@@ -1,21 +1,10 @@
-import {Box, Divider, IconButton, List, ListItem, TextareaAutosize, Typography} from "@mui/material";
-import React, {CSSProperties, useEffect, useRef, useState} from "react";
+import {Box, Divider, IconButton, TextareaAutosize, Typography} from "@mui/material";
+import React, {CSSProperties, useEffect, useState} from "react";
 import {Send} from "@mui/icons-material";
 import {ChatMessage} from "../im/chat_message";
-import {IMChatList} from "../im/ChatList";
-import {ChatMessageComp} from "./Message";
+import {IMChatList} from "../im/chat_list";
 import {GroupMemberList} from "./GroupMemberList";
-
-function scrollBottom(ele: HTMLUListElement | null) {
-    if (ele == null) {
-        return
-    }
-    const from = ele.scrollHeight
-    const to = ele.scrollTop
-    if (from - to > 400) {
-        ele.scrollTop = from + 100
-    }
-}
+import {MessageListC} from "./MessageList";
 
 export function ChatRoom(props: { sid: string }) {
 
@@ -68,7 +57,7 @@ export function ChatRoom(props: { sid: string }) {
         {isGroupChat && (<Box><GroupMemberList session={session}/><Divider/></Box>)}
 
         <Box height={(isGroupChat ? "470px" : "510px")}>
-            <MessageList messages={messages}/>
+            <MessageListC messages={messages}/>
         </Box>
         <Divider/>
 
@@ -106,27 +95,4 @@ function MessageInput(props: { onSend: (msg: string) => void }) {
             <Send/>
         </IconButton>
     </>
-}
-
-const messageListStyle: CSSProperties = {
-    overflow: "auto",
-    width: "100%",
-}
-
-function MessageList(props: { messages: ChatMessage[] }) {
-
-    const messages = props.messages
-    const messageListEle = useRef<HTMLUListElement>()
-
-    useEffect(() => {
-        // const p = messageListEle.current.scrollTop + messageListEle.current.clientTop
-
-        scrollBottom(messageListEle.current)
-    }, [messages])
-
-    return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>
-        <List disablePadding ref={messageListEle} style={messageListStyle} className={"BeautyScrollBar"} >
-            {messages.map(value => <ListItem key={`${value.Mid}`}><ChatMessageComp msg={value}/></ListItem>)}
-        </List>
-    </Box>
 }

@@ -1,4 +1,4 @@
-import axios, {AxiosInstance, AxiosPromise, AxiosResponse} from "axios";
+import axios, {AxiosInstance, AxiosPromise} from "axios";
 import {Response} from "./response";
 
 const instance: AxiosInstance = axios.create({

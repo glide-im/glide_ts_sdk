@@ -1,10 +1,22 @@
-import {Box, Divider, Grid, IconButton, List, ListItem, ListItemText, Typography} from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Divider,
+    Grid,
+    IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Typography
+} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {GroupAdd, Refresh} from "@mui/icons-material";
 import {AddContactDialog} from "./AddContactDialog";
-import {ContactsItem} from "./ContactsItem";
 import {CreateGroupDialog} from "./CreateGroupDialog";
 import {IMContactsList} from "../im/contacts_list";
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Contacts} from "../im/contacts";
 
 export function ContactsList() {
 
@@ -92,3 +104,28 @@ export function ContactsList() {
         </Grid>
     </Grid>
 }
+
+
+interface Props extends RouteComponentProps {
+    contact: Contacts;
+    onClick?: (id: number) => void
+}
+
+export const ContactsItem = withRouter((props: Props) => {
+
+    const c = props.contact;
+    const handleClick = () => {
+        props.history.push(`./session/${c.getSID()}`);
+    }
+
+    return <>
+        <ListItem button key={`${c.type}-${c.id}`} onClick={handleClick}>
+            <ListItemIcon>
+                <Avatar src={c.avatar}/>
+            </ListItemIcon>
+            <ListItemText primary={c.name}/>
+        </ListItem>
+
+    </>
+})
+

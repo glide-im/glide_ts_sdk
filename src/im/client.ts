@@ -5,7 +5,6 @@ import {
     ActionGroupAddMember,
     ActionGroupCreate,
     ActionGroupInfo,
-    ActionGroupJoin,
     ActionGroupMessage,
     ActionGroupUpdate,
     ActionNotify,
@@ -21,10 +20,7 @@ import {
     Message,
     UserInfo
 } from "./message";
-import {OldSession} from "./oldSession";
-import {ChatList} from "./ChatList";
 import {Group} from "./group";
-import {ContactsList} from "./contacts_list";
 import {delCookie, getCookie, setCookie} from "../utils/Cookies";
 
 export enum MessageLevel {
@@ -124,19 +120,6 @@ class Client {
             })
     }
 
-    public joinGroup(gid: number): Promise<OldSession> {
-        console.log("client/joinGroup", gid);
-        return Ws.request<OldSession>(ActionGroupJoin, {Gid: gid})
-            .then(value => {
-                // this.chatList.add(Session.create(value));
-                return value
-            })
-            .finally(() => {
-                console.log("client/joinGroup", "completed!");
-                // this.contactsList.updateAll().then();
-                // this.chatList.update().then()
-            })
-    }
 
     public createGroup(name: string): Promise<AddGroup> {
         console.log("client/createGroup", name);

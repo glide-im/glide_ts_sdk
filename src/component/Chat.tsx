@@ -15,12 +15,12 @@ import React, {useEffect, useState} from "react";
 import {ChatRoom} from "./ChatRoom";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
-import {IMChatList} from "../im/ChatList";
+import {IMChatList} from "../im/chat_list";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 
 const emptySession: Session[] = [];
 
-export function ChatList() {
+export function Chat() {
 
     const {sid} = useParams<{ sid: string }>();
 
@@ -51,7 +51,7 @@ export function ChatList() {
             .catch(err => {
                 setLoadSate({
                     loading: false,
-                    msg: err
+                    msg: err.toString()
                 })
             })
     }
@@ -66,7 +66,7 @@ export function ChatList() {
 
     return <Box style={{height: "700px"}}>
         <Grid alignItems={"center"} container style={{}}>
-            <Grid item md={4} style={{height: "700px"}}>
+            <Grid item xs={4} style={{height: "700px"}}>
                 <Box m={2}>
                     <Typography variant={"caption"}>Messages</Typography>
                     <IconButton size={"small"} onClick={refresh} style={{float: "right"}}>
@@ -80,7 +80,7 @@ export function ChatList() {
                             <SessionList selected={sid} sessions={sessions}/>
                 }
             </Grid>
-            <Grid item md={8} style={{height: "700px"}}>
+            <Grid item xs={8} style={{height: "700px"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
                 <ChatRoom sid={sid}/>
             </Grid>
@@ -104,10 +104,9 @@ export const SessionList = withRouter((props: SessionListProps) => {
         IMChatList.currentSid = s.ID
         props.history.replace(`/im/session/${s.ID}`)
     }
-
-    const list = props.sessions.flatMap((value: Session) =>
-        (<ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={onSelect}/>)
-    )
+    const list = props.sessions.map((value: Session) =>
+            <ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={onSelect}/>
+        )
 
     return <>
         <List style={{overflow: "auto"}}>

@@ -1,4 +1,4 @@
-import {ChatMessage} from "./oldSession";
+import {ChatMessage} from "./chat_message";
 import {client, MessageLevel} from "./client";
 import {Session} from "./session";
 import {getRecentSession} from "../api/api";
@@ -40,19 +40,17 @@ export class ChatList {
                     this.add(item)
                 })
                 return res
-            }).catch(err => {
-                return err.toString()
             })
     }
 
     public onChatMessage(message: ChatMessage) {
-        if (!this.contain(message.Cid)) {
+        if (!this.contain(message.Mid)) {
 
             return
         }
 
         if (message.Sender !== client.uid) {
-            client.showMessage(MessageLevel.LevelInfo, `New Message: ${message.getMessageExtra()}`)
+            client.showMessage(MessageLevel.LevelInfo, `New Message: ${message.Content}`)
         }
     }
 

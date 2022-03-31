@@ -1,7 +1,7 @@
 import {AuthBean, ContactsBean, SessionBean, UserInfoBean} from "./model";
 import {post} from "./axios";
 
-export function login<T>(account: string, password: string): Promise<AuthBean> {
+export function login(account: string, password: string): Promise<AuthBean> {
     const param = {
         Account: account,
         Device: 2,
@@ -10,14 +10,14 @@ export function login<T>(account: string, password: string): Promise<AuthBean> {
     return post("auth/signin", param)
 }
 
-export function auth<T>(token: string): Promise<AuthBean> {
+export function auth(token: string): Promise<AuthBean> {
     const param = {
         Token: token
     };
     return post("auth/token", param)
 }
 
-export function register<T>(account: string, password: string): Promise<AuthBean> {
+export function register(account: string, password: string): Promise<AuthBean> {
     const param = {
         Account: account,
         Password: password
