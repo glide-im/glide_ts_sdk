@@ -4,7 +4,6 @@ import {Chat} from "./Chat";
 import {ContactsList} from "./ContactsList";
 import React from "react";
 import {IMAccount} from "../im/account";
-import {IMChatList} from "../im/chat_list";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import {Chat as ChatIcon, PersonSearch} from "@mui/icons-material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
@@ -29,7 +28,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
                     <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
                     <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
                     <Route path={`${match.url}/session`} exact={true}>
-                        <Redirect to={`${match.url}/session/${IMChatList.currentSid}`}/>
+                        <Redirect to={`${match.url}/session/${IMAccount.getSessionList().currentSid}`}/>
                     </Route>
                     <Route path={`${match.url}/`} exact={true}>
                         <Redirect to={`${match.url}/session/0`}/>

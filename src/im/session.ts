@@ -1,6 +1,8 @@
 import {SessionBean} from "../api/model";
 import {ChatMessage} from "./chat_message";
 import {IMAccount} from "./account";
+import {Message, MessageType} from "./message";
+import {Api} from "../api/api";
 
 export class Session {
 
@@ -24,7 +26,6 @@ export class Session {
         } else {
             session.To = sb.Uid1;
         }
-
         session.ID = session.getSID();
         session.Title = session.ID;
         session.UpdateAt = sb.UpdateAt.toString();
@@ -35,16 +36,10 @@ export class Session {
     }
 
     public sendTextMessage(msg: string): Promise<ChatMessage> {
-
-        let chatMessage = new ChatMessage();
-        chatMessage.Content = msg
-        chatMessage.Sender = IMAccount.getUID();
-        chatMessage.Mid = new Date().toString();
-        this.messages.set(chatMessage.Mid, chatMessage);
-
-
-
-        return Promise.resolve(chatMessage);
+        return this.send(msg, MessageType.Text)
+            .then(r => {
+                return ChatMessage.create(r)
+            });
     }
 
     public setUpdateListener(listener: (session: Session) => void) {
@@ -79,5 +74,33 @@ export class Session {
         }
 
         return lg + "_" + sm;
+    }
+
+    private send(content: string, type: number): Promise<Message> {
+        const time = new Date().getSeconds();
+
+        const m: Message = {
+            Content: content,
+            From: IMAccount.getUID(),
+            Mid: "",
+            SendAt: time,
+            Seq: 0,
+            To: this.To,
+            Type: type
+        }
+        const midPromise = Api.getMid()
+            .then(mid => {
+                m.Mid = mid;
+                return m
+            });
+        return new Promise<Message>((resolve, reject) => {
+            midPromise
+                .then(m => {
+
+                })
+                .catch(err => {
+                    reject(err);
+                })
+        })
     }
 }

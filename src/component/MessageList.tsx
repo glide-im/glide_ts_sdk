@@ -66,7 +66,7 @@ const messageBoxStyle = function (): CSSProperties {
 function ChatMessageC(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    const sender = Glide.getUserInfo(msg.Sender)
+    const sender = Glide.getUserInfo(msg.From)
     const me = (Math.floor(Math.random() * 10) > 5)// (sender?.Uid ?? 0) === IMAccount.getUID()
 
     let name = <></>
@@ -85,7 +85,7 @@ function ChatMessageC(props: { msg: ChatMessage }) {
     if (msg.IsGroup && !me) {
         name = <Box style={{padding: '0px 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
-                {msg.Sender}
+                {msg.From}
             </Typography>
         </Box>
     }

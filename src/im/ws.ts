@@ -20,6 +20,7 @@ export interface Result<T> {
 
 const heartbeatInterval = 10000
 const connectionTimeout = 3000
+const requestTimeout = 3000
 
 type MessageCallBack = (m: CommonMessage) => void
 
@@ -50,6 +51,11 @@ class WebSocketClient {
     }
 
     public connect(ws: string, callback: (success: boolean, msg: string) => void) {
+        if (this.websocket != null) {
+            if (this.websocket.readyState === WebSocket.OPEN) {
+                this.websocket.close()
+            }
+        }
 
         let cb = callback;
         this.stateChangeListener.forEach((value => value(State.CONNECTING, "")));
@@ -96,26 +102,59 @@ class WebSocketClient {
         }, heartbeatInterval)
     }
 
-    public request1<T>(action: string, data?: any): Promise<Result<T>> {
-        const resolved = (resolve: (r: Result<T>) => void) => {
-            this.sendMessage<T>(action, data, (success, result, msg) => {
-                resolve({msg: msg, result: result, success: success})
-            })
-        };
-        return new Promise<Result<T>>(resolved)
-    }
-
+    /**
+     * Request the api by websocket, auth, logout the connection etc.
+     * @param action the action to request
+     * @param data  the data to send
+     */
     public request<T>(action: string, data?: any): Promise<T> {
-        const executor = (resolve: (r: T) => void, reject: (reason: string) => void) => {
-            this.sendMessage<T>(action, data, (success, result, msg) => {
-                if (success) {
-                    resolve(result)
-                } else {
-                    reject(msg)
+
+        const d: string = data === null ? {} : data;
+        const seq = this.seq++;
+
+        const message: CommonMessage = {
+            Action: action,
+            Data: d,
+            Seq: seq,
+        }
+
+        return new Promise<T>((resolve, reject) => {
+            // flag to indicate if the request is completed
+            let complete = false;
+
+            const timeout = setTimeout(() => {
+                if (!complete) {
+                    complete = true;
+                    reject(new Error("timeout"))
                 }
-            })
-        };
-        return new Promise<T>(executor)
+            }, requestTimeout);
+
+            this.send(message)
+                .then(() => {
+                    if (complete) {
+                        return;
+                    }
+                    this.apiCallbacks.set(seq, (m: CommonMessage) => {
+                        complete = true;
+                        if (m.Action === Actions.ApiSuccess) {
+                            const obj = m.Data;
+                            resolve(obj as T)
+                        } else {
+                            reject(m.Data)
+                        }
+                    })
+                })
+                .catch(e => {
+                    if (complete) {
+                        return;
+                    }
+                    complete = true;
+                    reject(e)
+                })
+                .finally(() => {
+                    clearTimeout(timeout);
+                })
+        })
     }
 
     public sendMessage<T>(action: string, data: any, cb?: Callback<T>) {
@@ -153,7 +192,7 @@ class WebSocketClient {
         this.stateChangeListener.push(l)
     }
 
-    public sendMessage2(){
+    public sendMessage2() {
 
     }
 
@@ -173,10 +212,6 @@ class WebSocketClient {
         })
     }
 
-    private onApiMessage(msg: CommonMessage) {
-
-    }
-
     private onIMMessage(msg: CommonMessage) {
 
     }
@@ -191,8 +226,12 @@ class WebSocketClient {
 
     private onReceive(data: MessageEvent) {
         const msg: CommonMessage = JSON.parse(data.data) as CommonMessage;
+
         if (msg.Action.startsWith("api")) {
-            this.onApiMessage(msg)
+            const callback = this.apiCallbacks.get(msg.Seq);
+            if (callback) {
+                callback(msg)
+            }
             return
         }
         if (msg.Action.startsWith("message")) {

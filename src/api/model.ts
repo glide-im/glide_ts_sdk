@@ -25,3 +25,7 @@ export interface SessionBean {
     UpdateAt: number
     CreateAt: number
 }
+
+export interface MidBean {
+    Mid: number
+}

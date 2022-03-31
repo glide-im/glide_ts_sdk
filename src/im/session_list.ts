@@ -3,7 +3,7 @@ import {Session} from "./session";
 import {SessionBean} from "../api/model";
 import {Api} from "../api/api";
 
-export class ChatList {
+export class SessionList {
 
     public currentSid: string;
 
@@ -71,5 +71,3 @@ export class ChatList {
         return this.sessionMap.has(chatId)
     }
 }
-
-export const IMChatList = new ChatList()

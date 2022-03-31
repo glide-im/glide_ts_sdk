@@ -3,6 +3,8 @@ import {setApiToken} from "../api/axios";
 import {Api} from "../api/api";
 import {AuthBean, UserInfoBean} from "../api/model";
 import {Ws} from "./ws";
+import {SessionList} from "./session_list";
+import {Actions} from "./message";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -17,12 +19,13 @@ export type MessageListener = (level: MessageLevel, msg: string) => void
 
 export class Account {
 
-    private uid_: string;
-    private token_: string;
+    private uid: string;
+    private token: string;
+    private sessions: SessionList = new SessionList();
 
     constructor() {
-        this.uid_ = getCookie("uid") ?? "";
-        this.token_ = getCookie("token") ?? "";
+        this.uid = getCookie("uid") ?? "";
+        this.token = getCookie("token") ?? "";
     }
 
     public login(account: string, password: string): Promise<any> {
@@ -33,9 +36,8 @@ export class Account {
     }
 
     public auth(): Promise<AuthBean> {
-        return Api.auth(this.token_)
+        return Api.auth(this.token)
             .then(res => {
-                setApiToken(this.token_);
                 return this.onAuthedAccount(res).then(() => res);
             })
             .catch(err => {
@@ -46,48 +48,57 @@ export class Account {
 
     public logout() {
         this.clearAuth()
+        Ws.request(Actions.ApiUserLogout, {})
+            .then();
         Ws.close()
     }
 
     public clearAuth() {
-        this.uid_ = "";
-        this.token_ = "";
+        this.uid = "";
+        this.token = "";
         delCookie("uid");
         delCookie("token");
     }
 
+    public getSessionList(): SessionList {
+        return this.sessions;
+    }
+
     public isAuthenticated(): boolean {
-        return this.uid_ && this.uid_ !== "" && this.token_ && this.token_ !== "";
+        return this.uid && this.uid !== "" && this.token && this.token !== "";
     }
 
     public getUID(): number {
-        return parseInt(this.uid_);
+        return parseInt(this.uid);
     }
 
     public getToken(): string {
-        return this.token_;
+        return this.token;
     }
 
     public getUserInfo(): UserInfoBean {
         return {Account: "", Avatar: "", Nickname: "Nickname", Uid: 0}
     }
 
-    private initWebsocket() {
-
-    }
-
     private onAuthedAccount(auth: AuthBean): Promise<any> {
+        this.uid = auth.Uid.toString();
+        this.token = auth.Token;
 
-        this.uid_ = auth.Uid.toString();
-        this.token_ = auth.Token;
-        setCookie("uid", this.uid_.toString(), 1);
-        setCookie("token", this.token_, 1);
+        setApiToken(auth.Token);
+
+        setCookie("uid", this.uid.toString(), 1);
+        setCookie("token", this.token, 1);
 
         return new Promise((resolve, reject) => {
             Ws.connect(auth.Servers[0], (s, m) => {
                 if (s) {
-                    this.initWebsocket()
-                    resolve("ok");
+                    Ws.request<AuthBean>(Actions.ApiUserAuth, {Token: this.getToken()})
+                        .then(r => {
+                            resolve(r);
+                        })
+                        .catch(err => {
+                            reject(err);
+                        });
                 } else {
                     reject(m);
                 }

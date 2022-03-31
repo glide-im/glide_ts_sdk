@@ -2,13 +2,13 @@ import {Box, Divider, IconButton, TextareaAutosize, Typography} from "@mui/mater
 import React, {CSSProperties, useEffect, useState} from "react";
 import {Send} from "@mui/icons-material";
 import {ChatMessage} from "../im/chat_message";
-import {IMChatList} from "../im/chat_list";
 import {GroupMemberList} from "./GroupMemberList";
 import {MessageListC} from "./MessageList";
+import {IMAccount} from "../im/account";
 
 export function ChatRoom(props: { sid: string }) {
 
-    const session = IMChatList.get(props.sid);
+    const session = IMAccount.getSessionList().get(props.sid);
     console.log("ChatRoom", props, session)
 
     const [messages, setMessages] = useState([])

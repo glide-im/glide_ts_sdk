@@ -1,3 +1,11 @@
+export enum MessageType {
+    Text = 1,
+    Image = 2,
+    Audio = 3,
+    Recall = 100,
+    GroupNotify = -1,
+}
+
 export enum Actions {
     MessageChat = "message.chat",
     MessageChatRecall = "message.chat.recall",
@@ -18,13 +26,16 @@ export enum Actions {
 
     Api = "api",
     ApiFailed = "api.failed",
+    ApiSuccess = "api.success",
+    ApiUserAuth = "api.user.auth",
+    ApiUserLogout = "api.user.logout",
     Heartbeat = "heartbeat",
 }
 
 export interface CommonMessage {
     Seq: number
     Action: string
-    Data: string
+    Data: any
 }
 
 export interface Message {
@@ -34,7 +45,7 @@ export interface Message {
     To: number
     Type: number
     Content: string
-    SentAt: number
+    SendAt: number
 }
 
 export interface AckRequest {

@@ -15,8 +15,8 @@ import React, {useEffect, useState} from "react";
 import {ChatRoom} from "./ChatRoom";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
-import {IMChatList} from "../im/chat_list";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
+import {IMAccount} from "../im/account";
 
 const emptySession: Session[] = [];
 
@@ -32,11 +32,11 @@ export function Chat() {
 
     const update = function () {
 
-        IMChatList.setChatListUpdateListener(function (list: Session[]) {
+        IMAccount.getSessionList().setChatListUpdateListener(function (list: Session[]) {
             setSessions(list)
         })
 
-        IMChatList.getSessions()
+        IMAccount.getSessionList().getSessions()
             .then(res => {
                 const s = {
                     loading: false,
@@ -98,15 +98,15 @@ interface SessionListProps extends RouteComponentProps {
 export const SessionList = withRouter((props: SessionListProps) => {
 
     const [selectedSid, setSelectedSid] = useState(props.selected)
-    IMChatList.currentSid = props.selected;
+    IMAccount.getSessionList().currentSid = props.selected;
     const onSelect = (s: Session) => {
         setSelectedSid(s.ID)
-        IMChatList.currentSid = s.ID
+        IMAccount.getSessionList().currentSid = s.ID
         props.history.replace(`/im/session/${s.ID}`)
     }
     const list = props.sessions.map((value: Session) =>
-            <ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={onSelect}/>
-        )
+        <ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={onSelect}/>
+    )
 
     return <>
         <List style={{overflow: "auto"}}>

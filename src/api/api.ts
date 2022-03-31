@@ -1,6 +1,7 @@
 import {AuthBean, ContactsBean, SessionBean, UserInfoBean} from "./model";
 import {post} from "./axios";
 
+
 function login(account: string, password: string): Promise<AuthBean> {
     const param = {
         Account: account,
@@ -53,6 +54,10 @@ function getOrCreateSession(to: number): Promise<SessionBean> {
     return post("session/get", {To: to})
 }
 
+function getMid(): Promise<any> {
+    return post("msg/id")
+}
+
 export const Api = {
     getUserInfo,
     getProfile,
@@ -62,5 +67,6 @@ export const Api = {
     getContacts,
     register,
     auth,
-    login
+    login,
+    getMid
 } as const;
