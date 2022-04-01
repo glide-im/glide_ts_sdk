@@ -122,12 +122,7 @@ class WebSocketClient {
             // flag to indicate if the request is completed
             let complete = false;
 
-            const timeout = setTimeout(() => {
-                if (!complete) {
-                    complete = true;
-                    reject(new Error("timeout"))
-                }
-            }, requestTimeout);
+            const timeout
 
             this.send(message)
                 .then(() => {
