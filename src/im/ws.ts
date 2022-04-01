@@ -1,6 +1,7 @@
-import {Actions, CommonMessage} from "./message";
+import { map, mergeMap, Observable, Observer } from "rxjs";
+import { Actions, CommonMessage, Message } from "./message";
 
-export type Listener = (msg: CommonMessage) => void
+export type Listener = (msg: CommonMessage<any>) => void
 
 export type StateListener = (state: State, msg: string) => void
 
@@ -22,7 +23,7 @@ const heartbeatInterval = 10000
 const connectionTimeout = 3000
 const requestTimeout = 3000
 
-type MessageCallBack = (m: CommonMessage) => void
+type MessageCallBack = (m: CommonMessage<any>) => void
 
 class WebSocketClient {
 
@@ -46,8 +47,8 @@ class WebSocketClient {
         this.messageCallbacks = new Map<number, any>()
     }
 
-    private static slog(where: string, msg: string) {
-        console.log(`[WebSocket] ${where}: ${msg}`)
+    private static slog(where: string, ...msg: any[]) {
+        console.log(`[WebSocket] ${where}: ${msg.map(r => r.toString()).join(' ')}`)
     }
 
     public connect(ws: string, callback: (success: boolean, msg: string) => void) {
@@ -93,13 +94,7 @@ class WebSocketClient {
         this.websocket.onmessage = ev => {
             this.onReceive(ev)
         };
-
-        clearInterval(this.heartbeat);
-        this.heartbeat = setInterval(() => {
-            if (this.websocket.readyState === WebSocket.OPEN) {
-                this.sendMessage(Actions.Heartbeat, {})
-            }
-        }, heartbeatInterval)
+        this.startHeartbeat()
     }
 
     /**
@@ -112,7 +107,7 @@ class WebSocketClient {
         const d: string = data === null ? {} : data;
         const seq = this.seq++;
 
-        const message: CommonMessage = {
+        const message: CommonMessage<any> = {
             Action: action,
             Data: d,
             Seq: seq,
@@ -122,14 +117,19 @@ class WebSocketClient {
             // flag to indicate if the request is completed
             let complete = false;
 
-            const timeout
+            const timeout = setTimeout(() => {
+                if (!complete) {
+                    complete = true;
+                    reject(new Error("timeout"))
+                }
+            }, requestTimeout);
 
             this.send(message)
                 .then(() => {
                     if (complete) {
                         return;
                     }
-                    this.apiCallbacks.set(seq, (m: CommonMessage) => {
+                    this.apiCallbacks.set(seq, (m: CommonMessage<any>) => {
                         complete = true;
                         if (m.Action === Actions.ApiSuccess) {
                             const obj = m.Data;
@@ -152,30 +152,6 @@ class WebSocketClient {
         })
     }
 
-    public sendMessage<T>(action: string, data: any, cb?: Callback<T>) {
-        if (this.websocket?.OPEN !== 1) {
-            return
-        }
-        let dat = "";
-        try {
-            dat = JSON.stringify(data)
-        } catch (e) {
-            if (cb) {
-                cb(false, null, "cannot json to string of " + data)
-            }
-            return;
-        }
-        let m: CommonMessage = {
-            Action: action,
-            Data: dat,
-            Seq: this.seq++
-        };
-        if (cb) {
-            this.messageCallbacks.set(m.Seq, cb)
-        }
-        this.websocket.send(JSON.stringify(m))
-    }
-
     public close() {
         if (this.websocket === null || this.websocket.readyState === WebSocket.CLOSED) {
             return
@@ -187,15 +163,65 @@ class WebSocketClient {
         this.stateChangeListener.push(l)
     }
 
-    public sendMessage2() {
-
+    public sendChatMessage(m: Message): Observable<Message> {
+        return new Observable((observer: Observer<CommonMessage<Message>>) => {
+            const data: CommonMessage<Message> = {
+                Action: Actions.MessageChat,
+                Data: m,
+                Seq: this.seq++,
+            };
+            observer.next(data)
+            observer.complete()
+        })
+            .pipe(
+                mergeMap(r => this.sendRx(r)),
+                map(r => r.Data)
+            )
     }
 
-    private wait(seq: number, cb: () => void) {
-        this.waits.set(seq, cb)
+    private createMessageObservable<T>(data: T): Observable<T> {
+        return new Observable((observer: Observer<CommonMessage<T>>) => {
+            const msg: CommonMessage<T> = {
+                Action: Actions.MessageChat,
+                Data: data,
+                Seq: this.seq++,
+            };
+            observer.next(msg)
+            observer.complete()
+        })
+            .pipe<CommonMessage<T>>(
+                mergeMap(m => this.sendRx(m)),
+            )
+            .pipe(
+                map(m => m.Data)
+            )
     }
 
-    private send(data: any): Promise<any> {
+    private getSeq(): Observable<number> {
+        return new Observable((observer: Observer<number>) => {
+            observer.next(this.seq++)
+            observer.complete()
+        });
+    }
+
+    private sendRx<T>(data: CommonMessage<T>): Observable<CommonMessage<T>> {
+        return new Observable((observer: Observer<CommonMessage<T>>) => {
+            if (this.websocket === undefined) {
+                observer.error("not initialized")
+                return
+            }
+            if (this.websocket.readyState !== WebSocket.OPEN) {
+                observer.error("not connected")
+                return
+            }
+            const json = JSON.stringify(data);
+            this.websocket.send(json)
+            observer.next(data)
+            observer.complete()
+        });
+    }
+
+    private send(data: CommonMessage<any>): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.websocket === undefined || this.websocket.readyState !== WebSocket.OPEN) {
                 reject("not connected")
@@ -207,25 +233,49 @@ class WebSocketClient {
         })
     }
 
-    private onIMMessage(msg: CommonMessage) {
+    private startHeartbeat() {
+        clearInterval(this.heartbeat);
+        this.heartbeat = setInterval(() => {
+            const hb: CommonMessage<any> = {
+                Action: Actions.Heartbeat,
+                Data: {},
+                Seq: this.seq++,
+            }
+            this.send(hb)
+                .then(() => {
+
+                })
+                .catch(e => {
+                    WebSocketClient.slog("heartbeat", "failed")
+                })
+        }, heartbeatInterval)
+    }
+
+    private wait(seq: number, cb: () => void) {
+        this.waits.set(seq, cb)
+    }
+
+    private onIMMessage(msg: CommonMessage<any>) {
 
     }
 
-    private onAckMessage(msg: CommonMessage) {
+    private onAckMessage(msg: CommonMessage<any>) {
 
     }
 
-    private onNotifyMessage(msg: CommonMessage) {
+    private onNotifyMessage(msg: CommonMessage<any>) {
 
     }
 
     private onReceive(data: MessageEvent) {
-        const msg: CommonMessage = JSON.parse(data.data) as CommonMessage;
+        const msg: CommonMessage<any> = JSON.parse(data.data) as CommonMessage<any>;
 
         if (msg.Action.startsWith("api")) {
             const callback = this.apiCallbacks.get(msg.Seq);
             if (callback) {
                 callback(msg)
+            } else {
+                WebSocketClient.slog("onReceive", "no callback for api, data", msg)
             }
             return
         }

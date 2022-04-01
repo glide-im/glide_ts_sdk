@@ -1,10 +1,11 @@
-import {delCookie, getCookie, setCookie} from "../utils/Cookies";
-import {setApiToken} from "../api/axios";
-import {Api} from "../api/api";
-import {AuthBean, UserInfoBean} from "../api/model";
-import {Ws} from "./ws";
-import {SessionList} from "./session_list";
-import {Actions} from "./message";
+import { mergeMap, Observable } from "rxjs";
+import { Api } from "../api/api";
+import { setApiToken } from "../api/axios";
+import { AuthBean, UserInfoBean } from "../api/model";
+import { Glide } from "./glide";
+import { Actions } from "./message";
+import { SessionList } from "./session_list";
+import { Ws } from "./ws";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -17,33 +18,38 @@ export enum MessageLevel {
 
 export type MessageListener = (level: MessageLevel, msg: string) => void
 
+
 export class Account {
 
     private uid: string;
-    private token: string;
     private sessions: SessionList = new SessionList();
 
-    constructor() {
-        this.uid = getCookie("uid") ?? "";
-        this.token = getCookie("token") ?? "";
+    public static getInstance(): Account {
+        return instance;
     }
 
-    public login(account: string, password: string): Promise<any> {
+    public login(account: string, password: string): Observable<string> {
         return Api.login(account, password)
-            .then(res => {
-                return this.onAuthedAccount(res).then(() => res);
-            })
+            .pipe(
+                mergeMap(res => this.onAuthed(res)),
+            )
     }
 
-    public auth(): Promise<AuthBean> {
-        return Api.auth(this.token)
-            .then(res => {
-                return this.onAuthedAccount(res).then(() => res);
-            })
-            .catch(err => {
-                this.clearAuth()
-                return Promise.reject(err);
-            })
+    public auth(): Observable<string> {
+
+        console.log("auth", this.getToken());
+
+        return Api.auth(this.getToken())
+            .pipe(
+                mergeMap(res => {
+                    res.Token = this.getToken();
+                    return this.onAuthed(res)
+                }),
+                // catchError(err => {
+                //     //this.clearAuth();
+                //     throw new Error("auth failed: " + err);
+                // })
+            )
     }
 
     public logout() {
@@ -54,10 +60,9 @@ export class Account {
     }
 
     public clearAuth() {
+        console.log("clearAuth");
         this.uid = "";
-        this.token = "";
-        delCookie("uid");
-        delCookie("token");
+        Glide.storeToken("");
     }
 
     public getSessionList(): SessionList {
@@ -65,7 +70,7 @@ export class Account {
     }
 
     public isAuthenticated(): boolean {
-        return this.uid && this.uid !== "" && this.token && this.token !== "";
+        return this.getToken() && this.getToken() !== "";
     }
 
     public getUID(): number {
@@ -73,43 +78,38 @@ export class Account {
     }
 
     public getToken(): string {
-        return this.token;
+        return Glide.getToken();
     }
 
     public getUserInfo(): UserInfoBean {
-        return {Account: "", Avatar: "", Nickname: "Nickname", Uid: 0}
+        return { Account: "", Avatar: "", Nickname: "Nickname", Uid: 0 }
     }
 
-    private onAuthedAccount(auth: AuthBean): Promise<any> {
-        this.uid = auth.Uid.toString();
-        this.token = auth.Token;
+    private onAuthed(auth: AuthBean): Observable<string> {
 
         setApiToken(auth.Token);
+        this.uid = auth.Uid.toString();
+        Glide.storeToken(auth.Token);
 
-        setCookie("uid", this.uid.toString(), 1);
-        setCookie("token", this.token, 1);
+        return new Observable<string>(observer => {
 
-        return new Promise((resolve, reject) => {
             Ws.connect(auth.Servers[0], (s, m) => {
                 if (s) {
-                    Ws.request<AuthBean>(Actions.ApiUserAuth, {Token: this.getToken()})
+                    observer.next("IM server connected");
+                    Ws.request<AuthBean>(Actions.ApiUserAuth, { Token: this.getToken() })
                         .then(r => {
-                            resolve(r);
+                            observer.next("IM server auth success");
                         })
                         .catch(err => {
-                            reject(err);
+                            observer.error(err);
                         });
                 } else {
-                    reject(m);
+                    observer.error(m);
                 }
             })
-        })
+            observer.complete();
+        });
     }
 }
 
-export const IMAccount = new Account();
-
-
-
-
-
+const instance: Account = new Account();

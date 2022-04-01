@@ -1,10 +1,21 @@
-import {IMGroupMember, IMUserInfo} from "./def";
-import {Api} from "../api/api";
+import { IMGroupMember, IMUserInfo } from "./def";
+import { Api } from "../api/api";
+import { getCookie, setCookie } from "src/utils/Cookies";
 
 class GlideIM {
 
     private tempUserInfo = new Map<number, IMUserInfo>();
     private tempGroupMember = new Map<number, IMGroupMember[]>();
+
+    public getToken(): string {
+        return this._readObject("token");
+    }
+
+    public storeToken(token: string) {
+        console.log("storeToken", token);
+        
+        return this._writeObject("token", token);
+    }
 
     public getUserInfo(id: number): IMUserInfo | null {
         let i = this.tempUserInfo.get(id);

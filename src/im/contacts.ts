@@ -1,5 +1,5 @@
 import {ContactsBean} from "../api/model";
-import {IMAccount} from "./account";
+import { Account} from "./account";
 
 export class Contacts {
 
@@ -27,7 +27,7 @@ export class Contacts {
             return this.id;
         }
 
-        let lg = IMAccount.getUID();
+        let lg = Account.getInstance().getUID();
         let sm = parseInt(this.id.toString());
 
         if (lg < sm) {

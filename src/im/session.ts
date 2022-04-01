@@ -1,8 +1,10 @@
-import {SessionBean} from "../api/model";
-import {ChatMessage} from "./chat_message";
-import {IMAccount} from "./account";
-import {Message, MessageType} from "./message";
-import {Api} from "../api/api";
+import { map, mergeMap, Observable } from "rxjs";
+import { Api } from "../api/api";
+import { SessionBean } from "../api/model";
+import { Account } from "./account";
+import { ChatMessage } from "./chat_message";
+import { Message, MessageType } from "./message";
+import { Ws } from "./ws";
 
 export class Session {
 
@@ -20,8 +22,8 @@ export class Session {
 
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
-        console.log(IMAccount.getUID(), sb.Uid1, sb.Uid2, sb.Uid1 === IMAccount.getUID());
-        if (sb.Uid1 === IMAccount.getUID()) {
+        console.log(Account.getInstance().getUID(), sb.Uid1, sb.Uid2, sb.Uid1 === Account.getInstance().getUID());
+        if (sb.Uid1 === Account.getInstance().getUID()) {
             session.To = sb.Uid2;
         } else {
             session.To = sb.Uid1;
@@ -35,11 +37,11 @@ export class Session {
         return session;
     }
 
-    public sendTextMessage(msg: string): Promise<ChatMessage> {
+    public sendTextMessage(msg: string): Observable<Message> {
         return this.send(msg, MessageType.Text)
-            .then(r => {
-                return ChatMessage.create(r)
-            });
+            .pipe(
+
+            )
     }
 
     public setUpdateListener(listener: (session: Session) => void) {
@@ -64,7 +66,7 @@ export class Session {
 
     private getSID(): string {
 
-        let lg = IMAccount.getUID();
+        let lg = Account.getInstance().getUID();
         let sm = this.To;
 
         if (lg < sm) {
@@ -76,31 +78,33 @@ export class Session {
         return lg + "_" + sm;
     }
 
-    private send(content: string, type: number): Promise<Message> {
+    private send(content: string, type: number): Observable<Message> {
         const time = new Date().getSeconds();
 
         const m: Message = {
             Content: content,
-            From: IMAccount.getUID(),
-            Mid: "",
+            From: Account.getInstance().getUID(),
+            Mid: 0,
             SendAt: time,
             Seq: 0,
             To: this.To,
             Type: type
         }
-        const midPromise = Api.getMid()
-            .then(mid => {
-                m.Mid = mid;
-                return m
-            });
-        return new Promise<Message>((resolve, reject) => {
-            midPromise
-                .then(m => {
 
+        return Api.getMid()
+            .pipe(
+                map(resp => {
+                    m.Mid = resp.Mid;
+                    return m
                 })
-                .catch(err => {
-                    reject(err);
-                })
-        })
+            )
+            .pipe(
+                mergeMap(msg =>
+                    Ws.sendChatMessage(msg)
+                )
+            )
+            .pipe(
+                
+            )
     }
 }

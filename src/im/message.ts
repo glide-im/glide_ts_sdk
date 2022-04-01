@@ -32,14 +32,14 @@ export enum Actions {
     Heartbeat = "heartbeat",
 }
 
-export interface CommonMessage {
+export interface CommonMessage<T> {
     Seq: number
     Action: string
-    Data: any
+    Data: T
 }
 
 export interface Message {
-    Mid: string
+    Mid: number
     Seq: number
     From: number
     To: number

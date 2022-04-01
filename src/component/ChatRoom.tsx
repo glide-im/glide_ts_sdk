@@ -4,11 +4,11 @@ import {Send} from "@mui/icons-material";
 import {ChatMessage} from "../im/chat_message";
 import {GroupMemberList} from "./GroupMemberList";
 import {MessageListC} from "./MessageList";
-import {IMAccount} from "../im/account";
+import { Account} from "../im/account";
 
 export function ChatRoom(props: { sid: string }) {
 
-    const session = IMAccount.getSessionList().get(props.sid);
+    const session = Account.getInstance().getSessionList().get(props.sid);
     console.log("ChatRoom", props, session)
 
     const [messages, setMessages] = useState([])
@@ -37,12 +37,9 @@ export function ChatRoom(props: { sid: string }) {
     const sendMessage = (msg: string) => {
         if (session != null) {
             session.sendTextMessage(msg)
-                .then((res) => {
-                    setMessages([...messages, res])
-                })
-                .catch((err) => {
-                    console.error("send message", err)
-                })
+            .subscribe(r=>{
+                
+            })
         }
     }
 

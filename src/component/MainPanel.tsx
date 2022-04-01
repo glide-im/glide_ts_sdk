@@ -1,17 +1,17 @@
-import {Avatar, Box, Grid, IconButton, Typography} from "@mui/material";
-import {Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter} from "react-router-dom";
-import {Chat} from "./Chat";
-import {ContactsList} from "./ContactsList";
-import React from "react";
-import {IMAccount} from "../im/account";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import {Chat as ChatIcon, PersonSearch} from "@mui/icons-material";
+import { Chat as ChatIcon, PersonSearch } from "@mui/icons-material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import { Avatar, Box, Grid, IconButton, Typography } from "@mui/material";
+import React from "react";
+import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter } from "react-router-dom";
+import { Account } from "../im/account";
+import { Chat } from "./Chat";
+import { ContactsList } from "./ContactsList";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
-    if (!IMAccount.isAuthenticated()) {
-        console.log("redirect to login");
+    if (!Account.getInstance().isAuthenticated()) {
+        console.log("redirect to login = ", Account.getInstance().getToken());
         props.history.push("/auth");
         return <></>
     }
@@ -19,19 +19,19 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
     const match = useRouteMatch();
 
     return (
-        <Grid container style={{boxShadow: "grey 6px 7px 15px 0px"}}>
-            <Grid item xs={1} style={{height: "700px"}}>
-                <Bar/>
+        <Grid container style={{ boxShadow: "grey 6px 7px 15px 0px" }}>
+            <Grid item xs={1} style={{ height: "700px" }}>
+                <Bar />
             </Grid>
-            <Grid item xs={11} style={{height: "700px"}}>
+            <Grid item xs={11} style={{ height: "700px" }}>
                 <Switch>
-                    <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
-                    <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
+                    <Route path={`${match.url}/session/:sid`} children={<Chat />} />
+                    <Route path={`${match.url}/friends`} children={<ContactsList />} />
                     <Route path={`${match.url}/session`} exact={true}>
-                        <Redirect to={`${match.url}/session/${IMAccount.getSessionList().currentSid}`}/>
+                        <Redirect to={`${match.url}/session/${Account.getInstance().getSessionList().currentSid}`} />
                     </Route>
                     <Route path={`${match.url}/`} exact={true}>
-                        <Redirect to={`${match.url}/session/0`}/>
+                        <Redirect to={`${match.url}/session/0`} />
                     </Route>
                 </Switch>
             </Grid>
@@ -45,7 +45,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     let avatar = ""
     let nickname = ""
 
-    const userInfo = IMAccount.getUserInfo()
+    const userInfo = Account.getInstance().getUserInfo()
 
     if (userInfo) {
         avatar = userInfo.Avatar
@@ -53,37 +53,37 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     }
 
     const onExitClick = () => {
-        IMAccount.clearAuth()
+        Account.getInstance().clearAuth()
         props.history.replace("/auth")
     }
 
     const menu = [
         {
-            icon: <ChatIcon color={"action"}/>,
+            icon: <ChatIcon color={"action"} />,
             path: "/im/session",
         },
         {
-            icon: <PeopleAltIcon/>,
+            icon: <PeopleAltIcon />,
             path: "/im/friends",
         },
         {
-            icon: <PersonSearch/>,
+            icon: <PersonSearch />,
             path: "/im/search",
         },
     ]
 
-    return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
+    return <Box bgcolor={"primary.dark"} style={{ height: "100%" }}>
 
         <Grid justifyContent={"center"} container color={"primary.dark"}>
 
             <Grid container justifyContent={"center"} marginTop={"16px"}>
-                <Box mt={2}><Avatar src={avatar}/></Box>
+                <Box mt={2}><Avatar src={avatar} /></Box>
             </Grid>
 
             <Grid container justifyContent={"center"}>
                 <Box m={2}>
                     <Typography align={"center"} variant={"subtitle2"} color={"ghostwhite"}>
-                        {nickname} {IMAccount.getUID()}
+                        {nickname} {Account.getInstance().getUID()}
                     </Typography>
                 </Box>
             </Grid>
@@ -100,7 +100,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
             <Grid container justifyContent={"center"}>
                 <IconButton onClick={onExitClick}>
-                    <ExitToAppIcon/>
+                    <ExitToAppIcon />
                 </IconButton>
             </Grid>
         </Grid>

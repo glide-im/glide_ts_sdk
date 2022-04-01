@@ -67,7 +67,7 @@ function ChatMessageC(props: { msg: ChatMessage }) {
 
     const msg = props.msg
     const sender = Glide.getUserInfo(msg.From)
-    const me = (Math.floor(Math.random() * 10) > 5)// (sender?.Uid ?? 0) === IMAccount.getUID()
+    const me = (Math.floor(Math.random() * 10) > 5)// (sender?.Uid ?? 0) === Account.getInstance().getUID()
 
     let name = <></>
 

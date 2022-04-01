@@ -1,14 +1,14 @@
-import React, {useRef} from "react";
-import {Avatar, Box, Button, Grid, Link, Paper, TextField, Typography} from "@mui/material";
-import {Link as RtLink, RouteComponentProps, withRouter} from "react-router-dom";
-import {IMAccount} from "../im/account";
+import { Avatar, Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
+import React, { useRef } from "react";
+import { Link as RtLink, RouteComponentProps, withRouter } from "react-router-dom";
+import { Account } from "../im/account";
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 
     const accountInput = useRef<HTMLInputElement>(null)
     const passwordInput = useRef<HTMLInputElement>(null)
 
-    const token = IMAccount.getToken()
+    const token = Account.getInstance().getToken()
 
     if (token) {
         props.history.push("/im");
@@ -19,13 +19,18 @@ export const Auth = withRouter((props: RouteComponentProps) => {
         const account = accountInput.current.value;
         const password = passwordInput.current.value;
 
-        IMAccount.login(account, password)
-            .then(() => {
+        Account.getInstance().login(account, password)
+        .subscribe({
+            next: (r) => {
+                console.log( r)
+            },
+            error: (e) => {
+                alert(e.message)
+            },
+            complete: () => {
                 props.history.push("/im");
-            })
-            .catch((reason) => {
-                alert(reason);
-            });
+            }
+        })
     }
 
     return (
@@ -51,13 +56,13 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                         <Grid container justifyContent={"right"}>
 
                             <RtLink to={"./reset"}>
-                                <Link>Forgot Password?</Link>
+                                Forgot Password?
                             </RtLink>
                             <Typography variant={"body1"}>
                                 &nbsp;&nbsp;or&nbsp;&nbsp;
                             </Typography>
                             <RtLink to={"./signup"}>
-                                <Link>Register</Link>
+                                Register
                             </RtLink>
                         </Grid>
                     </Grid>

@@ -1,5 +1,5 @@
-import {Message} from "./message";
-import {IMAccount} from "./account";
+import { Message } from "./message";
+import { Account } from "./account";
 
 export class ChatMessage {
 
@@ -17,9 +17,9 @@ export class ChatMessage {
         ret.From = m.From;
         ret.To = m.To;
         ret.Content = m.Content;
-        ret.Mid = m.Mid;
+        ret.Mid = m.Mid.toString();
         ret.SendAt = m.SendAt.toString();
-        ret.IsMe = m.From === IMAccount.getUID();
+        ret.IsMe = m.From === Account.getInstance().getUID();
         return ret;
     }
 

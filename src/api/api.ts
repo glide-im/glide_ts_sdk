@@ -1,21 +1,23 @@
-import {AuthBean, ContactsBean, SessionBean, UserInfoBean} from "./model";
-import {post} from "./axios";
+import { AuthBean, ContactsBean, MidBean, SessionBean, UserInfoBean } from "./model";
+import { post } from "./axios";
+import { Observable } from "rxjs";
+import { rxios } from "./rxios";
 
 
-function login(account: string, password: string): Promise<AuthBean> {
+function login(account: string, password: string): Observable<AuthBean> {
     const param = {
         Account: account,
         Device: 2,
         Password: password
     };
-    return post("auth/signin", param)
+    return rxios.post("auth/signin", param)
 }
 
-function auth(token: string): Promise<AuthBean> {
+function auth(token: string): Observable<AuthBean> {
     const param = {
         Token: token
     };
-    return post("auth/token", param)
+    return rxios.post("auth/token", param)
 }
 
 function register(account: string, password: string): Promise<AuthBean> {
@@ -51,11 +53,11 @@ function getRecentSession(): Promise<SessionBean[]> {
 }
 
 function getOrCreateSession(to: number): Promise<SessionBean> {
-    return post("session/get", {To: to})
+    return post("session/get", { To: to })
 }
 
-function getMid(): Promise<any> {
-    return post("msg/id")
+function getMid(): Observable<MidBean> {
+    return rxios.post("msg/id")
 }
 
 export const Api = {

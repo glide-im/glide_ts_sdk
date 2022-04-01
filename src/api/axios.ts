@@ -1,13 +1,13 @@
 import axios, {AxiosInstance, AxiosPromise} from "axios";
 import {Response} from "./response";
 
-const instance: AxiosInstance = axios.create({
+export const axiosInstance: AxiosInstance = axios.create({
     timeout: 3000,
     baseURL: "http://192.168.1.123:8081/api/"
 });
 
 const setAuthHeader = (key: string, value: string) => {
-    instance.defaults.headers.common[key] = value;
+    axiosInstance.defaults.headers.common[key] = value;
 };
 
 export function setApiToken(token: string) {
@@ -46,11 +46,11 @@ function resolve<T>(axiosPromise: AxiosPromise): Promise<T> {
 }
 
 function post_(path: string, data?: any): AxiosPromise {
-    return instance.post(path, data)
+    return axiosInstance.post(path, data)
 }
 
 function get_(path: string): AxiosPromise {
-    return instance.get(path);
+    return axiosInstance.get(path);
 }
 
 

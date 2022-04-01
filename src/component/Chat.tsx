@@ -16,7 +16,7 @@ import {ChatRoom} from "./ChatRoom";
 import {Refresh} from "@mui/icons-material";
 import {Session} from "../im/session";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
-import {IMAccount} from "../im/account";
+import { Account} from "../im/account";
 
 const emptySession: Session[] = [];
 
@@ -32,11 +32,11 @@ export function Chat() {
 
     const update = function () {
 
-        IMAccount.getSessionList().setChatListUpdateListener(function (list: Session[]) {
+        Account.getInstance().getSessionList().setChatListUpdateListener(function (list: Session[]) {
             setSessions(list)
         })
 
-        IMAccount.getSessionList().getSessions()
+        Account.getInstance().getSessionList().getSessions()
             .then(res => {
                 const s = {
                     loading: false,
@@ -98,10 +98,10 @@ interface SessionListProps extends RouteComponentProps {
 export const SessionList = withRouter((props: SessionListProps) => {
 
     const [selectedSid, setSelectedSid] = useState(props.selected)
-    IMAccount.getSessionList().currentSid = props.selected;
+    Account.getInstance().getSessionList().currentSid = props.selected;
     const onSelect = (s: Session) => {
         setSelectedSid(s.ID)
-        IMAccount.getSessionList().currentSid = s.ID
+        Account.getInstance().getSessionList().currentSid = s.ID
         props.history.replace(`/im/session/${s.ID}`)
     }
     const list = props.sessions.map((value: Session) =>
