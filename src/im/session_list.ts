@@ -1,13 +1,14 @@
-import {ChatMessage} from "./chat_message";
-import {Session} from "./session";
-import {SessionBean} from "../api/model";
-import {Api} from "../api/api";
+import { ChatMessage } from "./chat_message";
+import { Session } from "./session";
+import { SessionBean } from "../api/model";
+import { Api } from "../api/api";
+import { Message } from "./message";
 
 export class SessionList {
 
     public currentSid: string;
 
-    private sessionMap: Map<string, Session> = new Map<string, Session>()
+    private sessionMap: Map<number, Session> = new Map<number, Session>()
 
     private chatListUpdateListener: (chats: Session[]) => void = (() => null)
 
@@ -23,14 +24,14 @@ export class SessionList {
         if (this.sessionMap.size !== 0 && !reload) {
             return Promise.resolve(Array.from(this.sessionMap.values()))
         }
-        this.sessionMap = new Map<string, Session>()
+        this.sessionMap = new Map<number, Session>()
         return Api.getRecentSession()
             .then(s => {
                 const res = s.map(item => Session.fromSessionBean(item))
 
                 // mock
                 const sessionBean: SessionBean = {
-                    CreateAt: 0, LastMid: 1, Uid1: 2, Uid2: 3, Unread: 0, UpdateAt: 0
+                    CreateAt: 0, LastMid: 1, Uid1: 2, Uid2: 3, Unread: 0, UpdateAt: 0, To: 1
                 }
                 res.push(Session.fromSessionBean(sessionBean))
 
@@ -42,32 +43,31 @@ export class SessionList {
             })
     }
 
-    public onChatMessage(message: ChatMessage) {
-        if (!this.contain(message.Mid)) {
-
-            return
+    public onChatMessage(message: Message) {
+        const session = this.get(message.To)
+        if (session) {
+            session.onMessage(message)
         }
-
     }
 
-    public add(chat: Session) {
-        if (this.sessionMap.has(chat.ID)) {
+    public add(s: Session) {
+        if (this.sessionMap.has(s.To)) {
             return
         }
-        this.sessionMap.set(chat.ID, chat)
+        this.sessionMap.set(s.To, s)
     }
 
-    public get(sid: string): Session | null {
+    public get(sid: number): Session | null {
         return this.sessionMap.get(sid);
     }
 
     public clear() {
         this.currentSid = ""
-        this.sessionMap = new Map<string, Session>()
+        this.sessionMap = new Map<number, Session>()
         this.chatListUpdateListener([])
     }
 
-    public contain(chatId: string): boolean {
+    public contain(chatId: number): boolean {
         return this.sessionMap.has(chatId)
     }
 }

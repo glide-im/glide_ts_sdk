@@ -82,7 +82,7 @@ export function Chat() {
             </Grid>
             <Grid item xs={8} style={{height: "700px"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
-                <ChatRoom sid={sid}/>
+                <ChatRoom to={sid}/>
             </Grid>
         </Grid>
 
@@ -97,15 +97,16 @@ interface SessionListProps extends RouteComponentProps {
 
 export const SessionList = withRouter((props: SessionListProps) => {
 
-    const [selectedSid, setSelectedSid] = useState(props.selected)
+    const [currentSession, setCurrentSession] = useState(props.selected)
     Account.getInstance().getSessionList().currentSid = props.selected;
     const onSelect = (s: Session) => {
-        setSelectedSid(s.ID)
+        setCurrentSession(s.ID)
         Account.getInstance().getSessionList().currentSid = s.ID
-        props.history.replace(`/im/session/${s.ID}`)
+        props.history.replace(`/im/session/${s.To}`)
     }
+    
     const list = props.sessions.map((value: Session) =>
-        <ChatItem key={value.ID} chat={value} selected={value.ID === selectedSid} onSelect={onSelect}/>
+        <ChatItem key={value.To} chat={value} selected={value.To === parseInt(currentSession)} onSelect={onSelect}/>
     )
 
     return <>

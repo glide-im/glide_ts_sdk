@@ -1,4 +1,4 @@
-import { map, mergeMap, Observable } from "rxjs";
+import { every, map, mergeMap, Observable, share } from "rxjs";
 import { Api } from "../api/api";
 import { SessionBean } from "../api/model";
 import { Account } from "./account";
@@ -18,16 +18,11 @@ export class Session {
     public Type: number;
     public To: number;
 
-    private messages = new Map<string, ChatMessage>();
+    private messages = new Map<number, Message>();
 
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
-        console.log(Account.getInstance().getUID(), sb.Uid1, sb.Uid2, sb.Uid1 === Account.getInstance().getUID());
-        if (sb.Uid1 === Account.getInstance().getUID()) {
-            session.To = sb.Uid2;
-        } else {
-            session.To = sb.Uid1;
-        }
+        session.To = sb.To;
         session.ID = session.getSID();
         session.Title = session.ID;
         session.UpdateAt = sb.UpdateAt.toString();
@@ -37,11 +32,12 @@ export class Session {
         return session;
     }
 
-    public sendTextMessage(msg: string): Observable<Message> {
-        return this.send(msg, MessageType.Text)
-            .pipe(
+    public onMessage(message: Message) {
+        this.messages.set(message.Mid, message)
+    }
 
-            )
+    public sendTextMessage(msg: string): Observable<Message> {
+        return this.send(msg, MessageType.Text);
     }
 
     public setUpdateListener(listener: (session: Session) => void) {
@@ -56,7 +52,7 @@ export class Session {
 
     }
 
-    public getMessages(): ChatMessage[] {
+    public getMessages(): Message[] {
         return Array.from(this.messages.values());
     }
 
@@ -102,9 +98,6 @@ export class Session {
                 mergeMap(msg =>
                     Ws.sendChatMessage(msg)
                 )
-            )
-            .pipe(
-                
             )
     }
 }

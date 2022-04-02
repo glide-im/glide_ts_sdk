@@ -49,19 +49,22 @@ export interface Message {
 }
 
 export interface AckRequest {
-    Seq: number
-    Mid: string
+    Mid: number
     From: number
 }
 
 export interface AckGroupMessage {
     Seq: number
-    Mid: string
+    Mid: number
     Gid: number
 }
 
 export interface AckNotify {
-    Mid: string
+    Mid: number
+}
+
+export interface AckMessage {
+    mid: number
 }
 
 export interface Recall {
@@ -71,7 +74,7 @@ export interface Recall {
 
 export interface GroupNotify {
     Gid: number,
-    Mid: string,
+    Mid: number,
     Type: number,
     Timestamp: number,
     Seq: number,

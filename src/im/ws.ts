@@ -1,5 +1,6 @@
-import { map, mergeMap, Observable, Observer } from "rxjs";
-import { Actions, CommonMessage, Message } from "./message";
+import { ThreeSixty } from "@mui/icons-material";
+import { map, mergeMap, Observable, Observer, TimeoutError, timeout as timeoutOpt } from "rxjs";
+import { AckMessage, AckNotify, AckRequest, Actions, CommonMessage, Message } from "./message";
 
 export type Listener = (msg: CommonMessage<any>) => void
 
@@ -19,9 +20,14 @@ export interface Result<T> {
     msg: string
 }
 
-const heartbeatInterval = 10000
+const ackTimeout = 3000
+const heartbeatInterval = 30000
 const connectionTimeout = 3000
 const requestTimeout = 3000
+
+export interface MessageListener {
+    (m:Message): void
+}
 
 type MessageCallBack = (m: CommonMessage<any>) => void
 
@@ -31,11 +37,12 @@ class WebSocketClient {
 
     private stateChangeListener: StateListener[];
 
-    private messageCallbacks: Map<number, Callback<any>>;
     private seq: number;
 
     private heartbeat: any | null;
-    private waits: Map<number, () => void> = new Map<number, () => void>();
+
+    private chatMessageListener: MessageListener[] = [];
+    private groupMessageListner: ((m: Message) => void)[] = [];
 
     private ackCallBacks = new Map<number, MessageCallBack>();
     private apiCallbacks = new Map<number, MessageCallBack>();
@@ -43,15 +50,28 @@ class WebSocketClient {
     constructor() {
         this.websocket = null;
         this.seq = 1;
+
         this.stateChangeListener = [];
-        this.messageCallbacks = new Map<number, any>()
     }
 
     private static slog(where: string, ...msg: any[]) {
-        console.log(`[WebSocket] ${where}: ${msg.map(r => r.toString()).join(' ')}`)
+        console.log(`[WebSocket] ${where}:`, ...msg)
     }
 
-    public connect(ws: string, callback: (success: boolean, msg: string) => void) {
+    public connect(ws: string): Observable<string> {
+        return new Observable((observer: Observer<string>) => {
+            this.connectInternal(ws, (success, msg) => {
+                if (success) {
+                    observer.next("ws connected")
+                } else {
+                    observer.error(msg)
+                }
+                observer.complete()
+            });
+        });
+    }
+
+    private connectInternal(ws: string, callback: (success: boolean, msg: string) => void) {
         if (this.websocket != null) {
             if (this.websocket.readyState === WebSocket.OPEN) {
                 this.websocket.close()
@@ -102,7 +122,7 @@ class WebSocketClient {
      * @param action the action to request
      * @param data  the data to send
      */
-    public request<T>(action: string, data?: any): Promise<T> {
+    public request<T>(action: string, data?: any): Observable<T> {
 
         const d: string = data === null ? {} : data;
         const seq = this.seq++;
@@ -113,43 +133,10 @@ class WebSocketClient {
             Seq: seq,
         }
 
-        return new Promise<T>((resolve, reject) => {
-            // flag to indicate if the request is completed
-            let complete = false;
-
-            const timeout = setTimeout(() => {
-                if (!complete) {
-                    complete = true;
-                    reject(new Error("timeout"))
-                }
-            }, requestTimeout);
-
-            this.send(message)
-                .then(() => {
-                    if (complete) {
-                        return;
-                    }
-                    this.apiCallbacks.set(seq, (m: CommonMessage<any>) => {
-                        complete = true;
-                        if (m.Action === Actions.ApiSuccess) {
-                            const obj = m.Data;
-                            resolve(obj as T)
-                        } else {
-                            reject(m.Data)
-                        }
-                    })
-                })
-                .catch(e => {
-                    if (complete) {
-                        return;
-                    }
-                    complete = true;
-                    reject(e)
-                })
-                .finally(() => {
-                    clearTimeout(timeout);
-                })
-        })
+        return this.send(message)
+            .pipe(
+                mergeMap(() => this.getApiRespObservable<T>(seq)),
+            )
     }
 
     public close() {
@@ -159,27 +146,32 @@ class WebSocketClient {
         this.websocket?.close(3001, "bye")
     }
 
+    public addChatMessageListener(l: (m: Message) => void) {
+        this.chatMessageListener.push(l)
+    }
+
+    public removeChatMessageListener(l: (m: Message) => void) {
+        const index = this.chatMessageListener.indexOf(l);
+        if (index > -1) {
+            this.chatMessageListener.splice(index, 1);
+        }
+    }
+
     public addStateListener(l: StateListener) {
         this.stateChangeListener.push(l)
     }
 
     public sendChatMessage(m: Message): Observable<Message> {
-        return new Observable((observer: Observer<CommonMessage<Message>>) => {
-            const data: CommonMessage<Message> = {
-                Action: Actions.MessageChat,
-                Data: m,
-                Seq: this.seq++,
-            };
-            observer.next(data)
-            observer.complete()
-        })
+
+        return this.createCommonMessage(m)
             .pipe(
-                mergeMap(r => this.sendRx(r)),
-                map(r => r.Data)
+                mergeMap(msg => this.send(msg)),
+                mergeMap((msg) => this.getAckObservable(msg.Data)),
+                map(msg => msg)
             )
     }
 
-    private createMessageObservable<T>(data: T): Observable<T> {
+    private createCommonMessage<T>(data: T): Observable<CommonMessage<T>> {
         return new Observable((observer: Observer<CommonMessage<T>>) => {
             const msg: CommonMessage<T> = {
                 Action: Actions.MessageChat,
@@ -189,22 +181,9 @@ class WebSocketClient {
             observer.next(msg)
             observer.complete()
         })
-            .pipe<CommonMessage<T>>(
-                mergeMap(m => this.sendRx(m)),
-            )
-            .pipe(
-                map(m => m.Data)
-            )
     }
 
-    private getSeq(): Observable<number> {
-        return new Observable((observer: Observer<number>) => {
-            observer.next(this.seq++)
-            observer.complete()
-        });
-    }
-
-    private sendRx<T>(data: CommonMessage<T>): Observable<CommonMessage<T>> {
+    private send<T>(data: CommonMessage<T>): Observable<CommonMessage<T>> {
         return new Observable((observer: Observer<CommonMessage<T>>) => {
             if (this.websocket === undefined) {
                 observer.error("not initialized")
@@ -221,46 +200,99 @@ class WebSocketClient {
         });
     }
 
-    private send(data: CommonMessage<any>): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (this.websocket === undefined || this.websocket.readyState !== WebSocket.OPEN) {
-                reject("not connected")
-                return
-            }
-            const json = JSON.stringify(data);
-            this.websocket.send(json)
-            resolve("ok")
-        })
-    }
-
     private startHeartbeat() {
         clearInterval(this.heartbeat);
+
         this.heartbeat = setInterval(() => {
-            const hb: CommonMessage<any> = {
+            if (this.websocket === undefined || this.websocket.readyState !== WebSocket.OPEN) {
+                return
+            }
+            const hb: CommonMessage<{}> = {
                 Action: Actions.Heartbeat,
                 Data: {},
                 Seq: this.seq++,
             }
             this.send(hb)
-                .then(() => {
-
-                })
-                .catch(e => {
-                    WebSocketClient.slog("heartbeat", "failed")
+                .subscribe({
+                    next: (m: CommonMessage<any>) => {
+                        WebSocketClient.slog("heartbeat", "ok", m)
+                    },
+                    error: (e) => {
+                        WebSocketClient.slog("heartbeat", "failed", e)
+                    },
+                    complete: () => {
+                    }
                 })
         }, heartbeatInterval)
     }
 
-    private wait(seq: number, cb: () => void) {
-        this.waits.set(seq, cb)
+    private getAckObservable(msg: Message): Observable<Message> {
+        return new Observable<Message>((observer: Observer<Message>) => {
+            this.ackCallBacks.set(msg.Mid, () => {
+                observer.next(msg)
+                observer.complete()
+            });
+        }).pipe(
+            timeoutOpt(requestTimeout)
+        );
+    }
+
+    private getApiRespObservable<T>(seq: number): Observable<T> {
+        return new Observable((observer: Observer<T>) => {
+            this.apiCallbacks.set(seq, (m: CommonMessage<any>) => {
+                if (m.Action === Actions.ApiSuccess) {
+                    const obj = m.Data;
+                    observer.next(obj as T)
+                } else {
+                    observer.error(m.Data)
+                }
+                observer.complete()
+            })
+        })
+            .pipe(
+                timeoutOpt(ackTimeout)
+            )
     }
 
     private onIMMessage(msg: CommonMessage<any>) {
-
+        switch (msg.Action) {
+            case Actions.MessageChat:
+                this.chatMessageListener.forEach(l => l(msg.Data));
+                break;
+            case Actions.MessageGroup:
+                this.chatMessageListener.forEach(l => l(msg.Data));
+                break;
+            case Actions.MessageChatRecall:
+                this.chatMessageListener.forEach(l => l(msg.Data));
+                break;
+            case Actions.MessageGroupRecall:
+                this.chatMessageListener.forEach(l => l(msg.Data));
+                break;
+            default:
+                WebSocketClient.slog("onIMMessage", "unknown message", msg)
+        }
     }
 
     private onAckMessage(msg: CommonMessage<any>) {
+        switch (msg.Action) {
+            case Actions.AckMessage:
+                console.log("ack", msg);
+                break;
+            case Actions.AckNotify:
+                console.log("ack notify", msg);
+                break;
+            default:
+                WebSocketClient.slog("onAckMessage", "unknown", msg);
+                return;
+        }
+        const ack = msg.Data as AckMessage;
+        const callback = this.ackCallBacks.get(ack.mid)
 
+        if (callback === undefined) {
+            WebSocketClient.slog("onAckMessage", "no callback", msg);
+        } else {
+            callback(msg)
+        }
     }
 
     private onNotifyMessage(msg: CommonMessage<any>) {

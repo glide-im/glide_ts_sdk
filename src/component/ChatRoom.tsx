@@ -6,9 +6,10 @@ import {GroupMemberList} from "./GroupMemberList";
 import {MessageListC} from "./MessageList";
 import { Account} from "../im/account";
 
-export function ChatRoom(props: { sid: string }) {
+export function ChatRoom(props: { to: string }) {
 
-    const session = Account.getInstance().getSessionList().get(props.sid);
+    const id = parseInt(props.to);
+    const session = Account.getInstance().getSessionList().get(id);
     console.log("ChatRoom", props, session)
 
     const [messages, setMessages] = useState([])
@@ -38,7 +39,7 @@ export function ChatRoom(props: { sid: string }) {
         if (session != null) {
             session.sendTextMessage(msg)
             .subscribe(r=>{
-                
+                setMessages([...messages, r])
             })
         }
     }

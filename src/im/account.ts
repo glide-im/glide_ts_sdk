@@ -1,4 +1,5 @@
-import { mergeMap, Observable } from "rxjs";
+import { catchError, map, merge, mergeMap, Observable, single } from "rxjs";
+import { onComplete, onNext } from "src/rx/next";
 import { Api } from "../api/api";
 import { setApiToken } from "../api/axios";
 import { AuthBean, UserInfoBean } from "../api/model";
@@ -23,6 +24,8 @@ export class Account {
 
     private uid: string;
     private sessions: SessionList = new SessionList();
+    private servers: string[] = [];
+    private token: string;
 
     public static getInstance(): Account {
         return instance;
@@ -31,31 +34,28 @@ export class Account {
     public login(account: string, password: string): Observable<string> {
         return Api.login(account, password)
             .pipe(
-                mergeMap(res => this.onAuthed(res)),
+                mergeMap(res => this.connectIMServer(res)),
             )
     }
 
     public auth(): Observable<string> {
 
-        console.log("auth", this.getToken());
-
         return Api.auth(this.getToken())
             .pipe(
                 mergeMap(res => {
-                    res.Token = this.getToken();
-                    return this.onAuthed(res)
+                    return this.connectIMServer(res)
                 }),
-                // catchError(err => {
-                //     //this.clearAuth();
-                //     throw new Error("auth failed: " + err);
-                // })
+                catchError(err => {
+                    this.clearAuth();
+                    throw new Error("auth failed: " + err);
+                })
             )
     }
 
     public logout() {
         this.clearAuth()
         Ws.request(Actions.ApiUserLogout, {})
-            .then();
+            .subscribe({});
         Ws.close()
     }
 
@@ -85,30 +85,29 @@ export class Account {
         return { Account: "", Avatar: "", Nickname: "Nickname", Uid: 0 }
     }
 
-    private onAuthed(auth: AuthBean): Observable<string> {
+    private connectIMServer(auth: AuthBean): Observable<string> {
 
         setApiToken(auth.Token);
         this.uid = auth.Uid.toString();
         Glide.storeToken(auth.Token);
 
-        return new Observable<string>(observer => {
+        const server = auth.Servers[0];
+        const data = { Token: this.getToken() };
 
-            Ws.connect(auth.Servers[0], (s, m) => {
-                if (s) {
-                    observer.next("IM server connected");
-                    Ws.request<AuthBean>(Actions.ApiUserAuth, { Token: this.getToken() })
-                        .then(r => {
-                            observer.next("IM server auth success");
-                        })
-                        .catch(err => {
-                            observer.error(err);
-                        });
-                } else {
-                    observer.error(m);
-                }
-            })
-            observer.complete();
-        });
+        const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
+            .pipe(
+                map(() => "IM server auth success"),
+            )
+
+        return Ws.connect(server)
+            .pipe(
+                mergeMap(() => authWs),
+                onComplete(() => {
+                    Ws.addChatMessageListener(m => {
+                        this.sessions.onChatMessage(m);
+                    });
+                }),
+            )
     }
 }
 

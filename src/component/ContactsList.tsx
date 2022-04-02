@@ -115,7 +115,7 @@ export const ContactsItem = withRouter((props: Props) => {
 
     const c = props.contact;
     const handleClick = () => {
-        props.history.push(`./session/${c.getSID()}`);
+        props.history.push(`./session/${c.id}`);
     }
 
     return <>

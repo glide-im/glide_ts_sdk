@@ -1,6 +1,5 @@
-import { IMGroupMember, IMUserInfo } from "./def";
 import { Api } from "../api/api";
-import { getCookie, setCookie } from "src/utils/Cookies";
+import { IMGroupMember, IMUserInfo } from "./def";
 
 class GlideIM {
 
@@ -11,9 +10,7 @@ class GlideIM {
         return this._readObject("token");
     }
 
-    public storeToken(token: string) {
-        console.log("storeToken", token);
-        
+    public storeToken(token: string) {        
         return this._writeObject("token", token);
     }
 

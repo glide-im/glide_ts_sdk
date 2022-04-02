@@ -20,6 +20,7 @@ export interface UserInfoBean {
 export interface SessionBean {
     Uid1: number
     Uid2: number
+    To: number
     Unread: number
     LastMid: number
     UpdateAt: number
