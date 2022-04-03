@@ -104,7 +104,7 @@ export class Account {
                 mergeMap(() => authWs),
                 onComplete(() => {
                     Ws.addChatMessageListener(m => {
-                        this.sessions.onChatMessage(m);
+                        this.sessions.onMessage(m);
                     });
                 }),
             )

@@ -19,6 +19,7 @@ export class Session {
     public To: number;
 
     private messages = new Map<number, Message>();
+    private messageListener: ((message: Message) => void) | null = null;
 
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
@@ -33,7 +34,9 @@ export class Session {
     }
 
     public onMessage(message: Message) {
-        this.messages.set(message.Mid, message)
+        console.log("onMessage", message);
+        this.messages.set(message.mid, message)
+        this.messageListener && this.messageListener(message);
     }
 
     public sendTextMessage(msg: string): Observable<Message> {
@@ -44,8 +47,8 @@ export class Session {
 
     }
 
-    public setMessageListener(listener: (message: ChatMessage) => void) {
-
+    public setMessageListener(listener: (message: Message) => void) {
+        this.messageListener = listener;
     }
 
     public sendMessage(message: ChatMessage) {
@@ -78,19 +81,19 @@ export class Session {
         const time = new Date().getSeconds();
 
         const m: Message = {
-            Content: content,
-            From: Account.getInstance().getUID(),
-            Mid: 0,
-            SendAt: time,
-            Seq: 0,
-            To: this.To,
-            Type: type
+            content: content,
+            from: Account.getInstance().getUID(),
+            mid: 0,
+            sendAt: time,
+            seq: 0,
+            to: this.To,
+            type: type
         }
 
         return Api.getMid()
             .pipe(
                 map(resp => {
-                    m.Mid = resp.Mid;
+                    m.mid = resp.Mid;
                     return m
                 })
             )

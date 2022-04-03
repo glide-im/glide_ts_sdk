@@ -228,7 +228,7 @@ class WebSocketClient {
 
     private getAckObservable(msg: Message): Observable<Message> {
         return new Observable<Message>((observer: Observer<Message>) => {
-            this.ackCallBacks.set(msg.Mid, () => {
+            this.ackCallBacks.set(msg.mid, () => {
                 observer.next(msg)
                 observer.complete()
             });

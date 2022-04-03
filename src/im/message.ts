@@ -39,13 +39,13 @@ export interface CommonMessage<T> {
 }
 
 export interface Message {
-    Mid: number
-    Seq: number
-    From: number
-    To: number
-    Type: number
-    Content: string
-    SendAt: number
+    mid: number
+    seq: number
+    from: number
+    to: number
+    type: number
+    content: string
+    sendAt: number
 }
 
 export interface AckRequest {

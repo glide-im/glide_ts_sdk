@@ -1,8 +1,9 @@
-import { ChatMessage } from "./chat_message";
+
 import { Session } from "./session";
 import { SessionBean } from "../api/model";
 import { Api } from "../api/api";
 import { Message } from "./message";
+import { Account } from "./account";
 
 export class SessionList {
 
@@ -43,9 +44,15 @@ export class SessionList {
             })
     }
 
-    public onChatMessage(message: Message) {
-        const session = this.get(message.To)
-        if (session) {
+    public onMessage(message: Message) {
+        const uid = Account.getInstance().getUID()
+        let s = message.from
+        if (message.from === uid) {
+            s = message.to
+        }
+        console.log("list.onMessage1", message, s)
+        if (this.sessionMap.has(s)) {
+            const session = this.get(s)
             session.onMessage(message)
         }
     }

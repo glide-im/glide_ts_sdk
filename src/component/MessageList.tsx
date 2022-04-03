@@ -1,7 +1,9 @@
-import React, {CSSProperties, useEffect, useMemo, useRef} from "react";
-import {ChatMessage} from "../im/chat_message";
-import {Avatar, Box, Grid, List, ListItem, Typography} from "@mui/material";
-import {Glide} from "../im/glide";
+import React, { CSSProperties, useEffect, useMemo, useRef } from "react";
+import { ChatMessage } from "../im/chat_message";
+import { Avatar, Box, Grid, List, ListItem, Typography } from "@mui/material";
+import { Glide } from "../im/glide";
+import { Account } from "src/im/account";
+import { Message } from "src/im/message";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -18,9 +20,9 @@ const messageListStyle: CSSProperties = {
     overflow: "auto", width: "100%",
 }
 
-type MessageListItem = string | ChatMessage
+type MessageListItem = string | Message
 
-export function MessageListC(props: { messages: ChatMessage[] }) {
+export function MessageListC(props: { messages: Message[] }) {
 
     const messages: MessageListItem[] = useMemo(() => {
         return ["", "2022-3-31 08:49", ...props.messages]
@@ -42,7 +44,7 @@ export function MessageListC(props: { messages: ChatMessage[] }) {
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.Mid}`} sx={{padding: "0"}}><ChatMessageC msg={value}/></ListItem>
+        return <ListItem key={`${value.mid}`} sx={{ padding: "0" }}><ChatMessageC msg={value} /></ListItem>
     })
 
     return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>
@@ -63,11 +65,11 @@ const messageBoxStyle = function (): CSSProperties {
     }
 }
 
-function ChatMessageC(props: { msg: ChatMessage }) {
+function ChatMessageC(props: { msg: Message }) {
 
     const msg = props.msg
-    const sender = Glide.getUserInfo(msg.From)
-    const me = (Math.floor(Math.random() * 10) > 5)// (sender?.Uid ?? 0) === Account.getInstance().getUID()
+    const sender = Glide.getUserInfo(msg.from)
+    const me = msg.from === Account.getInstance().getUID()
 
     let name = <></>
 
@@ -77,15 +79,15 @@ function ChatMessageC(props: { msg: ChatMessage }) {
     if (!me) {
         direction = "row"
         avatar = <Grid item xs={1} justifyContent={"center"}>
-            <Avatar src={sender?.avatar ?? ""}/>
+            <Avatar src={sender?.avatar ?? ""} />
         </Grid>
 
     }
 
-    if (msg.IsGroup && !me) {
-        name = <Box style={{padding: '0px 8px'}}>
+    if (!me) {
+        name = <Box style={{ padding: '0px 8px' }}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
-                {msg.From}
+                {msg.from}
             </Typography>
         </Box>
     }
@@ -95,7 +97,7 @@ function ChatMessageC(props: { msg: ChatMessage }) {
         <Grid item style={{}}>
             {name}
             <Box bgcolor={"info.main"} style={messageBoxStyle()}>
-                <Typography variant={"body1"}>{msg.Content}</Typography>
+                <Typography variant={"body1"}>{msg.content}</Typography>
             </Box>
         </Grid>
     </Grid>

@@ -14,12 +14,12 @@ export class ChatMessage {
 
     public static create(m: Message): ChatMessage {
         const ret = new ChatMessage();
-        ret.From = m.From;
-        ret.To = m.To;
-        ret.Content = m.Content;
-        ret.Mid = m.Mid.toString();
-        ret.SendAt = m.SendAt.toString();
-        ret.IsMe = m.From === Account.getInstance().getUID();
+        ret.From = m.from;
+        ret.To = m.to;
+        ret.Content = m.content;
+        ret.Mid = m.mid.toString();
+        ret.SendAt = m.sendAt.toString();
+        ret.IsMe = m.from === Account.getInstance().getUID();
         return ret;
     }
 

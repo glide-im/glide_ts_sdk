@@ -1,10 +1,10 @@
-import {Box, Divider, IconButton, TextareaAutosize, Typography} from "@mui/material";
-import React, {CSSProperties, useEffect, useState} from "react";
-import {Send} from "@mui/icons-material";
-import {ChatMessage} from "../im/chat_message";
-import {GroupMemberList} from "./GroupMemberList";
-import {MessageListC} from "./MessageList";
-import { Account} from "../im/account";
+import { Box, Divider, IconButton, TextareaAutosize, Typography } from "@mui/material";
+import React, { CSSProperties, useEffect, useState } from "react";
+import { Send } from "@mui/icons-material";
+import { GroupMemberList } from "./GroupMemberList";
+import { MessageListC } from "./MessageList";
+import { Account } from "../im/account";
+import { Message } from "src/im/message";
 
 export function ChatRoom(props: { to: string }) {
 
@@ -21,7 +21,7 @@ export function ChatRoom(props: { to: string }) {
         }
         setMessages(session.getMessages())
 
-        session.setMessageListener((m: ChatMessage) => {
+        session.setMessageListener((m: Message) => {
             setMessages([...session.getMessages()])
         })
         return () => session.setMessageListener(null)
@@ -38,29 +38,29 @@ export function ChatRoom(props: { to: string }) {
     const sendMessage = (msg: string) => {
         if (session != null) {
             session.sendTextMessage(msg)
-            .subscribe(r=>{
-                setMessages([...messages, r])
-            })
+                .subscribe(r => {
+                    setMessages([...messages, r])
+                })
         }
     }
 
     return (<Box>
         <Box height={"70px"} paddingLeft={"16px"}>
-            <Typography variant={"h6"} style={{lineHeight: "70px"}}>
+            <Typography variant={"h6"} style={{ lineHeight: "70px" }}>
                 {session.Title}
             </Typography>
         </Box>
-        <Divider/>
+        <Divider />
 
-        {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}
+        {isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}
 
         <Box height={(isGroup ? "470px" : "510px")}>
-            <MessageListC messages={messages}/>
+            <MessageListC messages={messages} />
         </Box>
-        <Divider/>
+        <Divider />
 
-        <Box style={{height: "100px", padding: "10px"}}>
-            <MessageInput onSend={sendMessage}/>
+        <Box style={{ height: "100px", padding: "10px" }}>
+            <MessageInput onSend={sendMessage} />
         </Box>
     </Box>)
 }
@@ -88,9 +88,9 @@ function MessageInput(props: { onSend: (msg: string) => void }) {
     }
 
     return <>
-        <TextareaAutosize autoFocus style={messageInputStyle} onKeyPress={handleKeyDown}/>
-        <IconButton color={"primary"} size={"small"} style={{float: "right"}}>
-            <Send/>
+        <TextareaAutosize autoFocus style={messageInputStyle} onKeyPress={handleKeyDown} />
+        <IconButton color={"primary"} size={"small"} style={{ float: "right" }}>
+            <Send />
         </IconButton>
     </>
 }
