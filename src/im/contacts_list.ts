@@ -1,17 +1,29 @@
-import {Group} from "./group";
-import {Api} from "../api/api";
-import {Contacts} from "./contacts";
-import {ContactsBean, UserInfoBean} from "../api/model";
+import { Group } from "./group";
+import { Api } from "../api/api";
+import { Contacts } from "./contacts";
+import { ContactsBean, UserInfoBean } from "../api/model";
+import { map, mergeMap, Observable, of, toArray } from "rxjs";
+import { onNext } from "src/rx/next";
 
 export class ContactsList {
 
+    private contacts: Map<number, Contacts> = new Map<number, Contacts>();
+
     public onContactsChange: () => void | null = null;
 
-    public loadContacts(): Promise<Contacts[]> {
+    public getContactList(): Observable<Contacts[]> {
+        if (this.contacts.size > 0) {
+            return of(Array.from(this.contacts.values()));
+        }
         return Api.getContacts()
-            .then(contacts => {
-                return contacts.map(c => Contacts.create(c));
-            });
+            .pipe(
+                mergeMap(contacts => of(...contacts)),
+                map(contacts => Contacts.create(contacts)),
+                onNext(contacts => {
+                    this.contacts.set(contacts.id, contacts);
+                }),
+                toArray(),
+            )
     }
 
     public setContactsAddListener(listener: () => void | null) {

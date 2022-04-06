@@ -1,6 +1,5 @@
-import { ThreeSixty } from "@mui/icons-material";
-import { map, mergeMap, Observable, Observer, TimeoutError, timeout as timeoutOpt } from "rxjs";
-import { AckMessage, AckNotify, AckRequest, Actions, CommonMessage, Message } from "./message";
+import { map, mergeMap, Observable, Observer, timeout as timeoutOpt } from "rxjs";
+import { AckMessage, Actions, CommonMessage, Message } from "./message";
 
 export type Listener = (msg: CommonMessage<any>) => void
 
@@ -26,7 +25,7 @@ const connectionTimeout = 3000
 const requestTimeout = 3000
 
 export interface MessageListener {
-    (m:Message): void
+    (m: CommonMessage<any>): void
 }
 
 type MessageCallBack = (m: CommonMessage<any>) => void
@@ -41,8 +40,8 @@ class WebSocketClient {
 
     private heartbeat: any | null;
 
-    private chatMessageListener: MessageListener[] = [];
-    private groupMessageListner: ((m: Message) => void)[] = [];
+    private messageListener: MessageListener[] = [];
+    private groupMessageListner: ((m: CommonMessage<any>) => void)[] = [];
 
     private ackCallBacks = new Map<number, MessageCallBack>();
     private apiCallbacks = new Map<number, MessageCallBack>();
@@ -146,14 +145,14 @@ class WebSocketClient {
         this.websocket?.close(3001, "bye")
     }
 
-    public addChatMessageListener(l: (m: Message) => void) {
-        this.chatMessageListener.push(l)
+    public addMessageListener(l: (m: CommonMessage<any>) => void) {
+        this.messageListener.push(l)
     }
 
-    public removeChatMessageListener(l: (m: Message) => void) {
-        const index = this.chatMessageListener.indexOf(l);
+    public removeChatMessageListener(l: (m: CommonMessage<any>) => void) {
+        const index = this.messageListener.indexOf(l);
         if (index > -1) {
-            this.chatMessageListener.splice(index, 1);
+            this.messageListener.splice(index, 1);
         }
     }
 
@@ -255,18 +254,16 @@ class WebSocketClient {
     }
 
     private onIMMessage(msg: CommonMessage<any>) {
+        this.messageListener.forEach(l => l(msg));
+
         switch (msg.Action) {
             case Actions.MessageChat:
-                this.chatMessageListener.forEach(l => l(msg.Data));
                 break;
             case Actions.MessageGroup:
-                this.chatMessageListener.forEach(l => l(msg.Data));
                 break;
             case Actions.MessageChatRecall:
-                this.chatMessageListener.forEach(l => l(msg.Data));
                 break;
             case Actions.MessageGroupRecall:
-                this.chatMessageListener.forEach(l => l(msg.Data));
                 break;
             default:
                 WebSocketClient.slog("onIMMessage", "unknown message", msg)
@@ -296,7 +293,7 @@ class WebSocketClient {
     }
 
     private onNotifyMessage(msg: CommonMessage<any>) {
-
+        this.messageListener.forEach(l => l(msg));
     }
 
     private onReceive(data: MessageEvent) {

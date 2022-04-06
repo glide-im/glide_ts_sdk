@@ -1,31 +1,22 @@
+import { Send } from "@mui/icons-material";
 import { Box, Divider, IconButton, TextareaAutosize, Typography } from "@mui/material";
 import React, { CSSProperties, useEffect, useState } from "react";
-import { Send } from "@mui/icons-material";
+import { ChatMessage } from "src/im/chat_message";
+import { Account } from "../im/account";
 import { GroupMemberList } from "./GroupMemberList";
 import { MessageListC } from "./MessageList";
-import { Account } from "../im/account";
-import { Message } from "src/im/message";
+
+function SessionList() {
+    return Account.getInstance().getSessionList();
+}
 
 export function ChatRoom(props: { to: string }) {
 
     const id = parseInt(props.to);
-    const session = Account.getInstance().getSessionList().get(id);
+    const session = SessionList().get(id);
     console.log("ChatRoom", props, session)
 
-    const [messages, setMessages] = useState([])
     const isGroup = (session?.Type === 2)
-
-    useEffect(() => {
-        if (session == null) {
-            return
-        }
-        setMessages(session.getMessages())
-
-        session.setMessageListener((m: Message) => {
-            setMessages([...session.getMessages()])
-        })
-        return () => session.setMessageListener(null)
-    }, [session])
 
     if (session == null) {
         return <Box mt={"50%"}>
@@ -39,7 +30,7 @@ export function ChatRoom(props: { to: string }) {
         if (session != null) {
             session.sendTextMessage(msg)
                 .subscribe(r => {
-                    setMessages([...messages, r])
+                    console.log("sendMessage", r)
                 })
         }
     }
@@ -55,7 +46,7 @@ export function ChatRoom(props: { to: string }) {
         {isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}
 
         <Box height={(isGroup ? "470px" : "510px")}>
-            <MessageListC messages={messages} />
+            <SessionMessageList id={id} />
         </Box>
         <Divider />
 
@@ -63,6 +54,39 @@ export function ChatRoom(props: { to: string }) {
             <MessageInput onSend={sendMessage} />
         </Box>
     </Box>)
+}
+
+function SessionMessageList(props: { id: number }) {
+    const session = SessionList().get(props.id);
+
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+    useEffect(() => {
+        session?.getMessageHistry(0)
+            .subscribe({
+                next: (r) => {
+                    setMessages(r)
+                },
+                error: (e) => {
+                    console.log("getMessageHistry", e)
+                }
+            })
+        session?.setMessageListener((msg) => {
+            setMessages([...messages, msg])
+        })
+        return () => {
+            session?.setMessageListener(null)
+        }
+    }, [session])
+
+    if (session == null) {
+        return <Box mt={"50%"}>
+            <Typography variant="h6" textAlign={"center"}>
+                No Session
+            </Typography>
+        </Box>
+    }
+    return <MessageListC messages={session.getMessages()} />
 }
 
 const messageInputStyle: CSSProperties = {

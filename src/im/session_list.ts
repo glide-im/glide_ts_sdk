@@ -1,51 +1,57 @@
-
-import { Session } from "./session";
-import { SessionBean } from "../api/model";
+import { map, mergeMap, Observable, of, toArray } from "rxjs";
+import { onNext } from "src/rx/next";
 import { Api } from "../api/api";
-import { Message } from "./message";
 import { Account } from "./account";
+import { Message } from "./message";
+import { Session } from "./session";
+
+export interface SessionListUpdateListener {
+    (session: Session[]): void
+}
 
 export class SessionList {
 
-    public currentSid: string;
+    private account: Account;
+    public currentSid: string = "0";
 
+    private chatListUpdateListener: SessionListUpdateListener | null = null;
     private sessionMap: Map<number, Session> = new Map<number, Session>()
 
-    private chatListUpdateListener: (chats: Session[]) => void = (() => null)
+    constructor(account: Account) {
+        this.account = account
+    }
 
-    public startChat(id: number, type: number): Promise<Session> {
+    public init() {
+
+    }
+
+    public startChat(id: number): Promise<Session> {
         return Promise.reject("not implemented")
     }
 
-    public setChatListUpdateListener(l: (chats: Session[]) => void) {
-
+    public setChatListUpdateListener(l: SessionListUpdateListener | null) {
+        this.chatListUpdateListener = l
     }
 
-    public getSessions(reload: boolean = false): Promise<Session[]> {
+    public getSessions(reload: boolean = false): Observable<Session[]> {
         if (this.sessionMap.size !== 0 && !reload) {
-            return Promise.resolve(Array.from(this.sessionMap.values()))
+            return of(Array.from(this.sessionMap.values()));
         }
-        this.sessionMap = new Map<number, Session>()
         return Api.getRecentSession()
-            .then(s => {
-                const res = s.map(item => Session.fromSessionBean(item))
+            .pipe(
+                mergeMap(res => of(...res)),
+                map(s => Session.fromSessionBean(s)),
+                onNext(s => this.add(s)),
+                toArray(),
+            )
+    }
 
-                // mock
-                const sessionBean: SessionBean = {
-                    CreateAt: 0, LastMid: 1, Uid1: 2, Uid2: 3, Unread: 0, UpdateAt: 0, To: 1
-                }
-                res.push(Session.fromSessionBean(sessionBean))
-
-                // temp
-                res.forEach(item => {
-                    this.add(item)
-                })
-                return res
-            })
+    public getSessionsTemped(): Session[] {
+        return Array.from(this.sessionMap.values())
     }
 
     public onMessage(message: Message) {
-        const uid = Account.getInstance().getUID()
+        const uid = this.account.getUID()
         let s = message.from
         if (message.from === uid) {
             s = message.to
@@ -57,7 +63,7 @@ export class SessionList {
         }
     }
 
-    public add(s: Session) {
+    private add(s: Session) {
         if (this.sessionMap.has(s.To)) {
             return
         }

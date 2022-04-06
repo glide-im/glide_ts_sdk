@@ -6,6 +6,11 @@ export enum MessageType {
     GroupNotify = -1,
 }
 
+export enum SessionType {
+    Single = 1,
+    Group = 2,
+}
+
 export enum Actions {
     MessageChat = "message.chat",
     MessageChatRecall = "message.chat.recall",

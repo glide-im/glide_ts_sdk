@@ -1,3 +1,4 @@
+import { GroupAdd, Refresh } from "@mui/icons-material";
 import {
     Avatar,
     Box,
@@ -10,13 +11,12 @@ import {
     ListItemText,
     Typography
 } from "@mui/material";
-import React, {useEffect, useState} from "react";
-import {GroupAdd, Refresh} from "@mui/icons-material";
-import {AddContactDialog} from "./AddContactDialog";
-import {CreateGroupDialog} from "./CreateGroupDialog";
-import {IMContactsList} from "../im/contacts_list";
-import {RouteComponentProps, withRouter} from "react-router-dom";
-import {Contacts} from "../im/contacts";
+import React, { useEffect, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { Contacts } from "../im/contacts";
+import { IMContactsList } from "../im/contacts_list";
+import { AddContactDialog } from "./AddContactDialog";
+import { CreateGroupDialog } from "./CreateGroupDialog";
 
 export function ContactsList() {
 
@@ -27,12 +27,14 @@ export function ContactsList() {
 
     useEffect(() => {
 
-        IMContactsList.loadContacts()
-            .then((r) => {
-                setContacts([...r])
-            })
-            .catch((e) => {
-                console.error(e)
+        IMContactsList.getContactList()
+            .subscribe({
+                next: (list: Contacts[]) => {
+                    setContacts(list)
+                },
+                error: (err) => {
+                    console.log(err)
+                }
             })
         IMContactsList.setContactsAddListener(() => {
             setContacts([...IMContactsList.getAllContacts()])
@@ -41,8 +43,8 @@ export function ContactsList() {
     }, [])
 
     const list = contacts.flatMap(value => {
-            return (<ContactsItem contact={value}/>)
-        }
+        return (<ContactsItem contact={value} key={value.id} />)
+    }
     )
 
     const refresh = () => {
@@ -70,36 +72,36 @@ export function ContactsList() {
         setShowAddContact(false)
     }
 
-    return <Grid container style={{height: "700px"}}>
-        <Grid item md={4}>
+    return <Grid container style={{ height: "700px" }}>
+        <Grid item xs={4}>
             <Box m={2}>
                 <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)}
-                                   onSubmit={createGroup}/>
+                    onSubmit={createGroup} />
                 <AddContactDialog open={showAddContact} onClose={() => setShowAddContact(false)}
-                                  onSubmit={addContactHandler}/>
+                    onSubmit={addContactHandler} />
                 <Typography variant={"caption"}>Contacts</Typography>
 
-                <IconButton size={"small"} onClick={refresh} style={{float: "right"}}>
-                    <Refresh/>
+                <IconButton size={"small"} onClick={refresh} style={{ float: "right" }}>
+                    <Refresh />
                 </IconButton>
 
-                <IconButton size={"small"} onClick={() => setShowCreateGroup(true)} style={{float: "right"}}>
-                    <GroupAdd/>
+                <IconButton size={"small"} onClick={() => setShowCreateGroup(true)} style={{ float: "right" }}>
+                    <GroupAdd />
                 </IconButton>
             </Box>
-            <Divider/>
-            <List style={{overflow: "auto", maxHeight: "600px"}}>
+            <Divider />
+            <List style={{ overflow: "auto", maxHeight: "600px" }}>
                 <ListItem key={"add_contacts"} button onClick={() => setShowAddContact(true)}>
-                    <ListItemText primary={"Add ContactsList"}/>
+                    <ListItemText primary={"Add ContactsList"} />
                 </ListItem>
-                <Divider/>
+                <Divider />
 
                 {list}
 
             </List>
         </Grid>
-        <Grid item md={8}>
-            <Divider orientation={"vertical"} style={{float: "left"}}/>
+        <Grid item xs={8}>
+            <Divider orientation={"vertical"} style={{ float: "left" }} />
             <Typography variant={"h5"} align={"center"}> </Typography>
         </Grid>
     </Grid>
@@ -121,9 +123,9 @@ export const ContactsItem = withRouter((props: Props) => {
     return <>
         <ListItem button key={`${c.type}-${c.id}`} onClick={handleClick}>
             <ListItemIcon>
-                <Avatar src={c.avatar}/>
+                <Avatar src={c.avatar} />
             </ListItemIcon>
-            <ListItemText primary={c.name}/>
+            <ListItemText primary={c.name} />
         </ListItem>
 
     </>

@@ -1,9 +1,8 @@
-import React, { CSSProperties, useEffect, useMemo, useRef } from "react";
-import { ChatMessage } from "../im/chat_message";
 import { Avatar, Box, Grid, List, ListItem, Typography } from "@mui/material";
-import { Glide } from "../im/glide";
+import React, { CSSProperties, useEffect, useMemo, useRef } from "react";
 import { Account } from "src/im/account";
-import { Message } from "src/im/message";
+import { ChatMessage } from "src/im/chat_message";
+import { Glide } from "../im/glide";
 
 function scrollBottom(ele: HTMLUListElement | null) {
     if (ele == null) {
@@ -20,9 +19,9 @@ const messageListStyle: CSSProperties = {
     overflow: "auto", width: "100%",
 }
 
-type MessageListItem = string | Message
+type MessageListItem = string | ChatMessage
 
-export function MessageListC(props: { messages: Message[] }) {
+export function MessageListC(props: { messages: ChatMessage[] }) {
 
     const messages: MessageListItem[] = useMemo(() => {
         return ["", "2022-3-31 08:49", ...props.messages]
@@ -38,13 +37,13 @@ export function MessageListC(props: { messages: Message[] }) {
 
     const list = messages.map(value => {
         if (typeof value === "string") {
-            return <ListItem>
+            return <ListItem key={value}>
                 <Box width={"100%"}>
                     <Typography key={value} variant={"body2"} textAlign={"center"}>{value}</Typography>
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.mid}`} sx={{ padding: "0" }}><ChatMessageC msg={value} /></ListItem>
+        return <ListItem key={`${value.Mid}`} sx={{ padding: "0" }}><ChatMessageC msg={value} /></ListItem>
     })
 
     return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>
@@ -65,11 +64,11 @@ const messageBoxStyle = function (): CSSProperties {
     }
 }
 
-function ChatMessageC(props: { msg: Message }) {
+function ChatMessageC(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    const sender = Glide.getUserInfo(msg.from)
-    const me = msg.from === Account.getInstance().getUID()
+    const sender = Glide.getUserInfo(msg.From)
+    const me = msg.From === Account.getInstance().getUID()
 
     let name = <></>
 
@@ -87,7 +86,7 @@ function ChatMessageC(props: { msg: Message }) {
     if (!me) {
         name = <Box style={{ padding: '0px 8px' }}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
-                {msg.from}
+                {msg.From}
             </Typography>
         </Box>
     }
@@ -97,7 +96,7 @@ function ChatMessageC(props: { msg: Message }) {
         <Grid item style={{}}>
             {name}
             <Box bgcolor={"info.main"} style={messageBoxStyle()}>
-                <Typography variant={"body1"}>{msg.content}</Typography>
+                <Typography variant={"body1"}>{msg.Content}</Typography>
             </Box>
         </Grid>
     </Grid>

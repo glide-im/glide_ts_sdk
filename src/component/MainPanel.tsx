@@ -7,11 +7,11 @@ import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, with
 import { Account } from "../im/account";
 import { Chat } from "./Chat";
 import { ContactsList } from "./ContactsList";
+import { Meet } from "./Meet";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
     if (!Account.getInstance().isAuthenticated()) {
-        console.log("redirect to login = ", Account.getInstance().getToken());
         props.history.push("/auth");
         return <></>
     }
@@ -27,6 +27,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
                 <Switch>
                     <Route path={`${match.url}/session/:sid`} children={<Chat />} />
                     <Route path={`${match.url}/friends`} children={<ContactsList />} />
+                    <Route path={`${match.url}/meet`} children={<Meet />} />
                     <Route path={`${match.url}/session`} exact={true}>
                         <Redirect to={`${match.url}/session/${Account.getInstance().getSessionList().currentSid}`} />
                     </Route>
@@ -68,7 +69,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         },
         {
             icon: <PersonSearch />,
-            path: "/im/search",
+            path: "/im/meet",
         },
     ]
 

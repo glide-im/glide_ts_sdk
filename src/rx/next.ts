@@ -1,4 +1,4 @@
-import { Observable, Observer } from "rxjs";
+import { Observable } from "rxjs";
 
 
 type RxTransfer<T> = (source: Observable<T>) => Observable<T>;

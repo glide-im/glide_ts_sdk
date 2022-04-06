@@ -1,10 +1,15 @@
-import { every, map, mergeMap, Observable, share } from "rxjs";
+import { map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
+import { onNext } from "src/rx/next";
 import { Api } from "../api/api";
 import { SessionBean } from "../api/model";
 import { Account } from "./account";
-import { ChatMessage } from "./chat_message";
-import { Message, MessageType } from "./message";
+import { ChatMessage, MessageStatus } from "./chat_message";
+import { Message, MessageType, SessionType } from "./message";
 import { Ws } from "./ws";
+
+export interface SessionUpdateListener {
+    (): void
+}
 
 export class Session {
 
@@ -18,8 +23,11 @@ export class Session {
     public Type: number;
     public To: number;
 
-    private messages = new Map<number, Message>();
-    private messageListener: ((message: Message) => void) | null = null;
+    private messageList = new Array<ChatMessage>();
+    private messageMap = new Map<number, ChatMessage>();
+
+    private messageListener: ((message: ChatMessage) => void) | null = null;
+    private sessionUpdateListener: SessionUpdateListener | null = null;
 
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
@@ -30,41 +38,89 @@ export class Session {
         session.LastMessageSender = "-";
         session.LastMessage = '-';
         session.UnreadCount = 0;
+        session.Type = SessionType.Single;
         return session;
+    }
+
+    public getMessageHistry(beforeMid: number): Observable<ChatMessage[]> {
+        const res = this.getMessageBeforeMid(beforeMid);
+        if (res.length !== 0) {
+            return of(res);
+        }
+
+        switch (this.Type) {
+            case SessionType.Single:
+                return Api.getMessageHistry(this.To, beforeMid)
+                    .pipe(
+                        mergeMap(resp => of(...resp)),
+                        map(msg => ChatMessage.create2(msg)),
+                        onNext(msg => this.addMessageByOrder(msg)),
+                        toArray(),
+                    )
+            case SessionType.Group:
+                return of();
+            default:
+                return throwError(() => new Error("unknown session type"));
+        }
     }
 
     public onMessage(message: Message) {
         console.log("onMessage", message);
-        this.messages.set(message.mid, message)
-        this.messageListener && this.messageListener(message);
+
+        const c = ChatMessage.create(message)
+        this.addMessageByOrder(c);
     }
 
     public sendTextMessage(msg: string): Observable<Message> {
         return this.send(msg, MessageType.Text);
     }
 
-    public setUpdateListener(listener: (session: Session) => void) {
-
+    public setSessionUpdateListener(listener: SessionUpdateListener | null) {
+        this.sessionUpdateListener = listener;
     }
 
-    public setMessageListener(listener: (message: Message) => void) {
+    public setMessageListener(listener: (message: ChatMessage) => void) {
         this.messageListener = listener;
     }
 
-    public sendMessage(message: ChatMessage) {
-
+    public getMessages(): ChatMessage[] {
+        return Array.from(this.messageMap.values());
     }
 
-    public getMessages(): Message[] {
-        return Array.from(this.messages.values());
+    private getMessageBeforeMid(mid: number): ChatMessage[] {
+        if (this.messageList.length === 0) {
+            return this.messageList;
+        }
+
+        let index = 0;
+        if (mid !== 0) {
+            index = this.messageList.findIndex(msg => msg.Mid === mid);
+            if (index === -1) {
+                return [];
+            }
+        }
+        return this.messageList.splice(index, this.messageList.length - index);
     }
 
-    public GetLastMessage(): string {
-        return this.LastMessage;
+    private addMessageByOrder(message: ChatMessage) {
+        if (this.messageMap.has(message.Mid)) {
+            this.messageMap.get(message.Mid).update(message);
+
+        } else {
+            let index = this.messageList.findIndex(msg => msg.Mid > message.Mid);
+            if (index === -1) {
+                this.messageMap.set(message.Mid, message);
+                this.messageList.push(message);
+            } else {
+                this.messageMap.set(message.Mid, message);
+                this.messageList.splice(index, 0, message);
+            }
+            this.messageListener && this.messageListener(message);
+        }
+        this.sessionUpdateListener && this.sessionUpdateListener();
     }
 
     private getSID(): string {
-
         let lg = Account.getInstance().getUID();
         let sm = this.To;
 
@@ -73,34 +129,52 @@ export class Session {
             lg = sm;
             sm = tmp;
         }
-
         return lg + "_" + sm;
     }
 
     private send(content: string, type: number): Observable<Message> {
-        const time = new Date().getSeconds();
-
-        const m: Message = {
-            content: content,
-            from: Account.getInstance().getUID(),
-            mid: 0,
-            sendAt: time,
-            seq: 0,
-            to: this.To,
-            type: type
-        }
 
         return Api.getMid()
             .pipe(
                 map(resp => {
-                    m.mid = resp.Mid;
-                    return m
-                })
-            )
-            .pipe(
+                    const time = new Date().getSeconds();
+                    return {
+                        content: content,
+                        from: Account.getInstance().getUID(),
+                        mid: resp.Mid,
+                        sendAt: time,
+                        seq: 0,
+                        to: this.To,
+                        type: type
+                    }
+                }),
+                onNext(msg => {
+                    this.addMessageByOrder(ChatMessage.create(msg));
+                }),
                 mergeMap(msg =>
                     Ws.sendChatMessage(msg)
-                )
+                ),
+                onNext(msg => {
+                    const r = ChatMessage.create(msg);
+                    r.Status = MessageStatus.Sent;
+                    this.addMessageByOrder(r);
+                }),
             )
     }
+}
+
+class SortedList<T, V> {
+
+    private list = new Array<T>();
+    private map = new Map<V, T>();
+
+    constructor() {
+
+    }
+
+
+    public add() {
+
+    }
+
 }

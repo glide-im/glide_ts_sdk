@@ -3,7 +3,7 @@ import {Response} from "./response";
 
 export const axiosInstance: AxiosInstance = axios.create({
     timeout: 3000,
-    baseURL: "http://192.168.0.6:8081/api/"
+    baseURL: "http://192.168.1.123:8081/api/"
 });
 
 const setAuthHeader = (key: string, value: string) => {

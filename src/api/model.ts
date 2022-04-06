@@ -27,6 +27,32 @@ export interface SessionBean {
     CreateAt: number
 }
 
+export interface MessageBean {
+    Mid: number
+    From: number
+    To: number
+    Type: number
+    Content: string
+    CreateAt: number
+    SendAt: number
+    Status: number
+}
+
 export interface MidBean {
     Mid: number
+}
+
+export interface OnlineUserInfoBean {
+    ID: number
+    AliveAt: number
+    ConnectionAt: number
+    Device: number
+}
+
+export interface ServerInfoBean {
+    Online: number
+    MaxOnline: number
+    MessageSent: number
+    StartAt: number
+    OnlineCli: OnlineUserInfoBean[]
 }

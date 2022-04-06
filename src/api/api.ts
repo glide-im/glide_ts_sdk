@@ -1,6 +1,6 @@
-import { AuthBean, ContactsBean, MidBean, SessionBean, UserInfoBean } from "./model";
-import { post } from "./axios";
 import { Observable } from "rxjs";
+import { post } from "./axios";
+import { AuthBean, ContactsBean, MessageBean, MidBean, ServerInfoBean, SessionBean, UserInfoBean } from "./model";
 import { rxios } from "./rxios";
 
 
@@ -28,8 +28,8 @@ function register(account: string, password: string): Promise<AuthBean> {
     return post("auth/register", param)
 }
 
-function getContacts(): Promise<ContactsBean[]> {
-    return post("contacts/list")
+function getContacts(): Observable<ContactsBean[]> {
+    return rxios.post("contacts/list")
 }
 
 function addContacts(uid: number): Promise<ContactsBean> {
@@ -45,11 +45,15 @@ function getProfile(): Promise<UserInfoBean> {
 }
 
 function getUserInfo(uids: number[]): Promise<UserInfoBean[]> {
-    return post("user/info")
+    return post("user/info", { Uids: uids })
 }
 
-function getRecentSession(): Promise<SessionBean[]> {
-    return post("session/recent")
+function getRecentSession(): Observable<SessionBean[]> {
+    return rxios.post("session/recent")
+}
+
+function getMessageHistry(uid: number, beforeMid: number): Observable<MessageBean[]> {
+    return rxios.post("msg/chat/history", { Uid: uid, Before: beforeMid })
 }
 
 function getOrCreateSession(to: number): Promise<SessionBean> {
@@ -58,6 +62,10 @@ function getOrCreateSession(to: number): Promise<SessionBean> {
 
 function getMid(): Observable<MidBean> {
     return rxios.post("msg/id")
+}
+
+function getServerInfo(): Observable<ServerInfoBean> {
+    return rxios.get("app/info")
 }
 
 export const Api = {
@@ -70,5 +78,7 @@ export const Api = {
     register,
     auth,
     login,
-    getMid
+    getMid,
+    getMessageHistry,
+    getServerInfo
 } as const;
