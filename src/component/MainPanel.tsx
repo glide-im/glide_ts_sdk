@@ -5,9 +5,9 @@ import { Avatar, Box, Grid, IconButton, Typography } from "@mui/material";
 import React from "react";
 import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter } from "react-router-dom";
 import { Account } from "../im/account";
-import { Chat } from "./Chat";
-import { ContactsList } from "./ContactsList";
-import { Meet } from "./Meet";
+import { Chat } from "./chat/Chat";
+import { ContactsList } from "./friends/ContactsList";
+import { Meet } from "./meet/Meet";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 

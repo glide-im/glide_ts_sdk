@@ -3,7 +3,7 @@ import { onNext } from "src/rx/next";
 import { Api } from "../api/api";
 import { SessionBean } from "../api/model";
 import { Account } from "./account";
-import { ChatMessage, MessageStatus } from "./chat_message";
+import { ChatMessage, SendingStatus } from "./chat_message";
 import { Message, MessageType, SessionType } from "./message";
 import { Ws } from "./ws";
 
@@ -71,7 +71,7 @@ export class Session {
         this.addMessageByOrder(c);
     }
 
-    public sendTextMessage(msg: string): Observable<Message> {
+    public sendTextMessage(msg: string): Observable<ChatMessage> {
         return this.send(msg, MessageType.Text);
     }
 
@@ -105,7 +105,6 @@ export class Session {
     private addMessageByOrder(message: ChatMessage) {
         if (this.messageMap.has(message.Mid)) {
             this.messageMap.get(message.Mid).update(message);
-
         } else {
             let index = this.messageList.findIndex(msg => msg.Mid > message.Mid);
             if (index === -1) {
@@ -117,7 +116,10 @@ export class Session {
             }
             this.messageListener && this.messageListener(message);
         }
-        this.sessionUpdateListener && this.sessionUpdateListener();
+
+        if (this.messageList[this.messageList.length - 1] === message) {
+            this.sessionUpdateListener && this.sessionUpdateListener();
+        }
     }
 
     private getSID(): string {
@@ -132,12 +134,12 @@ export class Session {
         return lg + "_" + sm;
     }
 
-    private send(content: string, type: number): Observable<Message> {
+    private send(content: string, type: number): Observable<ChatMessage> {
 
         return Api.getMid()
             .pipe(
                 map(resp => {
-                    const time = new Date().getSeconds();
+                    const time = Date.parse(new Date().toString()) / 1000;
                     return {
                         content: content,
                         from: Account.getInstance().getUID(),
@@ -145,36 +147,24 @@ export class Session {
                         sendAt: time,
                         seq: 0,
                         to: this.To,
-                        type: type
+                        type: type,
+                        status: 0,
                     }
                 }),
                 onNext(msg => {
-                    this.addMessageByOrder(ChatMessage.create(msg));
+                    const r = ChatMessage.create(msg);
+                    r.Sending = SendingStatus.Sending;
+                    this.addMessageByOrder(r);
                 }),
                 mergeMap(msg =>
                     Ws.sendChatMessage(msg)
                 ),
-                onNext(msg => {
-                    const r = ChatMessage.create(msg);
-                    r.Status = MessageStatus.Sent;
+                map(resp => {
+                    const r = ChatMessage.create(resp);
+                    r.Sending = SendingStatus.Sent;
                     this.addMessageByOrder(r);
+                    return r;
                 }),
             )
     }
-}
-
-class SortedList<T, V> {
-
-    private list = new Array<T>();
-    private map = new Map<V, T>();
-
-    constructor() {
-
-    }
-
-
-    public add() {
-
-    }
-
 }

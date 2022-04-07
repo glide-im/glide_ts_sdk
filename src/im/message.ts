@@ -51,6 +51,7 @@ export interface Message {
     type: number
     content: string
     sendAt: number
+    status: number
 }
 
 export interface AckRequest {

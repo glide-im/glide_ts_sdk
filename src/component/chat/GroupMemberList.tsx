@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import {Add} from "@mui/icons-material";
 import {useState} from "react";
-import {Glide} from "../im/glide";
+import {Glide} from "../../im/glide";
 
 export function GroupMemberList(props: { id: number }) {
 

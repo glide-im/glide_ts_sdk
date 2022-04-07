@@ -1,7 +1,7 @@
 import { Avatar, Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
 import React, { useRef } from "react";
 import { Link as RtLink } from "react-router-dom";
-import { Api } from "../api/api";
+import { Api } from "src/api/api";
 
 export function Register() {
 

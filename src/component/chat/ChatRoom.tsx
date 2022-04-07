@@ -2,7 +2,7 @@ import { Send } from "@mui/icons-material";
 import { Box, Divider, IconButton, TextareaAutosize, Typography } from "@mui/material";
 import React, { CSSProperties, useEffect, useState } from "react";
 import { ChatMessage } from "src/im/chat_message";
-import { Account } from "../im/account";
+import { Account } from "../../im/account";
 import { GroupMemberList } from "./GroupMemberList";
 import { MessageListC } from "./MessageList";
 
@@ -29,8 +29,13 @@ export function ChatRoom(props: { to: string }) {
     const sendMessage = (msg: string) => {
         if (session != null) {
             session.sendTextMessage(msg)
-                .subscribe(r => {
-                    console.log("sendMessage", r)
+                .subscribe({
+                    next: () => { },
+                    error: (err) => {
+                        console.error(err)
+                    },
+                    complete: () => {
+                    }
                 })
         }
     }

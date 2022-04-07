@@ -1,7 +1,7 @@
 import { Avatar, Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
 import React, { useRef } from "react";
 import { Link as RtLink, RouteComponentProps, withRouter } from "react-router-dom";
-import { Account } from "../im/account";
+import { Account } from "../../im/account";
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 

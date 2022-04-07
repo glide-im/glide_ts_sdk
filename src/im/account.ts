@@ -3,7 +3,6 @@ import { onComplete } from "src/rx/next";
 import { Api } from "../api/api";
 import { setApiToken } from "../api/axios";
 import { AuthBean, UserInfoBean } from "../api/model";
-import { Contacts } from "./contacts";
 import { ContactsList } from "./contacts_list";
 import { Glide } from "./glide";
 import { Actions, CommonMessage } from "./message";
@@ -64,6 +63,8 @@ export class Account {
     public clearAuth() {
         console.log("clearAuth");
         this.uid = "";
+        this.token = "";
+        Ws.close();
         Glide.storeToken("");
     }
 

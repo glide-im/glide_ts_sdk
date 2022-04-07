@@ -1,11 +1,11 @@
-import { Avatar, Box, Grid, List, ListItem, Typography } from "@mui/material";
-import React, { CSSProperties, useEffect, useMemo, useRef } from "react";
+import { Avatar, Box, CircularProgress, Grid, List, ListItem, Typography } from "@mui/material";
+import React, { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Account } from "src/im/account";
-import { ChatMessage } from "src/im/chat_message";
-import { Glide } from "../im/glide";
+import { ChatMessage, SendingStatus } from "src/im/chat_message";
+import { Glide } from "src/im/glide";
 
 function scrollBottom(ele: HTMLUListElement | null) {
-    if (ele == null) {
+    if (ele === null) {
         return
     }
     const from = ele.scrollHeight
@@ -33,7 +33,7 @@ export function MessageListC(props: { messages: ChatMessage[] }) {
         // const p = messageListEle.current.scrollTop + messageListEle.current.clientTop
 
         scrollBottom(messageListEle.current)
-    }, [messages])
+    }, [])
 
     const list = messages.map(value => {
         if (typeof value === "string") {
@@ -55,11 +55,10 @@ export function MessageListC(props: { messages: ChatMessage[] }) {
 
 const messageBoxStyle = function (): CSSProperties {
     return {
-        maxWidth: "90%",
+        maxWidth: "100%",
         wordWrap: "break-word",
         display: "inline-block",
         padding: "8px 12px",
-        textAlign: "center",
         borderRadius: "6px"
     }
 }
@@ -70,20 +69,23 @@ function ChatMessageC(props: { msg: ChatMessage }) {
     const sender = Glide.getUserInfo(msg.From)
     const me = msg.From === Account.getInstance().getUID()
 
+    const [sending, setSending] = useState(msg.Sending)
+
+    useEffect(() => {
+        if (!me) {
+            return;
+        }
+        msg.setUpdateListener(() => {
+            setSending(msg.Sending)
+        })
+        return () => msg.setUpdateListener(null)
+    }, [msg, me])
+
     let name = <></>
 
-    let direction: "row-reverse" | "row" = "row-reverse"
-    let avatar = <></>
+    let direction: "row-reverse" | "row" = me ? "row-reverse" : "row"
 
-    if (!me) {
-        direction = "row"
-        avatar = <Grid item xs={1} justifyContent={"center"}>
-            <Avatar src={sender?.avatar ?? ""} />
-        </Grid>
-
-    }
-
-    if (!me) {
+    if (false) {
         name = <Box style={{ padding: '0px 8px' }}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
                 {msg.From}
@@ -91,12 +93,25 @@ function ChatMessageC(props: { msg: ChatMessage }) {
         </Box>
     }
 
-    return <Grid container direction={direction} padding={"4px 16px"}>
-        {avatar}
-        <Grid item style={{}}>
+    let status = <></>
+
+    if (me && sending === SendingStatus.Sending) {
+        status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
+            <CircularProgress size={12} />
+        </Box>
+    }
+
+    return <Grid container direction={direction} padding={"4px 8px"}>
+        <Grid item xs={1} justifyContent={"center"}>
+            <Avatar style={{ margin: "auto" }} src={sender?.avatar ?? ""} />
+        </Grid>
+        <Grid item xs={10}>
             {name}
-            <Box bgcolor={"info.main"} style={messageBoxStyle()}>
-                <Typography variant={"body1"}>{msg.Content}</Typography>
+            <Box display={"flex"} flexDirection={direction} height={"100%"}>
+                <Box bgcolor={"info.main"} style={messageBoxStyle()}>
+                    <Typography variant={"body1"}>{msg.Content}</Typography>
+                </Box>
+                {status}
             </Box>
         </Grid>
     </Grid>

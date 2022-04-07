@@ -1,5 +1,5 @@
 import { map, mergeMap, Observable, Observer, timeout as timeoutOpt } from "rxjs";
-import { AckMessage, Actions, CommonMessage, Message } from "./message";
+import { AckMessage, AckRequest, Actions, CommonMessage, Message } from "./message";
 
 export type Listener = (msg: CommonMessage<any>) => void
 
@@ -8,7 +8,9 @@ export type StateListener = (state: State, msg: string) => void
 export enum State {
     CONNECTED,
     CONNECTING,
-    CLOSED
+    CLOSED,
+    ERROR,
+    TIMEOUT,
 }
 
 export type Callback<T> = (success: boolean, result: T, msg: string) => void
@@ -96,6 +98,7 @@ class WebSocketClient {
                 cb(false, `ws connect failed ${e.type}`)
                 cb = null
             }
+            this.close()
         };
         this.websocket.onclose = (e) => {
             WebSocketClient.slog("onclose", "" + e)
@@ -160,9 +163,16 @@ class WebSocketClient {
         this.stateChangeListener.push(l)
     }
 
+    public removeStateListener(l: StateListener) {
+        const index = this.stateChangeListener.indexOf(l);
+        if (index > -1) {
+            this.stateChangeListener.splice(index, 1);
+        }
+    }
+
     public sendChatMessage(m: Message): Observable<Message> {
 
-        return this.createCommonMessage(m)
+        return this.createCommonMessage(Actions.MessageChat, m)
             .pipe(
                 mergeMap(msg => this.send(msg)),
                 mergeMap((msg) => this.getAckObservable(msg.Data)),
@@ -170,10 +180,10 @@ class WebSocketClient {
             )
     }
 
-    private createCommonMessage<T>(data: T): Observable<CommonMessage<T>> {
+    private createCommonMessage<T>(action: string, data: T): Observable<CommonMessage<T>> {
         return new Observable((observer: Observer<CommonMessage<T>>) => {
             const msg: CommonMessage<T> = {
-                Action: Actions.MessageChat,
+                Action: action,
                 Data: data,
                 Seq: this.seq++,
             };
@@ -258,16 +268,35 @@ class WebSocketClient {
 
         switch (msg.Action) {
             case Actions.MessageChat:
+            case Actions.MessageChatRecall:
+                const m = msg.Data as Message;
+                this.ackRequestMessage(m.from, m.mid);
                 break;
             case Actions.MessageGroup:
-                break;
-            case Actions.MessageChatRecall:
-                break;
             case Actions.MessageGroupRecall:
+                // TODO
                 break;
             default:
                 WebSocketClient.slog("onIMMessage", "unknown message", msg)
         }
+    }
+
+    private ackRequestMessage(from: number, mid: number) {
+        const ackR: AckRequest = {
+            Mid: mid,
+            From: from
+        }
+
+        this.createCommonMessage(Actions.AckRequest, ackR)
+            .pipe(
+                mergeMap(msg => this.send(msg)),
+            )
+            .subscribe({
+                next: () => { },
+                error: (e) => {
+                    WebSocketClient.slog("ackRequestMessage", "failed", e)
+                }
+            })
     }
 
     private onAckMessage(msg: CommonMessage<any>) {

@@ -91,7 +91,7 @@ function UserCard(props: { u: OnlineUserInfoBean }) {
             .catch(err => {
 
             })
-    }, [])
+    }, [props.u.ID])
 
     const onClick = () => {
         Account.getInstance().getSessionList()

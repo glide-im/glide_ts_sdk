@@ -13,8 +13,8 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import { Contacts } from "../im/contacts";
-import { IMContactsList } from "../im/contacts_list";
+import { Contacts } from "../../im/contacts";
+import { IMContactsList } from "../../im/contacts_list";
 import { AddContactDialog } from "./AddContactDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
 

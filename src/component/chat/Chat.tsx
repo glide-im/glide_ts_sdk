@@ -15,8 +15,8 @@ import {
 import React, { useEffect, useState } from "react";
 import { RouteComponentProps, useParams, withRouter } from "react-router-dom";
 import { delay } from "rxjs";
-import { Account } from "../im/account";
-import { Session } from "../im/session";
+import { Account } from "src/im/account";
+import { Session } from "src/im/session";
 import { ChatRoom } from "./ChatRoom";
 
 
@@ -26,8 +26,8 @@ function getSessionList() {
 
 export function Chat() {
 
-    console.log("Chat")
     const { sid } = useParams<{ sid: string }>();
+    console.log("Chat", sid)
 
     return <Box style={{ height: "700px" }}>
         <Grid alignItems={"center"} container style={{}}>
@@ -43,14 +43,10 @@ export function Chat() {
     </Box>
 }
 
-
-
 interface SessionListProps extends RouteComponentProps {
     selected: string,
     onSelect?: (sid: string) => void
 }
-
-// const emptySession: Session[] | null = null;
 
 export const SessionList = withRouter((props: SessionListProps) => {
 
@@ -68,7 +64,7 @@ export const SessionList = withRouter((props: SessionListProps) => {
     useEffect(() => {
         sessionList.setChatListUpdateListener(setSessions)
 
-        if (sessions.length == 0) {
+        if (sessions.length === 0) {
             sessionList.getSessions()
                 .pipe(delay(100))
                 .subscribe({
@@ -97,12 +93,12 @@ export const SessionList = withRouter((props: SessionListProps) => {
             })
         }
         return () => sessionList.setChatListUpdateListener(null)
-    }, [])
+    }, [sessionList, sessions])
 
 
     const onSelect = (s: Session) => {
-        setCurrentSession(s.ID)
-        sessionList.currentSid = s.ID
+        setCurrentSession(s.To.toString())
+        sessionList.currentSid = s.To.toString()
         props.history.replace(`/im/session/${s.To}`)
     }
 

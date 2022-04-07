@@ -2,9 +2,9 @@ import { Box, CircularProgress, Container, Grid } from "@mui/material";
 import React, { useEffect, useState } from 'react';
 import { HashRouter, Redirect, Route, Switch } from "react-router-dom";
 import './App.css';
-import { Auth } from "./component/Auth";
+import { Auth } from "./component/auth/Auth";
+import { Register } from "./component/auth/Register";
 import { MainPanel } from "./component/MainPanel";
-import { Register } from "./component/Register";
 import { SnackBar } from "./component/SnackBar";
 import { Account } from "./im/account";
 
