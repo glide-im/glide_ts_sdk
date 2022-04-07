@@ -4,13 +4,13 @@ import React, { CSSProperties, useEffect, useState } from "react";
 import { ChatMessage } from "src/im/chat_message";
 import { Account } from "../../im/account";
 import { GroupMemberList } from "./GroupMemberList";
-import { MessageListC } from "./MessageList";
+import { MessageListView } from "./MessageList";
 
 function SessionList() {
     return Account.getInstance().getSessionList();
 }
 
-export function ChatRoom(props: { to: string }) {
+export function ChatRoomContainer(props: { to: string }) {
 
     const id = parseInt(props.to);
     const session = SessionList().get(id);
@@ -76,13 +76,16 @@ function SessionMessageList(props: { id: number }) {
                     console.log("getMessageHistry", e)
                 }
             })
+    }, [session])
+
+    useEffect(() => {
         session?.setMessageListener((msg) => {
             setMessages([...messages, msg])
         })
         return () => {
             session?.setMessageListener(null)
         }
-    }, [session])
+    }, [session, messages])
 
     if (session == null) {
         return <Box mt={"50%"}>
@@ -91,7 +94,7 @@ function SessionMessageList(props: { id: number }) {
             </Typography>
         </Box>
     }
-    return <MessageListC messages={session.getMessages()} />
+    return <MessageListView messages={session.getMessages()} />
 }
 
 const messageInputStyle: CSSProperties = {

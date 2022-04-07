@@ -43,6 +43,10 @@ export class Session {
     }
 
     public getMessageHistry(beforeMid: number): Observable<ChatMessage[]> {
+        if (beforeMid === 0 && this.messageList.length !== 0) {
+            beforeMid = this.messageList[this.messageList.length - 1].Mid;
+        }
+
         const res = this.getMessageBeforeMid(beforeMid);
         if (res.length !== 0) {
             return of(res);
@@ -89,7 +93,7 @@ export class Session {
 
     private getMessageBeforeMid(mid: number): ChatMessage[] {
         if (this.messageList.length === 0) {
-            return this.messageList;
+            return [];
         }
 
         let index = 0;

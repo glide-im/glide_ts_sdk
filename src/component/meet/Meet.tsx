@@ -56,7 +56,7 @@ export function Meet() {
             </Grid>
         </Grid>
 
-        content = <Box style={{ overflow: "scroll" }} className={"BeautyScrollBar"} height={"100%"}>
+        content = <Box style={{ overflow: "auto" }} className={"BeautyScrollBar"} height={"100%"}>
             <Grid container textAlign={"center"} style={{ padding: "20px" }} spacing={2}>
                 {users}
             </Grid>
