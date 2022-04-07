@@ -1,4 +1,5 @@
 import { ContactsBean } from "../api/model";
+import { IMUserInfo } from "./def";
 
 export class Contacts {
 
@@ -18,6 +19,11 @@ export class Contacts {
         contact.sid = ""
         contact.init();
         return contact;
+    }
+
+    public setInfo(u: IMUserInfo){
+        this.avatar = u.avatar;
+        this.name = u.name;
     }
 
     private init() {

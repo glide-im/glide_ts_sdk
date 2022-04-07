@@ -2,14 +2,22 @@ import { Group } from "./group";
 import { Api } from "../api/api";
 import { Contacts } from "./contacts";
 import { ContactsBean, UserInfoBean } from "../api/model";
-import { map, mergeMap, Observable, of, toArray } from "rxjs";
+import { filter, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { onNext } from "src/rx/next";
+import { Glide } from "./glide";
 
 export class ContactsList {
 
     private contacts: Map<number, Contacts> = new Map<number, Contacts>();
 
     public onContactsChange: () => void | null = null;
+
+    public init(): Observable<ContactsList> {
+        return this.getContactList()
+            .pipe(
+                mergeMap(() => of(this))
+            )
+    }
 
     public getContactList(): Observable<Contacts[]> {
         if (this.contacts.size > 0) {
@@ -22,11 +30,20 @@ export class ContactsList {
                 onNext(contacts => {
                     this.contacts.set(contacts.id, contacts);
                 }),
+                filter(c => c.type === 1),
+                map(c => c.id),
                 toArray(),
+                mergeMap(ids => Glide.loadUserInfo(...ids)),
+                onNext(userInfo => {
+                    userInfo.forEach(u => {
+                        this.contacts.get(u.uid)?.setInfo(u)
+                    })
+                }),
+                mergeMap(() => of(Array.from(this.contacts.values())))
             )
     }
 
-    public setContactsAddListener(listener: () => void | null) {
+    public setContactsUpdateListener(listener: () => void | null) {
         this.onContactsChange = listener;
     }
 
@@ -36,32 +53,8 @@ export class ContactsList {
         return Api.addContacts(uid)
     }
 
-
-    public getGroup(gid): Group | null {
-        return null
-    }
-
-    public getFriend(uid): UserInfoBean | null {
-        return null
-    }
-
-    public getAllGroup(): Group[] {
-        return []
-    }
-
-    public getAllFriend(): UserInfoBean[] {
-        return []
-    }
-
     public getAllContacts(): Contacts[] {
-        const ret: Contacts[] = [];
-        // for (let userInfo of this.getAllFriend()) {
-        //     ret.push({Avatar: userInfo.Avatar, Id: userInfo.Uid, Name: userInfo.Nickname, Type: 1})
-        // }
-        // for (let group of this.getAllGroup()) {
-        //     ret.push({Avatar: group.Avatar, Id: group.Gid, Name: group.Name, Type: 2})
-        // }
-        return ret
+        return Array.from(this.contacts.values());
     }
 
     public clear() {
@@ -69,5 +62,3 @@ export class ContactsList {
     }
 
 }
-
-export const IMContactsList = new ContactsList();

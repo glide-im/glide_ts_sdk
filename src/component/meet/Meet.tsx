@@ -84,13 +84,13 @@ function UserCard(props: { u: OnlineUserInfoBean }) {
     const [user, setUser] = useState<IMUserInfo | null>(null)
 
     useEffect(() => {
-        Glide.loadUserInfo(props.u.ID)
-            .then(res => {
-                setUser(res)
-            })
-            .catch(err => {
+        // Glide.loadUserInfo(props.u.ID)
+        //     .then(res => {
+        //         setUser(res)
+        //     })
+        //     .catch(err => {
 
-            })
+        //     })
     }, [props.u.ID])
 
     const onClick = () => {

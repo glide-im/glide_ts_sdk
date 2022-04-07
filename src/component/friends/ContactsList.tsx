@@ -11,10 +11,11 @@ import {
     ListItemText,
     Typography
 } from "@mui/material";
+import { grey } from "@mui/material/colors";
 import React, { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import { Account } from "src/im/account";
 import { Contacts } from "../../im/contacts";
-import { IMContactsList } from "../../im/contacts_list";
 import { AddContactDialog } from "./AddContactDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
 
@@ -25,9 +26,10 @@ export function ContactsList() {
     const [showAddContact, setShowAddContact] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
 
-    useEffect(() => {
+    const c = Account.getInstance().getContactList()
 
-        IMContactsList.getContactList()
+    useEffect(() => {
+        c.getContactList()
             .subscribe({
                 next: (list: Contacts[]) => {
                     setContacts(list)
@@ -36,11 +38,11 @@ export function ContactsList() {
                     console.log(err)
                 }
             })
-        IMContactsList.setContactsAddListener(() => {
-            setContacts([...IMContactsList.getAllContacts()])
+        c.setContactsUpdateListener(() => {
+            setContacts([...c.getAllContacts()])
         })
-        return () => IMContactsList.setContactsAddListener(null)
-    }, [])
+        return () => c.setContactsUpdateListener(null)
+    }, [c])
 
     const list = contacts.flatMap(value => {
         return (<ContactsItem contact={value} key={value.id} />)
@@ -59,7 +61,7 @@ export function ContactsList() {
 
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
-            IMContactsList.addFriend(id, "")
+            c.addFriend(id, "")
                 .then((r) => {
                     console.log(r)
                 })
@@ -123,7 +125,7 @@ export const ContactsItem = withRouter((props: Props) => {
     return <>
         <ListItem button key={`${c.type}-${c.id}`} onClick={handleClick}>
             <ListItemIcon>
-                <Avatar src={c.avatar} />
+                <Avatar variant="rounded" sx={{ bgcolor: grey[500] }} src={c.avatar} />
             </ListItemIcon>
             <ListItemText primary={c.name} />
         </ListItem>

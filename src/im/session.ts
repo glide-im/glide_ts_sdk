@@ -1,9 +1,12 @@
 import { map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
 import { onNext } from "src/rx/next";
+import { timeStampSecToDate } from "src/utils/TimeUtils";
 import { Api } from "../api/api";
 import { SessionBean } from "../api/model";
 import { Account } from "./account";
 import { ChatMessage, SendingStatus } from "./chat_message";
+import { IMUserInfo } from "./def";
+import { Glide } from "./glide";
 import { Message, MessageType, SessionType } from "./message";
 import { Ws } from "./ws";
 
@@ -22,6 +25,8 @@ export class Session {
     public UnreadCount: number;
     public Type: number;
     public To: number;
+
+    private userInfo: IMUserInfo | null = null;
 
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<number, ChatMessage>();
@@ -42,9 +47,35 @@ export class Session {
         return session;
     }
 
+    public init(): Observable<Session> {
+        if (this.isGroup()) {
+            return of(this);
+        } else {
+            return Glide.loadUserInfo(this.To)
+                .pipe(
+                    mergeMap(userInfo => of(userInfo[0])),
+                    onNext(info => {
+                        this.userInfo = info;
+                        this.Title = info.name;
+                        this.Avatar = info.avatar;
+                    }),
+                    mergeMap(() => this.getMessageHistry(0)),
+                    mergeMap(() => of(this)),
+                );
+        }
+    }
+
+    public isGroup(): boolean {
+        return this.Type === SessionType.Group;
+    }
+
+    public getUserInfo(): IMUserInfo | null {
+        return this.userInfo;
+    }
+
     public getMessageHistry(beforeMid: number): Observable<ChatMessage[]> {
         if (beforeMid === 0 && this.messageList.length !== 0) {
-            beforeMid = this.messageList[this.messageList.length - 1].Mid;
+            beforeMid = Number.MAX_SAFE_INTEGER;
         }
 
         const res = this.getMessageBeforeMid(beforeMid);
@@ -58,7 +89,9 @@ export class Session {
                     .pipe(
                         mergeMap(resp => of(...resp)),
                         map(msg => ChatMessage.create2(msg)),
-                        onNext(msg => this.addMessageByOrder(msg)),
+                        onNext(msg => {
+                            this.addMessageByOrder(msg)
+                        }),
                         toArray(),
                     )
             case SessionType.Group:
@@ -72,6 +105,8 @@ export class Session {
         console.log("onMessage", message);
 
         const c = ChatMessage.create(message)
+        
+        this.UnreadCount++;
         this.addMessageByOrder(c);
     }
 
@@ -98,12 +133,13 @@ export class Session {
 
         let index = 0;
         if (mid !== 0) {
-            index = this.messageList.findIndex(msg => msg.Mid === mid);
+            index = this.messageList.findIndex(msg => msg.Mid <= mid);
             if (index === -1) {
                 return [];
             }
         }
-        return this.messageList.splice(index, this.messageList.length - index);
+
+        return this.messageList.slice(index, this.messageList.length - index);
     }
 
     private addMessageByOrder(message: ChatMessage) {
@@ -122,7 +158,10 @@ export class Session {
         }
 
         if (this.messageList[this.messageList.length - 1] === message) {
-            this.sessionUpdateListener && this.sessionUpdateListener();
+            this.LastMessage = message.Content;
+            this.LastMessageSender = message.From === Account.getInstance().getUID() ? "me" : this.Title;
+            this.UpdateAt = timeStampSecToDate(message.SendAt);
+            this.sessionUpdateListener?.();
         }
     }
 

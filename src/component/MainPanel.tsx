@@ -2,6 +2,7 @@ import { Chat as ChatIcon, PersonSearch } from "@mui/icons-material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import { Avatar, Box, Grid, IconButton, Typography } from "@mui/material";
+import { grey } from "@mui/material/colors";
 import React from "react";
 import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter } from "react-router-dom";
 import { Account } from "../im/account";
@@ -23,7 +24,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
             <Grid item xs={1} style={{ height: "700px" }}>
                 <Bar />
             </Grid>
-            <Grid item xs={11} style={{ height: "700px" }}>
+            <Grid item xs={11} style={{ height: "700px" }} sx={{ bgcolor: grey[50] }}>
                 <Switch>
                     <Route path={`${match.url}/session/:sid`} children={<Chat />} />
                     <Route path={`${match.url}/friends`} children={<ContactsList />} />
@@ -49,8 +50,8 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     const userInfo = Account.getInstance().getUserInfo()
 
     if (userInfo) {
-        avatar = userInfo.Avatar
-        //nickname = userInfo.Nickname + "\r\n" + userInfo.Uid
+        avatar = userInfo.avatar
+        nickname = userInfo.name + "\r\n" + userInfo.uid
     }
 
     const onExitClick = () => {
@@ -84,7 +85,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
             <Grid container justifyContent={"center"}>
                 <Box m={2}>
                     <Typography align={"center"} variant={"subtitle2"} color={"ghostwhite"}>
-                        {nickname} {Account.getInstance().getUID()}
+                        {nickname}
                     </Typography>
                 </Box>
             </Grid>

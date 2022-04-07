@@ -1,9 +1,10 @@
-import { catchError, map, mergeMap, Observable } from "rxjs";
+import { catchError, concat, map, mergeMap, Observable } from "rxjs";
 import { onComplete } from "src/rx/next";
 import { Api } from "../api/api";
 import { setApiToken } from "../api/axios";
-import { AuthBean, UserInfoBean } from "../api/model";
+import { AuthBean } from "../api/model";
 import { ContactsList } from "./contacts_list";
+import { IMUserInfo } from "./def";
 import { Glide } from "./glide";
 import { Actions, CommonMessage } from "./message";
 import { SessionList } from "./session_list";
@@ -27,6 +28,8 @@ export class Account {
     private contacts: ContactsList = new ContactsList();
     private servers: string[] = [];
     private token: string;
+
+    private userInfo: IMUserInfo | null = null;
 
     public static getInstance(): Account {
         return instance;
@@ -88,8 +91,8 @@ export class Account {
         return Glide.getToken();
     }
 
-    public getUserInfo(): UserInfoBean {
-        return { Account: "", Avatar: "", Nickname: "Nickname", Uid: 0 }
+    public getUserInfo(): IMUserInfo | null {
+        return this.userInfo;
     }
 
     private initAccount(auth: AuthBean): Observable<string> {
@@ -102,7 +105,19 @@ export class Account {
 
         this.sessions.init();
 
-        return this.connectIMServer()
+        const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.Uid)
+            .pipe(
+                map(us => {
+                    this.userInfo = us[0];
+                    return "load user info success";
+                })
+            )
+
+        return concat(
+            initUserInfo,
+            this.connectIMServer(),
+            this.sessions.init()
+        )
     }
 
     private connectIMServer(): Observable<string> {

@@ -44,8 +44,8 @@ function getProfile(): Promise<UserInfoBean> {
     return post("user/profile")
 }
 
-function getUserInfo(uids: number[]): Promise<UserInfoBean[]> {
-    return post("user/info", { Uids: uids })
+function getUserInfo(...uids: number[]): Promise<UserInfoBean[]> {
+    return post("user/info", { Uid: uids })
 }
 
 function getRecentSession(): Observable<SessionBean[]> {

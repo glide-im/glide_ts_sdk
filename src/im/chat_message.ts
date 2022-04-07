@@ -19,7 +19,7 @@ export class ChatMessage {
     public To: number;
     public Content: string;
     public Mid: number;
-    public SendAt: string;
+    public SendAt: number;
 
     public Status: number;
     public IsMe: boolean;
@@ -39,7 +39,7 @@ export class ChatMessage {
         ret.To = m.To;
         ret.Content = m.Content;
         ret.Mid = m.Mid;
-        ret.SendAt = m.SendAt.toString();
+        ret.SendAt = m.SendAt;
         ret.IsMe = m.From === Account.getInstance().getUID();
         ret.Status = m.Status
         return ret;
@@ -51,7 +51,7 @@ export class ChatMessage {
         ret.To = m.to;
         ret.Content = m.content;
         ret.Mid = m.mid;
-        ret.SendAt = m.sendAt.toString();
+        ret.SendAt = m.sendAt;
         ret.IsMe = m.from === Account.getInstance().getUID();
         ret.Status = m.status
         return ret;

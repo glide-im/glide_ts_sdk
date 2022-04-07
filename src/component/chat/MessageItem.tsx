@@ -2,6 +2,7 @@ import { Box, Typography, CircularProgress, Grid, Avatar } from "@mui/material"
 import { CSSProperties, useEffect, useState } from "react"
 import { Account } from "src/im/account"
 import { ChatMessage, SendingStatus } from "src/im/chat_message"
+import { IMUserInfo } from "src/im/def"
 import { Glide } from "src/im/glide"
 
 const messageBoxStyle = function (): CSSProperties {
@@ -14,7 +15,7 @@ const messageBoxStyle = function (): CSSProperties {
     }
 }
 
-export function ChatMessageItem(props: { msg: ChatMessage }) {
+export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo }) {
 
     const msg = props.msg
     const sender = Glide.getUserInfo(msg.From)

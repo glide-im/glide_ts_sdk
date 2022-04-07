@@ -1,7 +1,9 @@
 import { Refresh } from "@mui/icons-material";
-import { Avatar, Box, CircularProgress, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { Avatar, Badge, Box, CircularProgress, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { green } from "@mui/material/colors";
 import { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import { delay } from "rxjs";
 import { Account } from "src/im/account";
 import { Session } from "src/im/session";
 
@@ -104,37 +106,48 @@ export const SessionListView = withRouter((props: SessionListProps) => {
 
 function Progress(props: { showProgress?: boolean, msg?: string }) {
 
-    return <Box sx={{ display: "flex", justifyContent: "center", flexDirection: "column", alignContent: "center", paddingTop: "50%" }}>
-        {props.showProgress !== false ? <CircularProgress /> : <></>}
-        {props.msg ? <Typography variant={"caption"}>{props.msg}</Typography> : <></>}
+    return <Box display={"flex"} flexDirection={"column"} paddingTop={"50%"}>
+        {props.showProgress !== false ? <CircularProgress style={{ margin: "auto" }} /> : <></>}
+        {props.msg ? <Typography variant={"caption"} textAlign={"center"}>{props.msg}</Typography> : <></>}
     </Box>
 }
 
 function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
+    if (props.selected) {
+        props.chat.UnreadCount = 0;
+    }
+    
     const [chat, setChat] = useState({ obj: props.chat })
 
     useEffect(() => {
         chat.obj.setSessionUpdateListener(() => {
             console.log("ChatItem", "chat updated")
+            if (props.selected) {
+                chat.obj.UnreadCount = 0;
+            }
             setChat({ obj: chat.obj })
         })
         return () => chat.obj.setSessionUpdateListener(null)
-    }, [chat])
+    }, [chat, props.selected])
 
     const onItemClick = () => {
-        // const c = client.chatList.get(chat.ID)
-        // client.chatList.setCurrentChat(c, onChatUpdate, onChatMessage)
         props.onSelect(chat.obj)
     }
 
-    return <div key={chat.obj.ID}>
-        <ListItem button style={{ cursor: "pointer" }}
-            onClick={onItemClick} selected={props.selected}>
-            <ListItemIcon>
-                <Avatar src={""} />
+    let msg = chat.obj.LastMessage
+    if (chat.obj.isGroup() || chat.obj.LastMessageSender === 'me') {
+        msg = `${chat.obj.LastMessageSender}: ${chat.obj.LastMessage}`
+    }
+
+    return <>
+        <ListItem button style={{ cursor: "pointer" }} onClick={onItemClick} selected={props.selected}>
+            <ListItemIcon >
+                <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"} >
+                    <Avatar variant="rounded" sx={{ bgcolor: green[500] }} src={chat.obj.Avatar} />
+                </Badge>
             </ListItemIcon>
-            <ListItemText primary={!chat.obj.Title ? "-" : chat.obj.Title} secondary={"-"} />
+            <ListItemText primary={chat.obj.Title} secondary={msg} />
         </ListItem>
-    </div>
+    </>
 }

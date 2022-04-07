@@ -1,4 +1,4 @@
-import { map, mergeMap, Observable, of, toArray } from "rxjs";
+import { map, mergeMap, Observable, of, onErrorResumeNext, toArray } from "rxjs";
 import { onNext } from "src/rx/next";
 import { Api } from "../api/api";
 import { Account } from "./account";
@@ -21,8 +21,11 @@ export class SessionList {
         this.account = account
     }
 
-    public init() {
-
+    public init(): Observable<string> {
+        const res = this.getSessions().pipe(
+            mergeMap(() => "session init complete"),
+        )
+        return onErrorResumeNext(res, of("session init failed"))
     }
 
     public startChat(id: number): Promise<Session> {
@@ -41,6 +44,7 @@ export class SessionList {
             .pipe(
                 mergeMap(res => of(...res)),
                 map(s => Session.fromSessionBean(s)),
+                mergeMap(s => s.init()),
                 onNext(s => this.add(s)),
                 toArray(),
             )

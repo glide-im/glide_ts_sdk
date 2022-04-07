@@ -1,3 +1,6 @@
+import { groupBy, map, merge, mergeMap, Observable, of, toArray } from "rxjs";
+import { UserInfoBean } from "src/api/model";
+import { onNext } from "src/rx/next";
 import { Api } from "../api/api";
 import { IMGroupMember, IMUserInfo } from "./def";
 
@@ -10,7 +13,7 @@ class GlideIM {
         return this._readObject("token");
     }
 
-    public storeToken(token: string) {        
+    public storeToken(token: string) {
         return this._writeObject("token", token);
     }
 
@@ -18,29 +21,43 @@ class GlideIM {
         let i = this.tempUserInfo.get(id);
         if (i != null) {
             return i
-        }
-        return this._readObject(`ui_${id}`);
+        } 
+        return null        
+        // const res = this._readObject(`ui_${id}`);
+        // this.tempUserInfo.set(id, res);
+        // return res
     }
 
-    public loadUserInfo(id: number): Promise<IMUserInfo> {
-        return new Promise((resolve, reject) => {
-            let i = this.getUserInfo(id);
-            if (i != null) {
-                resolve(i);
-            } else {
-                Api.getUserInfo([id])
-                    .then((r) => {
-                        let u = r[0];
-                        const ui: IMUserInfo = {
-                            avatar: u.Avatar, name: u.Nickname, uid: u.Uid
-                        };
-                        this.tempUserInfo.set(id, ui);
-                        this._writeObject(`ui_${id}`, ui);
-                        resolve(ui);
-                    })
-                    .catch(reject);
-            }
-        });
+    public loadUserInfo(...id: number[]): Observable<IMUserInfo[]> {
+
+        return of(...id).pipe(
+            groupBy<number, boolean>(id => {
+                return this.getUserInfo(id) != null;
+            }),
+            mergeMap(g => {
+                if (g.key) {
+                    return g.pipe(
+                        map(id => this.getUserInfo(id)),
+                    );
+                } else {
+                    return g.pipe(
+                        toArray(),
+                        mergeMap(ids => {
+                            return Api.getUserInfo(...ids)
+                        }),
+                        mergeMap(userInfos => of(...userInfos)),
+                        map<UserInfoBean, IMUserInfo>(u => ({ avatar: u.Avatar, name: u.Nickname, uid: u.Uid })),
+                    )
+                }
+            }),
+            toArray(),
+            onNext(userInfo => {
+                userInfo.forEach(u => {
+                    this._writeObject(`ui_${id}`, u);
+                    this.tempUserInfo.set(u.uid, u);
+                });
+            })
+        )
     }
 
     public loadGroupMember(id: number): Promise<IMGroupMember> {

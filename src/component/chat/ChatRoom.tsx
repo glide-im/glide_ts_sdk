@@ -1,10 +1,10 @@
 import { Send } from "@mui/icons-material";
 import { Box, Divider, IconButton, TextareaAutosize, Typography } from "@mui/material";
-import React, { CSSProperties, useEffect, useState } from "react";
-import { ChatMessage } from "src/im/chat_message";
+import { grey } from "@mui/material/colors";
+import React, { CSSProperties } from "react";
 import { Account } from "../../im/account";
 import { GroupMemberList } from "./GroupMemberList";
-import { MessageListView } from "./MessageList";
+import { SessionMessageList } from "./MessageList";
 
 function SessionList() {
     return Account.getInstance().getSessionList();
@@ -41,7 +41,7 @@ export function ChatRoomContainer(props: { to: string }) {
     }
 
     return (<Box>
-        <Box height={"70px"} paddingLeft={"16px"}>
+        <Box height={"70px"} paddingLeft={"16px"} color={'black'}>
             <Typography variant={"h6"} style={{ lineHeight: "70px" }}>
                 {session.Title}
             </Typography>
@@ -61,44 +61,8 @@ export function ChatRoomContainer(props: { to: string }) {
     </Box>)
 }
 
-function SessionMessageList(props: { id: number }) {
-    const session = SessionList().get(props.id);
-
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-    useEffect(() => {
-        session?.getMessageHistry(0)
-            .subscribe({
-                next: (r) => {
-                    setMessages(r)
-                },
-                error: (e) => {
-                    console.log("getMessageHistry", e)
-                }
-            })
-    }, [session])
-
-    useEffect(() => {
-        session?.setMessageListener((msg) => {
-            setMessages([...messages, msg])
-        })
-        return () => {
-            session?.setMessageListener(null)
-        }
-    }, [session, messages])
-
-    if (session == null) {
-        return <Box mt={"50%"}>
-            <Typography variant="h6" textAlign={"center"}>
-                No Session
-            </Typography>
-        </Box>
-    }
-    return <MessageListView messages={session.getMessages()} />
-}
-
 const messageInputStyle: CSSProperties = {
-    height: "60px", width: "96%", border: "none", outline: "none", resize: "none"
+    height: "60px", width: "96%", border: "none", outline: "none", resize: "none", backgroundColor: grey[50], fontFamily: 'default'
 }
 
 function MessageInput(props: { onSend: (msg: string) => void }) {
