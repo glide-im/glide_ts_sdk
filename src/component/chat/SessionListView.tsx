@@ -3,7 +3,6 @@ import { Avatar, Badge, Box, CircularProgress, Divider, IconButton, List, ListIt
 import { green } from "@mui/material/colors";
 import { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import { delay } from "rxjs";
 import { Account } from "src/im/account";
 import { Session } from "src/im/session";
 

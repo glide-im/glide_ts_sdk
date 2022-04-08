@@ -1,4 +1,4 @@
-import { groupBy, map, merge, mergeMap, Observable, of, toArray } from "rxjs";
+import { groupBy, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { UserInfoBean } from "src/api/model";
 import { onNext } from "src/rx/next";
 import { Api } from "../api/api";

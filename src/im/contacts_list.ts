@@ -1,9 +1,8 @@
-import { Group } from "./group";
-import { Api } from "../api/api";
-import { Contacts } from "./contacts";
-import { ContactsBean, UserInfoBean } from "../api/model";
 import { filter, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { onNext } from "src/rx/next";
+import { Api } from "../api/api";
+import { ContactsBean } from "../api/model";
+import { Contacts } from "./contacts";
 import { Glide } from "./glide";
 
 export class ContactsList {
