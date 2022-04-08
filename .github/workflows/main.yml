@@ -57,16 +57,16 @@ jobs:
           asset_name: glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz
           asset_content_type: application/gzip
 
-     - name: Deploy
-       uses: appleboy/ssh-action@master
-       with:
-         host: ${{ secrets.HOST }}
-         username: ${{ secrets.USERNAME }}
-         password: ${{ secrets.PASSWORD }}
-         port: ${{ secrets.PORT }}
-         script: |
-           rm /data/www/glide-im-web -rf
-           mkdir /data/www/glide-im-web
-           cd /data/www/glide-im-web
-           wget https://github.com/Glide-IM/Glide-IM-Web/releases/download/${{ steps.get_tag.outputs.TAG }}/glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz -O glide-im-web.tar.gz
-           tar -zxvf glide-im-web.tar.gz
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            rm /data/www/glide-im-web -rf
+            mkdir /data/www/glide-im-web
+            cd /data/www/glide-im-web
+            wget https://github.com/Glide-IM/Glide-IM-Web/releases/download/${{ steps.get_tag.outputs.TAG }}/glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz -O glide-im-web.tar.gz
+            tar -zxvf glide-im-web.tar.gz
