@@ -11,7 +11,7 @@
       "src": "logo.png",
       "type": "image/png",
       "sizes": "128x128"
-    },
+    }
   ],
   "start_url": ".",
   "display": "standalone",

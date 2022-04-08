@@ -1,5 +1,5 @@
 import { Observable } from "rxjs";
-import { post } from "./axios";
+import { getBaseUrl, post, setBaseUrl } from "./axios";
 import { AuthBean, ContactsBean, MessageBean, MidBean, ServerInfoBean, SessionBean, UserInfoBean } from "./model";
 import { rxios } from "./rxios";
 
@@ -69,6 +69,8 @@ function getServerInfo(): Observable<ServerInfoBean> {
 }
 
 export const Api = {
+    setBaseUrl,
+    getBaseUrl,
     getUserInfo,
     getProfile,
     getRecentSession,

@@ -1,12 +1,14 @@
 import { Box, CircularProgress, Container, Grid } from "@mui/material";
 import React, { useEffect, useState } from 'react';
 import { HashRouter, Redirect, Route, Switch } from "react-router-dom";
+import { Api } from "./api/api";
 import './App.css';
 import { Auth } from "./component/auth/Auth";
 import { Register } from "./component/auth/Register";
 import { MainPanel } from "./component/MainPanel";
 import { SnackBar } from "./component/SnackBar";
 import { Account } from "./im/account";
+import { getCookie } from "./utils/Cookies";
 
 function App() {
 
@@ -17,20 +19,27 @@ function App() {
     })
 
     useEffect(() => {
+        const base = getCookie("baseUrl")
+        if (base) {
+            Api.setBaseUrl(base)
+        }
+    }, [])
+
+    useEffect(() => {
         if (Account.getInstance().isAuthenticated()) {
             console.log("start auth");
-            
+
             Account.getInstance().auth()
                 .subscribe({
                     next: (r) => {
-                        console.log( r)
+                        console.log(r)
                     },
                     error: (e) => {
                         console.log("auth error", e);
                     },
                     complete: () => {
                         console.log("auth complete");
-                        
+
                         setState({
                             isAuthenticated: true,
                             isLoading: false,

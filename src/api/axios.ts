@@ -1,14 +1,22 @@
-import axios, {AxiosInstance, AxiosPromise} from "axios";
-import {Response} from "./response";
+import axios, { AxiosInstance, AxiosPromise } from "axios";
+import { Response } from "./response";
 
 export const axiosInstance: AxiosInstance = axios.create({
     timeout: 3000,
-    baseURL: "http://192.168.1.123:8081/api/"
+    baseURL: process.env.REACT_APP_BASE_URL,
 });
 
 const setAuthHeader = (key: string, value: string) => {
     axiosInstance.defaults.headers.common[key] = value;
 };
+
+export function setBaseUrl(url: string) {
+    axiosInstance.defaults.baseURL = url;
+}
+
+export function getBaseUrl(): string {
+    return axiosInstance.defaults.baseURL;
+}
 
 export function setApiToken(token: string) {
     setAuthHeader("Authorization", "Bearer " + token);

@@ -27,7 +27,7 @@ jobs:
       - name: npm install build
         run: |
           npm install
-          npm run build
+          npm run build:prod
 
       - name: Create Release
         id: create_release
@@ -42,7 +42,8 @@ jobs:
 
       - name: build TAR PACKAGE
         run: |
-          tar -czvf glide_im.tar.gz build
+          cd build
+          tar -czvf glide-im-web.tar.gz *
 
       - name: Upload Release
         id: upload-release-asset
@@ -52,22 +53,20 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: glide_im.tar.gz
-          asset_name: glide_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+          asset_path: glide-im-web.tar.gz
+          asset_name: glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz
           asset_content_type: application/gzip
 
-#      - name: Deploy
-#        uses: appleboy/ssh-action@master
-#        with:
-#          host: ${{ secrets.HOST }}
-#          username: ${{ secrets.USERNAME }}
-#          password: ${{ secrets.PASSWORD }}
-#          port: ${{ secrets.PORT }}
-#          script: |
-#            cd /srv/glideim
-#            wget https://github.91chi.fun//https://github.com/dengzii/go_im/releases/latest/download/go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-#            tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-#            pkill go_im
-#            nohup ./go_im >> log.output &
-#            rm go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-
+     - name: Deploy
+       uses: appleboy/ssh-action@master
+       with:
+         host: ${{ secrets.HOST }}
+         username: ${{ secrets.USERNAME }}
+         password: ${{ secrets.PASSWORD }}
+         port: ${{ secrets.PORT }}
+         script: |
+           rm /data/www/glide-im-web -rf
+           mkdir /data/www/glide-im-web
+           cd /data/www/glide-im-web
+           wget https://github.com/Glide-IM/Glide-IM-Web/releases/download/${{ steps.get_tag.outputs.TAG }}/glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz -O glide-im-web.tar.gz
+           tar -zxvf glide-im-web.tar.gz
