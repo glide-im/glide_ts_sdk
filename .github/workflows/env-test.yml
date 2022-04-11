@@ -1,0 +1,46 @@
+name: Publish & Deploy
+
+on: [push]
+
+jobs:
+  build-and-deploy:
+    name: GlideIM
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Get Tag
+        id: get_tag
+        run: |
+          echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+
+      - name: NodeJS 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.15.4
+
+      - name: npm install build
+        run: |
+          npm install
+          npm run build:prod
+
+      - name: build TAR PACKAGE
+        run: |
+          cd build
+          tar -czvf glide-im-web.tar.gz *
+
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            rm /data/www/glide-im-web-test -rf
+            mkdir /data/www/glide-im-web-test
+            cd /data/www/glide-im-web-test
+            wget https://github.com/Glide-IM/Glide-IM-Web/releases/download/${{ steps.get_tag.outputs.TAG }}/glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz -O glide-im-web.tar.gz
+            tar -zxvf glide-im-web.tar.gz
