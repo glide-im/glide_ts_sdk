@@ -32,15 +32,12 @@ jobs:
           tar -czvf glide-im-web.tar.gz *
 
       - name: Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          script: |
-            rm /data/www/glide-im-web-test -rf
-            mkdir /data/www/glide-im-web-test
-            cd /data/www/glide-im-web-test
-            wget https://github.com/Glide-IM/Glide-IM-Web/releases/download/${{ steps.get_tag.outputs.TAG }}/glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz -O glide-im-web.tar.gz
-            tar -zxvf glide-im-web.tar.gz
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          ARGS: "-rltgoDzvO --delete"
+          SOURCE: "build/"
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USER }}
+          TARGET: "/data/www/glide-im-web-test"
+          EXCLUDE: "/dist/, /node_modules/"
