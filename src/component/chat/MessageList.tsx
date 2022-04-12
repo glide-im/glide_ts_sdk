@@ -12,6 +12,19 @@ export function SessionMessageList(props: { id: number }) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     useEffect(() => {
+        setMessages(session?.getMessages());
+    }, [session])
+
+    useEffect(() => {
+        session?.setMessageListener((msg) => {
+            setMessages([...session.getMessages()])
+        })
+        return () => {
+            session?.setMessageListener(null)
+        }
+    }, [session, messages])
+
+    const loadHistory = () => {
         session?.getMessageHistry(0)
             .subscribe({
                 next: (r) => {
@@ -24,16 +37,7 @@ export function SessionMessageList(props: { id: number }) {
                     setLoading(false)
                 }
             })
-    }, [session])
-
-    useEffect(() => {
-        session?.setMessageListener((msg) => {
-            setMessages([...session.getMessages()])
-        })
-        return () => {
-            session?.setMessageListener(null)
-        }
-    }, [session, messages])
+    }
 
     if (session == null) {
         return <Box mt={"50%"}>

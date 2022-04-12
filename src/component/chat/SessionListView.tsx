@@ -19,10 +19,8 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     const [currentSession, setCurrentSession] = useState(props.selected)
     const [sessions, setSessions] = useState(sessionList.getSessionsTemped());
 
-    const [loadSate, setLoadSate] = useState({
-        loading: true,
-        msg: null
-    })
+    const [loadSate, setLoadSate] = useState(true)
+    const [loadError, setLoadError] = useState("")
 
     useEffect(() => {
         sessionList.setChatListUpdateListener(r => {
@@ -32,35 +30,20 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     }, [sessionList]);
 
     useEffect(() => {
-        if (sessions.length === 0) {
-            sessionList.getSessions()
-                .subscribe({
-                    next: (res: Session[]) => {
-                        const s = {
-                            loading: false,
-                            msg: null
-                        }
-                        if (res.length === 0) {
-                            s.msg = "Empty"
-                        }
-                        setSessions(res)
-                        setLoadSate(s)
-                    },
-                    error: (err) => {
-                        setLoadSate({
-                            loading: false,
-                            msg: err
-                        })
-                    },
-                })
-        } else {
-            setLoadSate({
-                loading: false,
-                msg: null
+        sessionList.getSessions()
+            .subscribe({
+                next: (res: Session[]) => {
+                    setSessions(res)
+                },
+                error: (err) => {
+                    setLoadSate(false)
+                    setLoadError(err.toString())
+                },
+                complete: () => {
+                    setLoadSate(false)
+                },
             })
-        }
-    }, [sessionList, sessions])
-
+    }, [sessionList])
 
     const onSelect = (s: Session) => {
         setCurrentSession(s.To.toString())
@@ -69,16 +52,34 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     }
 
     const onRefresh = () => {
-
+        setLoadSate(true)
+        sessionList.getSessions()
+            .subscribe({
+                next: (res: Session[]) => {
+                    setSessions(res)
+                },
+                error: (err) => {
+                    console.log(err)
+                    setLoadSate(false)
+                    setLoadError(err.toString())
+                },
+                complete: () => {
+                    setLoadSate(false)
+                },
+            })
     }
 
     let content = <></>
 
-    if (loadSate.loading) {
+    if (loadSate) {
         content = <Progress showProgress={true} msg={"Loading"} />
+    } else if (loadError) {
+        content = <Progress showProgress={false} msg={loadError} />
+    } else if (sessions.length === 0) {
+        content = <Progress showProgress={false} msg={"Empty..."} />
     } else {
         const list = sessions?.map((value: Session) =>
-            <ChatItem key={value.To} chat={value} selected={value.To === parseInt(currentSession)} onSelect={onSelect} />
+            <SessionListItem key={value.To} chat={value} selected={value.To === parseInt(currentSession)} onSelect={onSelect} />
         )
 
         content = <List style={{ overflow: "auto" }}>
@@ -111,12 +112,12 @@ function Progress(props: { showProgress?: boolean, msg?: string }) {
     </Box>
 }
 
-function ChatItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
+function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
     if (props.selected) {
         props.chat.UnreadCount = 0;
     }
-    
+
     const [chat, setChat] = useState({ obj: props.chat })
 
     useEffect(() => {

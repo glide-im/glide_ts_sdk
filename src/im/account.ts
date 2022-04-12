@@ -80,7 +80,8 @@ export class Account {
     }
 
     public isAuthenticated(): boolean {
-        return this.getToken() && this.getToken() !== "";
+        const tk = this.getToken()
+        return tk && tk !== "";
     }
 
     public getUID(): number {
@@ -102,8 +103,6 @@ export class Account {
         this.servers = auth.Servers;
         this.token = auth.Token;
         Glide.storeToken(auth.Token);
-
-        this.sessions.init();
 
         const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.Uid)
             .pipe(

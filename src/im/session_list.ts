@@ -23,7 +23,7 @@ export class SessionList {
 
     public init(): Observable<string> {
         const res = this.getSessions().pipe(
-            mergeMap(() => "session init complete"),
+            mergeMap(() => of("session init complete")),
         )
         return onErrorResumeNext(res, of("session init failed"))
     }
@@ -34,6 +34,10 @@ export class SessionList {
 
     public setChatListUpdateListener(l: SessionListUpdateListener | null) {
         this.chatListUpdateListener = l
+    }
+
+    public update(): Observable<Session[]> {
+        return this.getSessions(true)
     }
 
     public getSessions(reload: boolean = false): Observable<Session[]> {

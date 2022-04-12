@@ -1,6 +1,7 @@
 import { groupBy, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { UserInfoBean } from "src/api/model";
 import { onNext } from "src/rx/next";
+import { getCookie, setCookie } from "src/utils/Cookies";
 import { Api } from "../api/api";
 import { IMGroupMember, IMUserInfo } from "./def";
 
@@ -10,19 +11,19 @@ class GlideIM {
     private tempGroupMember = new Map<number, IMGroupMember[]>();
 
     public getToken(): string {
-        return this._readObject("token");
+        return getCookie("token");
     }
 
     public storeToken(token: string) {
-        return this._writeObject("token", token);
+        setCookie("token", token, 1);
     }
 
     public getUserInfo(id: number): IMUserInfo | null {
         let i = this.tempUserInfo.get(id);
         if (i != null) {
             return i
-        } 
-        return null        
+        }
+        return null
         // const res = this._readObject(`ui_${id}`);
         // this.tempUserInfo.set(id, res);
         // return res

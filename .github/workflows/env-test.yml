@@ -1,4 +1,4 @@
-name: Publish & Deploy For Test
+name: Publish & Deploy Test
 
 on: [push]
 
@@ -25,11 +25,6 @@ jobs:
         run: |
           npm install
           npm run build:prod
-
-      - name: build TAR PACKAGE
-        run: |
-          cd build
-          tar -czvf glide-im-web.tar.gz *
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@main

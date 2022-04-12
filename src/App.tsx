@@ -6,7 +6,7 @@ import './App.css';
 import { Auth } from "./component/auth/Auth";
 import { Register } from "./component/auth/Register";
 import { MainPanel } from "./component/MainPanel";
-import { SnackBar } from "./component/SnackBar";
+import { showSnack, SnackBar } from "./component/SnackBar";
 import { Account } from "./im/account";
 import { getCookie } from "./utils/Cookies";
 
@@ -26,7 +26,7 @@ function App() {
     }, [])
 
     useEffect(() => {
-        if (Account.getInstance().isAuthenticated()) {
+        if (authed) {
             console.log("start auth");
 
             Account.getInstance().auth()
@@ -36,10 +36,14 @@ function App() {
                     },
                     error: (e) => {
                         console.log("auth error", e);
+                        setState({
+                            isAuthenticated: false,
+                            isLoading: false,
+                        })
+                        showSnack(e.message)
                     },
                     complete: () => {
                         console.log("auth complete");
-
                         setState({
                             isAuthenticated: true,
                             isLoading: false,
@@ -47,13 +51,12 @@ function App() {
                     }
                 });
         }
-    }, [])
+    }, [authed])
 
 
     return (
         <div className="App">
             <SnackBar />
-            {/*<MessageStack/>*/}
             <Container color={"text.disabled"} style={{ height: "100vh" }}>
                 <HashRouter>
                     <Grid container color={"text.disabled"} style={{ height: "100vh", width: "1000px", margin: "auto" }}

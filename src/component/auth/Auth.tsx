@@ -23,7 +23,8 @@ export const Auth = withRouter((props: RouteComponentProps) => {
         const account = accountInput.current.value;
         const password = passwordInput.current.value;
 
-        Account.getInstance().login(account, password)
+        Account.getInstance()
+            .login(account, password)
             .subscribe({
                 next: (r) => {
                     console.log(r)
