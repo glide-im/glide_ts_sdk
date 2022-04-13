@@ -24,20 +24,24 @@ export function SessionMessageList(props: { id: number }) {
         }
     }, [session, messages])
 
-    // const loadHistory = () => {
-    //     session?.getMessageHistry(0)
-    //         .subscribe({
-    //             next: (r) => {
-    //                 setMessages(r)
-    //             },
-    //             error: (e) => {
-    //                 console.log("getMessageHistry", e)
-    //             },
-    //             complete: () => {
-    //                 setLoading(false)
-    //             }
-    //         })
-    // }
+    const loadHistory = () => {
+        session?.getMessageHistry(0)
+            .subscribe({
+                next: (r) => {
+                    setMessages(r)
+                },
+                error: (e) => {
+                    console.log("getMessageHistry", e)
+                },
+                complete: () => {
+                    setLoading(false)
+                }
+            })
+    }
+
+    if (props.id === 1) {
+        loadHistory()
+    }
 
     if (session == null) {
         return <Box mt={"50%"}>
