@@ -6,7 +6,7 @@ import { Account } from "src/im/account";
 import { IMUserInfo } from "src/im/def";
 import { Glide } from "src/im/glide";
 
-export function Meet() {
+export function Square() {
 
     const [serverInfo, setServerInfo] = useState<ServerInfoBean | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -56,24 +56,25 @@ export function Meet() {
             </Grid>
         </Grid>
 
-        content = <Box style={{ overflow: "auto" }} className={"BeautyScrollBar"} height={"100%"}>
+        content =
             <Grid container textAlign={"center"} style={{ padding: "20px" }} spacing={2}>
                 {users}
             </Grid>
-        </Box>
     }
 
     return <Grid container height={"100%"}>
         <Grid item xs={4}>
             <Box m={2}>
-                <Typography variant={"caption"}>Meet</Typography>
+                <Typography variant={"caption"}>在线</Typography>
             </Box>
             <Divider />
             {servInfo}
         </Grid>
         <Grid item xs={8} height={"100%"}>
             <Divider orientation={"vertical"} style={{ float: "left" }} />
-            {content}
+            <Box style={{ overflow: "auto" }} className={"BeautyScrollBar"} height={"100%"}>
+                {content}
+            </Box>
         </Grid>
     </Grid>
 }

@@ -1,9 +1,10 @@
 import { Avatar, Box, Button, Grid, Paper, TextField, Typography } from "@mui/material";
 import React, { useRef } from "react";
-import { Link as RtLink } from "react-router-dom";
+import { Link as RtLink, RouteComponentProps, withRouter } from "react-router-dom";
 import { Api } from "src/api/api";
+import { showSnack } from "../SnackBar";
 
-export function Register() {
+export const Register = withRouter((props: RouteComponentProps) => {
 
     const accountInput = useRef<HTMLInputElement>(null)
     const passwordInput = useRef<HTMLInputElement>(null)
@@ -21,7 +22,8 @@ export function Register() {
 
         Api.register(account, password)
             .then((resp) => {
-
+                showSnack("注册成功");
+                props.history.push("/auth");
             })
             .catch((reason) => {
                 alert(reason)
@@ -54,7 +56,7 @@ export function Register() {
                     <Grid item xs={12}>
                         <Grid container justifyContent={"right"}>
                             <RtLink to={"./signin"}>
-                               Back to Login
+                                Back to Login
                             </RtLink>
                         </Grid>
                         <Grid container justifyContent={"right"}>
@@ -68,4 +70,4 @@ export function Register() {
             </Paper>
         </Grid>
     )
-}
+})

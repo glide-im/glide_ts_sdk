@@ -1,14 +1,16 @@
 import { Chat as ChatIcon, PersonSearch } from "@mui/icons-material";
+import CropSquareIcon from '@mui/icons-material/CropSquare';
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import { Avatar, Box, Grid, IconButton, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import React from "react";
+import React, { useState } from "react";
 import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter } from "react-router-dom";
+import { State, Ws } from "src/im/ws";
 import { Account } from "../im/account";
 import { Chat } from "./chat/Chat";
 import { ContactsList } from "./friends/ContactsList";
-import { Meet } from "./meet/Meet";
+import { Square } from "./square/Square";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
@@ -28,7 +30,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
                 <Switch>
                     <Route path={`${match.url}/session/:sid`} children={<Chat />} />
                     <Route path={`${match.url}/friends`} children={<ContactsList />} />
-                    <Route path={`${match.url}/meet`} children={<Meet />} />
+                    <Route path={`${match.url}/square`} children={<Square />} />
                     <Route path={`${match.url}/session`} exact={true}>
                         <Redirect to={`${match.url}/session/${Account.getInstance().getSessionList().currentSid}`} />
                     </Route>
@@ -48,6 +50,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
     let nickname = ""
 
     const userInfo = Account.getInstance().getUserInfo()
+    const [online, setOnline] = useState(Ws.isConnected())
 
     if (userInfo) {
         avatar = userInfo.avatar
@@ -69,10 +72,24 @@ export const Bar = withRouter((props: RouteComponentProps) => {
             path: "/im/friends",
         },
         {
+            icon: <CropSquareIcon />,
+            path: "/im/square",
+        },
+        {
             icon: <PersonSearch />,
-            path: "/im/meet",
+            path: "/im/search",
         },
     ]
+
+    Ws.addStateListener((s, _) => {
+        if (s === State.CLOSED) {
+            setOnline(false)
+        } else if (s === State.CONNECTED) {
+            setOnline(true)
+        } else {
+
+        }
+    })
 
     return <Box bgcolor={"primary.dark"} style={{ height: "100%" }}>
 
@@ -84,7 +101,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
             <Grid container justifyContent={"center"}>
                 <Box m={2}>
-                    <Typography align={"center"} variant={"subtitle2"} color={"ghostwhite"}>
+                    <Typography align={"center"} variant={"caption"} color={online ? "ghostwhite" : "red"}>
                         {nickname}
                     </Typography>
                 </Box>

@@ -92,7 +92,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
 
     return <>
         <Box m={2}>
-            <Typography variant={"caption"}>Messages</Typography>
+            <Typography variant={"caption"}>会话</Typography>
             <IconButton size={"small"} onClick={onRefresh} style={{ float: "right" }}>
                 <Refresh />
             </IconButton>
@@ -141,7 +141,7 @@ function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c
     }
 
     return <>
-        <ListItem button style={{ cursor: "pointer" }} onClick={onItemClick} selected={props.selected}>
+        <ListItem button style={{ cursor: "pointer" }} sx={{ bgcolor: 'background.paper' }} onClick={onItemClick} selected={props.selected}>
             <ListItemIcon >
                 <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"} >
                     <Avatar variant="rounded" sx={{ bgcolor: green[500] }} src={chat.obj.Avatar} />

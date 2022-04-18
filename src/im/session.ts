@@ -1,5 +1,4 @@
 import { map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
-import { onErrorResumeNext } from "rxjs/operators";
 import { onNext } from "src/rx/next";
 import { timeStampSecToDate } from "src/utils/TimeUtils";
 import { Api } from "../api/api";
@@ -52,18 +51,17 @@ export class Session {
         if (this.isGroup()) {
             return of(this);
         } else {
-
             return Glide.loadUserInfo(this.To)
                 .pipe(
                     mergeMap(userInfo => of(userInfo[0])),
-                    onErrorResumeNext(new Observable<IMUserInfo>(subscriber => {
-                        subscriber.next({
-                            avatar: "-",
-                            name: "-",
-                            uid: this.To,
-                        });
-                        subscriber.complete();
-                    })),
+                    // onErrorResumeNext(new Observable<IMUserInfo>(subscriber => {
+                    //     subscriber.next({
+                    //         avatar: "-",
+                    //         name: "-",
+                    //         uid: this.To,
+                    //     });
+                    //     subscriber.complete();
+                    // })),
                     onNext(info => {
                         this.userInfo = info;
                         this.Title = info.name;

@@ -32,7 +32,8 @@ export function ChatRoomContainer(props: { to: string }) {
                 .subscribe({
                     next: () => { },
                     error: (err) => {
-                        console.error(err)
+                        alert(err)
+                        // console.error(err)
                     },
                     complete: () => {
                     }

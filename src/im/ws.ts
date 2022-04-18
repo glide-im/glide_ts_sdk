@@ -59,6 +59,10 @@ class WebSocketClient {
         console.log(`[WebSocket] ${where}:`, ...msg)
     }
 
+    public isConnected():boolean{
+        return this.websocket !== null && this.websocket.readyState === this.websocket.OPEN
+    }
+
     public connect(ws: string): Observable<string> {
         return new Observable((observer: Observer<string>) => {
             this.connectInternal(ws, (success, msg) => {

@@ -81,7 +81,7 @@ export function ContactsList() {
                     onSubmit={createGroup} />
                 <AddContactDialog open={showAddContact} onClose={() => setShowAddContact(false)}
                     onSubmit={addContactHandler} />
-                <Typography variant={"caption"}>Contacts</Typography>
+                <Typography variant={"caption"}>联系人</Typography>
 
                 <IconButton size={"small"} onClick={refresh} style={{ float: "right" }}>
                     <Refresh />

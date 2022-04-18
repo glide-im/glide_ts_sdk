@@ -1,4 +1,4 @@
-import { Box, CircularProgress, List, ListItem, Typography } from "@mui/material";
+import { Box, List, ListItem, Typography } from "@mui/material";
 import React, { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Account } from "src/im/account";
 import { ChatMessage } from "src/im/chat_message";
@@ -6,14 +6,11 @@ import { IMUserInfo } from "src/im/def";
 import { ChatMessageItem } from "./MessageItem";
 
 export function SessionMessageList(props: { id: number }) {
+
     const session = Account.getInstance().getSessionList().get(props.id);
 
-    const [loading, setLoading] = useState(true);
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-    useEffect(() => {
-        setMessages(session?.getMessages());
-    }, [session])
+    const [messages, setMessages] = useState<ChatMessage[]>(session?.getMessages() ?? []);
+    console.log("SessionMessageList", props.id, messages)
 
     useEffect(() => {
         session?.setMessageListener((msg) => {
@@ -34,7 +31,6 @@ export function SessionMessageList(props: { id: number }) {
                     console.log("getMessageHistry", e)
                 },
                 complete: () => {
-                    setLoading(false)
                 }
             })
     }
@@ -51,14 +47,14 @@ export function SessionMessageList(props: { id: number }) {
         </Box>
     }
 
-    if (loading) {
-        return <Box height={"100%"} display={"flex"} flexDirection={"column"}>
-            <CircularProgress style={{ margin: "30% auto 0px auto" }} />
-            <Typography variant="h6" textAlign={"center"}>
-                Loading...
-            </Typography>
-        </Box>
-    }
+    // if (loading) {
+    //     return <Box height={"100%"} display={"flex"} flexDirection={"column"}>
+    //         <CircularProgress style={{ margin: "30% auto 0px auto" }} />
+    //         <Typography variant="h6" textAlign={"center"}>
+    //             Loading...
+    //         </Typography>
+    //     </Box>
+    // }
 
     return <MessageListView messages={messages} isGroup={session.isGroup()} userInfo={session.getUserInfo()} />
 }
