@@ -9,8 +9,16 @@ export function SessionMessageList(props: { id: number }) {
 
     const session = Account.getInstance().getSessionList().get(props.id);
 
-    const [messages, setMessages] = useState<ChatMessage[]>(session?.getMessages() ?? []);
-    console.log("SessionMessageList", props.id, messages)
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    console.log("SessionMessageList", session)
+
+    useEffect(() => {
+        if (session === null) {
+            return
+        }
+        const msgs = session.getMessages()
+        setMessages(msgs)
+    }, [session])
 
     useEffect(() => {
         session?.setMessageListener((msg) => {

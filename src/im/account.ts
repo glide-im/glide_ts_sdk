@@ -1,4 +1,4 @@
-import { catchError, concat, map, mergeMap, Observable } from "rxjs";
+import { catchError, concat, map, mergeMap, Observable, timeout } from "rxjs";
 import { onComplete } from "src/rx/next";
 import { Api } from "../api/api";
 import { setApiToken } from "../api/axios";
@@ -49,6 +49,7 @@ export class Account {
                 mergeMap(res => {
                     return this.initAccount(res)
                 }),
+                timeout(5000),
                 catchError(err => {
                     this.clearAuth();
                     throw new Error("auth failed: " + err);
@@ -126,7 +127,7 @@ export class Account {
 
         const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
             .pipe(
-                map(() => "IM server auth success"),
+                map(() => "IM auth success"),
             )
 
         return Ws.connect(server)
@@ -139,12 +140,16 @@ export class Account {
     }
 
     private onMessage(m: CommonMessage<any>) {
+        console.log("onMessage", m);
         switch (m.Action) {
+            case Actions.NotifyContact:
+                this.contacts.onNewContactNotify(m.Data);
+                break;
             case Actions.MessageChat:
             case Actions.MessageGroup:
             case Actions.MessageChatRecall:
             case Actions.MessageGroupRecall:
-                this.sessions.onMessage(m.Data);
+                this.sessions.onMessage(m.Action, m.Data);
                 break;
             case Actions.NotifyKickOut:
                 break;
