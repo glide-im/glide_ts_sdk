@@ -34,6 +34,15 @@ export class Session {
     private messageListener: ((message: ChatMessage) => void) | null = null;
     private sessionUpdateListener: SessionUpdateListener | null = null;
 
+    public static create(to: number, type: number): Session {
+        const ret = new Session();
+        ret.To = to;
+        ret.Type = type;
+        ret.ID = ret.getSID();
+        ret.Title = ret.ID;
+        return ret;
+    }
+
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
         session.To = sb.To;

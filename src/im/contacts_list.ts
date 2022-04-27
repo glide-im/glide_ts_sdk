@@ -4,6 +4,7 @@ import { Api } from "../api/api";
 import { ContactsBean } from "../api/model";
 import { Contacts } from "./contacts";
 import { Glide } from "./glide";
+import { ContactNotify } from "./message";
 
 export class ContactsList {
 
@@ -16,6 +17,14 @@ export class ContactsList {
             .pipe(
                 mergeMap(() => of(this))
             )
+    }
+
+    public onNewContactNotify(n: ContactNotify) {
+        const ct: Contacts = new Contacts();
+        ct.id = n.Id
+        ct.type = n.Type
+        this.contacts.set(ct.id, ct);
+        this.onContactsChange?.();
     }
 
     public getContactList(): Observable<Contacts[]> {

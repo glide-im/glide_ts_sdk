@@ -2,7 +2,7 @@ import { map, mergeMap, Observable, of, toArray } from "rxjs";
 import { onNext } from "src/rx/next";
 import { Api } from "../api/api";
 import { Account } from "./account";
-import { Message } from "./message";
+import { Actions, Message } from "./message";
 import { Session } from "./session";
 
 export interface SessionListUpdateListener {
@@ -12,7 +12,7 @@ export interface SessionListUpdateListener {
 export class SessionList {
 
     private account: Account;
-    public currentSid: string = "0";
+    public currentChatTo: string = "0";
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
     private sessionMap: Map<number, Session> = new Map<number, Session>()
@@ -24,10 +24,10 @@ export class SessionList {
     public init(): Observable<string> {
 
         return this.getSessions()
-        .pipe(
-            mergeMap(() => of("session init complete, " + this.sessionMap.size + " sessions")),
-            // map(() => "session init complete"),
-        )
+            .pipe(
+                mergeMap(() => of("session init complete, " + this.sessionMap.size + " sessions")),
+                // map(() => "session init complete"),
+            )
     }
 
     public startChat(id: number): Promise<Session> {
@@ -66,7 +66,7 @@ export class SessionList {
         return Array.from(this.sessionMap.values())
     }
 
-    public onMessage(message: Message) {
+    public onMessage(action: Actions, message: Message) {
         const uid = this.account.getUID()
         let s = message.from
         if (message.from === uid) {
@@ -76,6 +76,11 @@ export class SessionList {
         if (this.sessionMap.has(s)) {
             const session = this.get(s)
             session.onMessage(message)
+        } else {
+            const sessionType = action.startsWith("group") ? 2 : 1
+            const ses = Session.create(message.from, sessionType)
+            ses.onMessage(message)
+            this.add(ses)
         }
     }
 
@@ -84,6 +89,7 @@ export class SessionList {
             return
         }
         this.sessionMap.set(s.To, s)
+        this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
     }
 
     public get(sid: number): Session | null {
@@ -91,9 +97,9 @@ export class SessionList {
     }
 
     public clear() {
-        this.currentSid = ""
+        this.currentChatTo = ""
         this.sessionMap = new Map<number, Session>()
-        this.chatListUpdateListener([])
+        this.chatListUpdateListener?.([])
     }
 
     public contain(chatId: number): boolean {

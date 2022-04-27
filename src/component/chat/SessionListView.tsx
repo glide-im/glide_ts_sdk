@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Account } from "src/im/account";
 import { Session } from "src/im/session";
+import { SessionListItem } from "./SessionListItem";
 
 interface SessionListProps extends RouteComponentProps {
     selected: string,
-    onSelect?: (sid: string) => void
+    onSelect?: (to: number) => void
 }
 
 export const SessionListView = withRouter((props: SessionListProps) => {
@@ -47,8 +48,10 @@ export const SessionListView = withRouter((props: SessionListProps) => {
 
     const onSelect = (s: Session) => {
         setCurrentSession(s.To.toString())
-        sessionList.currentSid = s.To.toString()
+        sessionList.currentChatTo = s.To.toString()
         props.history.replace(`/im/session/${s.To}`)
+        props.onSelect?.(s.To)
+
     }
 
     const onRefresh = () => {
@@ -110,44 +113,4 @@ function Progress(props: { showProgress?: boolean, msg?: string }) {
         {props.showProgress !== false ? <CircularProgress style={{ margin: "auto" }} /> : <></>}
         {props.msg ? <Typography variant={"caption"} textAlign={"center"}>{props.msg}</Typography> : <></>}
     </Box>
-}
-
-function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
-
-    if (props.selected) {
-        props.chat.UnreadCount = 0;
-    }
-
-    const [chat, setChat] = useState({ obj: props.chat })
-
-    useEffect(() => {
-        chat.obj.setSessionUpdateListener(() => {
-            console.log("ChatItem", "chat updated")
-            if (props.selected) {
-                chat.obj.UnreadCount = 0;
-            }
-            setChat({ obj: chat.obj })
-        })
-        return () => chat.obj.setSessionUpdateListener(null)
-    }, [chat, props.selected])
-
-    const onItemClick = () => {
-        props.onSelect(chat.obj)
-    }
-
-    let msg = chat.obj.LastMessage
-    if (chat.obj.isGroup() || chat.obj.LastMessageSender === 'me') {
-        msg = `${chat.obj.LastMessageSender}: ${chat.obj.LastMessage}`
-    }
-
-    return <>
-        <ListItem button style={{ cursor: "pointer" }} sx={{ bgcolor: 'background.paper' }} onClick={onItemClick} selected={props.selected}>
-            <ListItemIcon >
-                <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"} >
-                    <Avatar variant="rounded" sx={{ bgcolor: green[500] }} src={chat.obj.Avatar} />
-                </Badge>
-            </ListItemIcon>
-            <ListItemText primary={chat.obj.Title} secondary={msg} />
-        </ListItem>
-    </>
 }

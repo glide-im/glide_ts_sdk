@@ -10,17 +10,19 @@ import { SessionListView } from "./SessionListView";
 
 export function Chat() {
 
-    const { sid } = useParams<{ sid: string }>();
-    console.log("Chat", sid)
+    const { to } = useParams<{ to: string }>();
+    console.log("Chat", to)
 
     return <Box style={{ height: "700px" }}>
         <Grid alignItems={"center"} container style={{}}>
             <Grid item xs={4} style={{ height: "700px" }}>
-                <SessionListView selected={sid} />
+                <SessionListView selected={to} onSelect={(to: number) => {
+
+                }} />
             </Grid>
             <Grid item xs={8} style={{ height: "700px" }}>
                 <Divider orientation={"vertical"} style={{ float: "left" }} />
-                <ChatRoomContainer to={sid} />
+                <ChatRoomContainer to={to} />
             </Grid>
         </Grid>
 

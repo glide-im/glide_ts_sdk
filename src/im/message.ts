@@ -20,6 +20,7 @@ export enum Actions {
     MessageGroupRecall = "message.group.recall",
 
     NotifyNeedAuth = "notify.auth",
+    NotifyContact = "notify.contact",
     NotifyKickOut = "notify.kickout",
     NotifyGroup = "notify.group",
     NotifyAccountLogin = "notify.login",
@@ -85,4 +86,11 @@ export interface GroupNotify {
     Timestamp: number,
     Seq: number,
     Data: string,
+}
+
+export interface ContactNotify {
+    FromId: number,
+    FromType: number,
+    Id: number,
+    Type: number
 }
