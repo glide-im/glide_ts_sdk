@@ -1,6 +1,6 @@
-import { ListItem, ListItemIcon, Badge, Avatar, ListItemText } from "@mui/material";
+import { Avatar, Badge, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import { green } from "@mui/material/colors";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Session } from "src/im/session";
 
 export function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {

@@ -1,6 +1,6 @@
-import { Message } from "./message";
-import { Account } from "./account";
 import { MessageBean } from "src/api/model";
+import { Account } from "./account";
+import { Message } from "./message";
 
 export enum SendingStatus {
     Unknown,
