@@ -152,9 +152,11 @@ export class Account {
                 this.sessions.onMessage(m.Action, m.Data);
                 break;
             case Actions.NotifyKickOut:
+                alert("kick out");
+                this.logout();
                 break;
             case Actions.NotifyNeedAuth:
-
+                this.logout();
                 break;
         }
     }

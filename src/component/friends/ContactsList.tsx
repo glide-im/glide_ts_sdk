@@ -17,19 +17,18 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Account } from "src/im/account";
 import { Contacts } from "../../im/contacts";
 import { AddContactDialog } from "./AddContactDialog";
-import { CreateGroupDialog } from "./CreateGroupDialog";
 
 export function ContactsList() {
 
     const [contacts, setContacts] = useState([])
 
     const [showAddContact, setShowAddContact] = useState(false)
-    const [showCreateGroup, setShowCreateGroup] = useState(false)
+    // const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     const c = Account.getInstance().getContactList()
 
     useEffect(() => {
-        c.getContactList()
+        c.getOrInitContactList()
             .subscribe({
                 next: (list: Contacts[]) => {
                     setContacts(list)
@@ -53,19 +52,21 @@ export function ContactsList() {
 
     }
 
-    const createGroup = (name: string) => {
+    // const createGroup = (name: string) => {
         // client.createGroup(name)
         //     .then()
-        setShowCreateGroup(false)
-    }
+        // setShowCreateGroup(false)
+    // }
 
     const addContactHandler = (isGroup: boolean, id: number) => {
         if (!isGroup) {
             c.addFriend(id, "")
                 .then((r) => {
+                    setContacts([...c.getContacts()])
                     console.log(r)
                 })
                 .catch((e) => {
+                    alert(e)
                     console.log(e)
                 })
         } else {
@@ -77,8 +78,8 @@ export function ContactsList() {
     return <Grid container style={{ height: "700px" }}>
         <Grid item xs={4}>
             <Box m={2}>
-                <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)}
-                    onSubmit={createGroup} />
+                {/* <CreateGroupDialog open={showCreateGroup} onClose={() =>setShowAddContact(false)}
+                    onSubmit={createGroup} /> */}
                 <AddContactDialog open={showAddContact} onClose={() => setShowAddContact(false)}
                     onSubmit={addContactHandler} />
                 <Typography variant={"caption"}>联系人</Typography>
@@ -87,16 +88,12 @@ export function ContactsList() {
                     <Refresh />
                 </IconButton>
 
-                <IconButton size={"small"} onClick={() => setShowCreateGroup(true)} style={{ float: "right" }}>
+                <IconButton size={"small"} onClick={() => setShowAddContact(true)} style={{ float: "right" }}>
                     <GroupAdd />
                 </IconButton>
             </Box>
             <Divider />
             <List style={{ overflow: "auto", maxHeight: "600px" }}>
-                <ListItem key={"add_contacts"} button onClick={() => setShowAddContact(true)}>
-                    <ListItemText primary={"Add ContactsList"} />
-                </ListItem>
-                <Divider />
 
                 {list}
 

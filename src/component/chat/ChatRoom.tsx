@@ -14,7 +14,6 @@ export function ChatRoomContainer(props: { to: string }) {
 
     const id = parseInt(props.to);
     const session = SessionList().get(id);
-    console.log("ChatRoom", props, session)
 
     const isGroup = (session?.Type === 2)
 

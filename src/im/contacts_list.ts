@@ -13,7 +13,7 @@ export class ContactsList {
     public onContactsChange: () => void | null = null;
 
     public init(): Observable<ContactsList> {
-        return this.getContactList()
+        return this.getOrInitContactList()
             .pipe(
                 mergeMap(() => of(this))
             )
@@ -27,7 +27,12 @@ export class ContactsList {
         this.onContactsChange?.();
     }
 
-    public getContactList(): Observable<Contacts[]> {
+    public getContacts(): Contacts[] {
+        const c = this.contacts.values();
+        return Array.from(c);
+    }
+
+    public getOrInitContactList(): Observable<Contacts[]> {
         if (this.contacts.size > 0) {
             return of(Array.from(this.contacts.values()));
         }
@@ -56,9 +61,15 @@ export class ContactsList {
     }
 
     public addFriend(uid: number, remark?: string): Promise<ContactsBean> {
-        console.log("ContactsList/addFriend", uid, remark);
-
         return Api.addContacts(uid)
+            .then((r) => {
+                const c = new Contacts();
+                c.id = uid;
+                c.name = `${uid}`;
+                c.type = 1;
+                this.contacts.set(uid, c);
+                return r;
+            })
     }
 
     public getAllContacts(): Contacts[] {

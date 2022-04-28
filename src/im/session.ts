@@ -119,10 +119,8 @@ export class Session {
     }
 
     public onMessage(message: Message) {
-        console.log("onMessage", message);
-
+        console.log("onMessage", this, message);
         const c = ChatMessage.create(message)
-
         this.UnreadCount++;
         this.addMessageByOrder(c);
     }

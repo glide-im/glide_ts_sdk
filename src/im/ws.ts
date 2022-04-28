@@ -48,6 +48,8 @@ class WebSocketClient {
     private ackCallBacks = new Map<number, MessageCallBack>();
     private apiCallbacks = new Map<number, MessageCallBack>();
 
+    private connectTimeout: NodeJS.Timeout | null = null
+
     constructor() {
         this.websocket = null;
         this.seq = 1;
@@ -59,7 +61,7 @@ class WebSocketClient {
         console.log(`[WebSocket] ${where}:`, ...msg)
     }
 
-    public isConnected():boolean{
+    public isConnected(): boolean {
         return this.websocket !== null && this.websocket.readyState === this.websocket.OPEN
     }
 
@@ -68,17 +70,17 @@ class WebSocketClient {
             this.connectInternal(ws, (success, msg) => {
                 if (success) {
                     observer.next("ws connected")
+                    observer.complete()
                 } else {
                     observer.error(msg)
                 }
-                observer.complete()
             });
         });
     }
 
     private connectInternal(ws: string, callback: (success: boolean, msg: string) => void) {
         if (this.websocket != null) {
-            if (this.websocket.readyState === WebSocket.OPEN) {
+            if (this.websocket.readyState !== WebSocket.CLOSED) {
                 this.websocket.close()
             }
         }
@@ -86,7 +88,8 @@ class WebSocketClient {
         let cb = callback;
         this.stateChangeListener.forEach((value => value(State.CONNECTING, "")));
         this.websocket = new WebSocket(ws);
-        setTimeout(() => {
+        this.connectTimeout = setTimeout(() => {
+            WebSocketClient.slog("connectInternal", "connect timeout")
             if (!this.websocket?.OPEN) {
                 if (cb != null) {
                     cb(false, "timeout");
@@ -97,6 +100,7 @@ class WebSocketClient {
         }, connectionTimeout);
 
         this.websocket.onerror = (e) => {
+            clearTimeout(this.connectTimeout);
             WebSocketClient.slog("onerror", "" + e)
             if (cb != null) {
                 cb(false, `ws connect failed ${e.type}`)
@@ -105,10 +109,12 @@ class WebSocketClient {
             this.close()
         };
         this.websocket.onclose = (e) => {
+            clearTimeout(this.connectTimeout);
             WebSocketClient.slog("onclose", "" + e)
             this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
         };
         this.websocket.onopen = (e) => {
+            clearTimeout(this.connectTimeout);
             WebSocketClient.slog("onopen", "" + e)
             this.stateChangeListener.forEach((value => value(State.CONNECTED, "connected")))
 

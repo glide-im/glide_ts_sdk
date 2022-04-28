@@ -2,9 +2,9 @@ import { Chat as ChatIcon, PersonSearch } from "@mui/icons-material";
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import { Avatar, Box, Grid, IconButton, Typography } from "@mui/material";
+import { Avatar, Box, Button, Grid, IconButton, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter } from "react-router-dom";
 import { State, Ws } from "src/im/ws";
 import { Account } from "../im/account";
@@ -57,9 +57,32 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         nickname = userInfo.name + "\r\n" + userInfo.uid
     }
 
+    useEffect(() => {
+        const l = (s: State, _: any) => {
+            if (s === State.CLOSED) {
+                setOnline(false)
+            } else if (s === State.CONNECTED) {
+                setOnline(true)
+            }
+        }
+        Ws.addStateListener(l)
+        return () => { Ws.removeStateListener(l) }
+    }, []);
+
     const onExitClick = () => {
         Account.getInstance().clearAuth()
         props.history.replace("/auth")
+    }
+
+    const Reconnect = () => {
+        Account.getInstance().auth()
+            .subscribe({
+                next: () => {
+                },
+                error: (e) => {
+                    alert(e)
+                }
+            })
     }
 
     const menu = [
@@ -81,16 +104,6 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         },
     ]
 
-    Ws.addStateListener((s, _) => {
-        if (s === State.CLOSED) {
-            setOnline(false)
-        } else if (s === State.CONNECTED) {
-            setOnline(true)
-        } else {
-
-        }
-    })
-
     return <Box bgcolor={"primary.dark"} style={{ height: "100%" }}>
 
         <Grid justifyContent={"center"} container color={"primary.dark"}>
@@ -104,6 +117,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
                     <Typography align={"center"} variant={"caption"} color={online ? "ghostwhite" : "red"}>
                         {nickname}
                     </Typography>
+                    {online ? "" : <Button onClick={Reconnect}>Reconnect</Button>}
                 </Box>
             </Grid>
 
