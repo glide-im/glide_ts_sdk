@@ -32,7 +32,7 @@ function getContacts(): Observable<ContactsBean[]> {
     return rxios.post("contacts/list")
 }
 
-function addContacts(uid: number): Promise<ContactsBean> {
+function addContacts(uid: number): Promise<any> {
     const param = {
         Uid: uid,
         Remark: "",

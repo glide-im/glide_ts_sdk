@@ -23,9 +23,6 @@ export function AddContactDialog(props: AddContactDialogProp) {
         <Dialog open={props.open} onClose={props.onClose} aria-labelledby="form-dialog-title">
             <DialogTitle id="form-dialog-title">Add Contact</DialogTitle>
             <DialogContent>
-                <DialogContentText>
-                    Group or friend ID
-                </DialogContentText>
                 <TextField autoFocus onChange={e => {
                     setId(parseInt(e.target.value))
                 }} margin="dense" id="number" label="ID"
@@ -35,11 +32,6 @@ export function AddContactDialog(props: AddContactDialogProp) {
             <DialogActions>
                 <Button onClick={props.onClose} color="primary">
                     Cancel
-                </Button>
-                <Button onClick={() => {
-                    props.onSubmit(true, id)
-                }} color="primary">
-                    Add Group
                 </Button>
                 <Button onClick={() => {
                     props.onSubmit(false, id)

@@ -72,7 +72,6 @@ export class SessionList {
         if (message.from === uid) {
             s = message.to
         }
-        console.log("list.onMessage1", message, s)
         if (this.sessionMap.has(s)) {
             const session = this.get(s)
             session.onMessage(message)

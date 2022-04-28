@@ -11,7 +11,6 @@ import { SessionListView } from "./SessionListView";
 export function Chat() {
 
     const { to } = useParams<{ to: string }>();
-    console.log("Chat", to)
 
     return <Box style={{ height: "700px" }}>
         <Grid alignItems={"center"} container style={{}}>

@@ -12,8 +12,7 @@ interface SessionListProps extends RouteComponentProps {
 }
 
 export const SessionListView = withRouter((props: SessionListProps) => {
-
-    console.log("SessionList", props.selected)
+    
     const sessionList = Account.getInstance().getSessionList();
 
     const [currentSession, setCurrentSession] = useState(props.selected)
