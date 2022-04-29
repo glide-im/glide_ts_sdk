@@ -26,7 +26,7 @@ jobs:
           npm install
           npm run build:prod
           cd build 
-          date >> build-date.lo
+          date >> build-date.log
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@main
