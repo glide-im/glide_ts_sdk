@@ -4,6 +4,7 @@ import { Avatar, Box, Button, Grid, IconButton, Paper, TextField, Typography } f
 import React, { useRef, useState } from "react";
 import { Link as RtLink, RouteComponentProps, withRouter } from "react-router-dom";
 import { Account } from "../../im/account";
+import { Version } from '../version';
 import { SettingDialog } from './SettingsDialog';
 
 export const Auth = withRouter((props: RouteComponentProps) => {
@@ -30,7 +31,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                     console.log(r)
                 },
                 error: (e) => {
-                    alert(e.message)
+                    alert(e)
                 },
                 complete: () => {
                     props.history.push("/im");
@@ -97,6 +98,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                         </Grid>
                     </Grid>
                 </Grid>
+                <Version />
             </Paper>
         </Grid>
     )

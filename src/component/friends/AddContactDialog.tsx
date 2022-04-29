@@ -2,12 +2,10 @@ import {
     Button,
     Dialog,
     DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
+    DialogContent, DialogTitle,
     TextField
 } from "@mui/material";
-import {useState} from "react";
+import { useState } from "react";
 
 
 interface AddContactDialogProp {
