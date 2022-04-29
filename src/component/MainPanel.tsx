@@ -11,6 +11,7 @@ import { Account } from "../im/account";
 import { Chat } from "./chat/Chat";
 import { ContactsList } from "./friends/ContactsList";
 import { Square } from "./square/Square";
+import { Version } from "./version";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
@@ -135,7 +136,15 @@ export const Bar = withRouter((props: RouteComponentProps) => {
                 <IconButton onClick={onExitClick}>
                     <ExitToAppIcon />
                 </IconButton>
+
             </Grid>
+
+
+        </Grid>
+        <Grid container justifyContent={"center"}>
+            <Box m={2}>
+                <Version />
+            </Box>
         </Grid>
     </Box>
 })

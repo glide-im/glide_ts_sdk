@@ -76,7 +76,7 @@ function App() {
                                 <Route path={"/im"}>
                                     <MainPanel />
                                 </Route>
-                                <Route path={"/"}>
+                                <Route path={"/"} strict={true}>
                                     {state.isAuthenticated ? <Redirect to={'/im'} /> : <Redirect to={'/auth'} />}
                                 </Route>
                             </Switch>

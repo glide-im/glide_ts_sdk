@@ -223,7 +223,7 @@ class WebSocketClient {
         clearInterval(this.heartbeat);
 
         this.heartbeat = setInterval(() => {
-            if (this.websocket === undefined || this.websocket.readyState !== WebSocket.OPEN) {
+            if (this.websocket === undefined || this.websocket?.readyState !== WebSocket.OPEN) {
                 return
             }
             const hb: CommonMessage<{}> = {
