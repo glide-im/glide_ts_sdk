@@ -29,6 +29,12 @@ jobs:
           npm install
           npm run build:prod
 
+      - name: build TAR PACKAGE
+        run: |
+          cd build
+          date >> build-date.log
+          tar -czvf glide-im-web.tar.gz *
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@master
@@ -39,11 +45,6 @@ jobs:
           release_name: release_${{ steps.get_tag.outputs.TAG }}
           draft: false
           prerelease: false
-
-      - name: build TAR PACKAGE
-        run: |
-          cd build
-          tar -czvf glide-im-web.tar.gz *
 
       - name: Upload Release
         id: upload-release-asset
@@ -58,15 +59,12 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          script: |
-            rm /data/www/glide-im-web -rf
-            mkdir /data/www/glide-im-web
-            cd /data/www/glide-im-web
-            wget https://github.com/Glide-IM/Glide-IM-Web/releases/download/${{ steps.get_tag.outputs.TAG }}/glide-im-web-${{ steps.get_tag.outputs.TAG }}.tar.gz -O glide-im-web.tar.gz
-            tar -zxvf glide-im-web.tar.gz
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          ARGS: "-rltgoDzvO --delete"
+          SOURCE: "build/"
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USER }}
+          TARGET: ${{ secrets.UPLOAD_DIR_RELEASE }}
+          EXCLUDE: "/dist/, /node_modules/"
