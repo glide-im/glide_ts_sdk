@@ -25,6 +25,8 @@ jobs:
         run: |
           npm install
           npm run build:prod
+          cd build 
+          date >> build-date.lo
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@main
@@ -34,5 +36,5 @@ jobs:
           SOURCE: "build/"
           REMOTE_HOST: ${{ secrets.HOST }}
           REMOTE_USER: ${{ secrets.USER }}
-          TARGET: "/data/www/glide-im-web-test"
+          TARGET: ${{ secrets.UPLOAD_DIR_PRE }}
           EXCLUDE: "/dist/, /node_modules/"
