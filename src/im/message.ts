@@ -33,22 +33,22 @@ export enum Actions {
     Api = "api",
     ApiFailed = "api.failed",
     ApiSuccess = "api.success",
-    ApiUserAuth = "api.user.auth",
-    ApiUserLogout = "api.user.logout",
+    ApiUserAuth = "api.auth",
     Heartbeat = "heartbeat",
 }
 
 export interface CommonMessage<T> {
-    Seq: number
-    Action: string
-    Data: T
+    seq: number
+    action: string
+    to: string
+    data: T
 }
 
 export interface Message {
     mid: number
     seq: number
-    from: number
-    to: number
+    from: string
+    to: string
     type: number
     content: string
     sendAt: number
@@ -56,18 +56,18 @@ export interface Message {
 }
 
 export interface AckRequest {
-    Mid: number
-    From: number
+    mid: number
+    from: string
 }
 
 export interface AckGroupMessage {
-    Seq: number
-    Mid: number
-    Gid: number
+    seq: number
+    mid: number
+    gid: number
 }
 
 export interface AckNotify {
-    Mid: number
+    mid: number
 }
 
 export interface AckMessage {
@@ -75,22 +75,22 @@ export interface AckMessage {
 }
 
 export interface Recall {
-    Mid: string,
-    RecallBy: number,
+    mid: string,
+    recall_by: number,
 }
 
 export interface GroupNotify {
-    Gid: number,
-    Mid: number,
-    Type: number,
-    Timestamp: number,
-    Seq: number,
-    Data: string,
+    gid: number,
+    mid: number,
+    type: number,
+    timestamp: number,
+    seq: number,
+    data: string,
 }
 
 export interface ContactNotify {
-    FromId: number,
+    FromId: string,
     FromType: number,
-    Id: number,
+    Id: string,
     Type: number
 }

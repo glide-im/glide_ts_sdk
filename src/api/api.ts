@@ -32,7 +32,7 @@ function getContacts(): Observable<ContactsBean[]> {
     return rxios.post("contacts/list")
 }
 
-function addContacts(uid: number): Promise<any> {
+function addContacts(uid: string): Promise<any> {
     const param = {
         Uid: uid,
         Remark: "",
@@ -44,16 +44,16 @@ function getProfile(): Promise<UserInfoBean> {
     return post("user/profile")
 }
 
-function getUserInfo(...uids: number[]): Promise<UserInfoBean[]> {
-    return post("user/info", { Uid: uids })
+function getUserInfo(...uids: string[]): Promise<UserInfoBean[]> {
+    return post("user/info", { Uid: uids.map(uid => parseInt(uid)) })
 }
 
 function getRecentSession(): Observable<SessionBean[]> {
     return rxios.post("session/recent")
 }
 
-function getMessageHistry(uid: number, beforeMid: number): Observable<MessageBean[]> {
-    return rxios.post("msg/chat/history", { Uid: uid, Before: beforeMid })
+function getMessageHistry(uid: string, beforeMid: number): Observable<MessageBean[]> {
+    return rxios.post("msg/chat/history", { Uid: parseInt(uid), Before: beforeMid })
 }
 
 function getOrCreateSession(to: number): Promise<SessionBean> {

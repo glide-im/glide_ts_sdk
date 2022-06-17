@@ -15,7 +15,7 @@ export function Chat() {
     return <Box style={{ height: "700px" }}>
         <Grid alignItems={"center"} container style={{}}>
             <Grid item xs={4} style={{ height: "700px" }}>
-                <SessionListView selected={to} onSelect={(to: number) => {
+                <SessionListView selected={to} onSelect={(to: string) => {
 
                 }} />
             </Grid>

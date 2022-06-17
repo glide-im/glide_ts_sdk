@@ -8,7 +8,7 @@ import { ContactNotify } from "./message";
 
 export class ContactsList {
 
-    private contacts: Map<number, Contacts> = new Map<number, Contacts>();
+    private contacts: Map<string, Contacts> = new Map<string, Contacts>();
 
     public onContactsChange: () => void | null = null;
 
@@ -60,7 +60,7 @@ export class ContactsList {
         this.onContactsChange = listener;
     }
 
-    public addFriend(uid: number, remark?: string): Promise<ContactsBean> {
+    public addFriend(uid: string, remark?: string): Promise<ContactsBean> {
         return Api.addContacts(uid)
             .then((r) => {
                 const c = new Contacts();

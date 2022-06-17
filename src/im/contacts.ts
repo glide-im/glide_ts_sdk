@@ -5,7 +5,7 @@ export class Contacts {
 
     public avatar: string;
     public name: string;
-    public id: number;
+    public id: string;
     public type: number;
     public sid: string;
 

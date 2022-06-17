@@ -5,7 +5,7 @@ export interface AuthBean {
 }
 
 export interface ContactsBean {
-    Id: number
+    Id: string
     Type: number
     Remark: string
 }
@@ -29,8 +29,8 @@ export interface SessionBean {
 
 export interface MessageBean {
     Mid: number
-    From: number
-    To: number
+    From: string
+    To: string
     Type: number
     Content: string
     CreateAt: number
@@ -43,7 +43,7 @@ export interface MidBean {
 }
 
 export interface OnlineUserInfoBean {
-    ID: number
+    ID: string
     AliveAt: number
     ConnectionAt: number
     Device: number

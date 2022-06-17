@@ -8,7 +8,7 @@ import { SessionListItem } from "./SessionListItem";
 
 interface SessionListProps extends RouteComponentProps {
     selected: string,
-    onSelect?: (to: number) => void
+    onSelect?: (to: string) => void
 }
 
 export const SessionListView = withRouter((props: SessionListProps) => {
@@ -45,8 +45,8 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     }, [sessionList])
 
     const onSelect = (s: Session) => {
-        setCurrentSession(s.To.toString())
-        sessionList.currentChatTo = s.To.toString()
+        setCurrentSession(s.To)
+        sessionList.currentChatTo = s.To
         props.history.replace(`/im/session/${s.To}`)
         props.onSelect?.(s.To)
 
@@ -80,7 +80,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
         content = <Progress showProgress={false} msg={"Empty..."} />
     } else {
         const list = sessions?.map((value: Session) =>
-            <SessionListItem key={value.To} chat={value} selected={value.To === parseInt(currentSession)} onSelect={onSelect} />
+            <SessionListItem key={value.To} chat={value} selected={value.To === currentSession} onSelect={onSelect} />
         )
 
         content = <List style={{ overflow: "auto" }}>
