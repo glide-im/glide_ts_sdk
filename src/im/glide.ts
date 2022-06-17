@@ -7,7 +7,7 @@ import { IMGroupMember, IMUserInfo } from "./def";
 
 class GlideIM {
 
-    private tempUserInfo = new Map<number, IMUserInfo>();
+    private tempUserInfo = new Map<string, IMUserInfo>();
     private tempGroupMember = new Map<number, IMGroupMember[]>();
 
     public getToken(): string {
@@ -18,7 +18,7 @@ class GlideIM {
         setCookie("token", token, 1);
     }
 
-    public getUserInfo(id: number): IMUserInfo | null {
+    public getUserInfo(id: string): IMUserInfo | null {
         let i = this.tempUserInfo.get(id);
         if (i != null) {
             return i
@@ -29,10 +29,10 @@ class GlideIM {
         // return res
     }
 
-    public loadUserInfo(...id: number[]): Observable<IMUserInfo[]> {
+    public loadUserInfo(...id: string[]): Observable<IMUserInfo[]> {
 
         return of(...id).pipe(
-            groupBy<number, boolean>(id => {
+            groupBy<string, boolean>(id => {
                 return this.getUserInfo(id) != null;
             }),
             mergeMap(g => {
@@ -47,7 +47,7 @@ class GlideIM {
                             return Api.getUserInfo(...ids)
                         }),
                         mergeMap(userInfos => of(...userInfos)),
-                        map<UserInfoBean, IMUserInfo>(u => ({ avatar: u.Avatar, name: u.Nickname, uid: u.Uid })),
+                        map<UserInfoBean, IMUserInfo>(u => ({ avatar: u.Avatar, name: u.Nickname, uid: u.Uid.toString() })),
                     )
                 }
             }),

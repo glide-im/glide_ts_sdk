@@ -25,7 +25,7 @@ export class Session {
     public LastMessage: string;
     public UnreadCount: number;
     public Type: number;
-    public To: number;
+    public To: string;
 
     private userInfo: IMUserInfo | null = null;
 
@@ -35,7 +35,7 @@ export class Session {
     private messageListener: ((message: ChatMessage) => void) | null = null;
     private sessionUpdateListener: SessionUpdateListener | null = null;
 
-    public static create(to: number, type: number): Session {
+    public static create(to: string, type: number): Session {
         const ret = new Session();
         ret.To = to;
         ret.Type = type;
@@ -46,7 +46,7 @@ export class Session {
 
     public static fromSessionBean(sb: SessionBean): Session {
         let session = new Session();
-        session.To = sb.To;
+        session.To = sb.To.toString();
         session.ID = session.getSID();
         session.Title = session.ID;
         session.UpdateAt = sb.UpdateAt.toString();
@@ -77,7 +77,7 @@ export class Session {
                         this.Title = info.name;
                         this.Avatar = info.avatar;
                     }),
-                    mergeMap(() => this.getMessageHistry(0)),
+                    // mergeMap(() => this.getMessageHistry(0)),
                     mergeMap(() => of(this)),
                 );
         }

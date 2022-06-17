@@ -9,7 +9,7 @@ export interface IMGroupMember {
 }
 
 export interface IMUserInfo {
-    uid: number;
+    uid: string;
     name: string;
     avatar: string;
 }

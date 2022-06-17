@@ -11,18 +11,18 @@ import { useState } from "react";
 interface AddContactDialogProp {
     open: boolean,
     onClose: () => void,
-    onSubmit: (isGroup: boolean, id: number) => void,
+    onSubmit: (isGroup: boolean, id: string) => void,
 }
 
 export function AddContactDialog(props: AddContactDialogProp) {
-    const [id, setId] = useState(-1)
+    const [id, setId] = useState("")
 
     return <>
         <Dialog open={props.open} onClose={props.onClose} aria-labelledby="form-dialog-title">
             <DialogTitle id="form-dialog-title">Add Contact</DialogTitle>
             <DialogContent>
                 <TextField autoFocus onChange={e => {
-                    setId(parseInt(e.target.value))
+                    setId(e.target.value)
                 }} margin="dense" id="number" label="ID"
                            type="text"
                            fullWidth/>

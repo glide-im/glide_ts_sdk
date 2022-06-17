@@ -15,7 +15,7 @@ export class SessionList {
     public currentChatTo: string = "0";
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
-    private sessionMap: Map<number, Session> = new Map<number, Session>()
+    private sessionMap: Map<string, Session> = new Map<string, Session>()
 
     constructor(account: Account) {
         this.account = account
@@ -91,17 +91,17 @@ export class SessionList {
         this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
     }
 
-    public get(sid: number): Session | null {
+    public get(sid: string): Session | null {
         return this.sessionMap.get(sid);
     }
 
     public clear() {
         this.currentChatTo = ""
-        this.sessionMap = new Map<number, Session>()
+        this.sessionMap = new Map<string, Session>()
         this.chatListUpdateListener?.([])
     }
 
-    public contain(chatId: number): boolean {
+    public contain(chatId: string): boolean {
         return this.sessionMap.has(chatId)
     }
 }

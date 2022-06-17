@@ -5,7 +5,7 @@ import { ChatMessage } from "src/im/chat_message";
 import { IMUserInfo } from "src/im/def";
 import { ChatMessageItem } from "./MessageItem";
 
-export function SessionMessageList(props: { id: number }) {
+export function SessionMessageList(props: { id: string }) {
 
     const session = Account.getInstance().getSessionList().get(props.id);
 
@@ -43,7 +43,7 @@ export function SessionMessageList(props: { id: number }) {
             })
     }
 
-    if (props.id === 1) {
+    if (props.id === "1") {
         loadHistory()
     }
 

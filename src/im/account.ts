@@ -59,8 +59,6 @@ export class Account {
 
     public logout() {
         this.clearAuth()
-        Ws.request(Actions.ApiUserLogout, {})
-            .subscribe({});
         Ws.close()
     }
 
@@ -85,8 +83,8 @@ export class Account {
         return tk && tk !== "";
     }
 
-    public getUID(): number {
-        return parseInt(this.uid);
+    public getUID(): string {
+        return this.uid;
     }
 
     public getToken(): string {
@@ -105,7 +103,7 @@ export class Account {
         this.token = auth.Token;
         Glide.storeToken(auth.Token);
 
-        const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.Uid)
+        const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.Uid.toString())
             .pipe(
                 map(us => {
                     this.userInfo = us[0];
@@ -141,15 +139,15 @@ export class Account {
 
     private onMessage(m: CommonMessage<any>) {
         console.log("onMessage", m);
-        switch (m.Action) {
+        switch (m.action) {
             case Actions.NotifyContact:
-                this.contacts.onNewContactNotify(m.Data);
+                this.contacts.onNewContactNotify(m.data);
                 break;
             case Actions.MessageChat:
             case Actions.MessageGroup:
             case Actions.MessageChatRecall:
             case Actions.MessageGroupRecall:
-                this.sessions.onMessage(m.Action, m.Data);
+                this.sessions.onMessage(m.action, m.data);
                 break;
             case Actions.NotifyKickOut:
                 alert("kick out");

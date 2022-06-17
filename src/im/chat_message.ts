@@ -15,8 +15,8 @@ export interface MessageUpdateListener {
 
 export class ChatMessage {
 
-    public From: number;
-    public To: number;
+    public From: string;
+    public To: string;
     public Content: string;
     public Mid: number;
     public SendAt: number;

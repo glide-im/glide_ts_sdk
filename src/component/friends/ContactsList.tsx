@@ -58,7 +58,7 @@ export function ContactsList() {
         // setShowCreateGroup(false)
     // }
 
-    const addContactHandler = (isGroup: boolean, id: number) => {
+    const addContactHandler = (isGroup: boolean, id: string) => {
         if (!isGroup) {
             c.addFriend(id, "")
                 .then((r) => {
