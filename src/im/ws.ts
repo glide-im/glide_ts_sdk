@@ -182,8 +182,7 @@ class WebSocketClient {
     }
 
     public sendChatMessage(m: Message): Observable<Message> {
-
-        return this.createCommonMessage(Actions.MessageChat, m)
+        return this.createCommonMessage(Actions.MessageChat, m, m.to)
             .pipe(
                 mergeMap(msg => this.send(msg)),
                 mergeMap((msg) => this.getAckObservable(msg.data)),
@@ -191,12 +190,12 @@ class WebSocketClient {
             )
     }
 
-    private createCommonMessage<T>(action: string, data: T): Observable<CommonMessage<T>> {
+    private createCommonMessage<T>(action: string, data: T, to: string): Observable<CommonMessage<T>> {
         return new Observable((observer: Observer<CommonMessage<T>>) => {
             const msg: CommonMessage<T> = {
                 action: action,
                 data: data,
-                to: "",
+                to: to,
                 seq: this.seq++,
             };
             observer.next(msg)
@@ -300,7 +299,7 @@ class WebSocketClient {
             from: from
         }
 
-        this.createCommonMessage(Actions.AckRequest, ackR)
+        this.createCommonMessage(Actions.AckRequest, ackR, from)
             .pipe(
                 mergeMap(msg => this.send(msg)),
             )

@@ -13,6 +13,14 @@ function login(account: string, password: string): Observable<AuthBean> {
     return rxios.post("auth/signin", param)
 }
 
+function guest(nickname:string, avatar:string): Observable<AuthBean> {
+    const param = {
+        Avatar: nickname,
+        Nickname: avatar,
+    };
+    return rxios.post("auth/guest", param)
+}
+
 function auth(token: string): Observable<AuthBean> {
     const param = {
         Token: token
@@ -82,5 +90,6 @@ export const Api = {
     login,
     getMid,
     getMessageHistry,
-    getServerInfo
+    getServerInfo,
+    guest,
 } as const;

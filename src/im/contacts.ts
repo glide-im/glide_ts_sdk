@@ -15,7 +15,6 @@ export class Contacts {
         contact.name = b.Id.toString();
         contact.id = b.Id;
         contact.type = b.Type;
-
         contact.sid = ""
         contact.init();
         return contact;

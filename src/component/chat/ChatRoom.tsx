@@ -40,7 +40,7 @@ export function ChatRoomContainer(props: { to: string }) {
         }
     }
 
-    return (<Box>
+    return (<Box height={"100"}>
         <Box height={"70px"} paddingLeft={"16px"} color={'black'}>
             <Typography variant={"h6"} style={{ lineHeight: "70px" }}>
                 {session.Title}
@@ -50,7 +50,7 @@ export function ChatRoomContainer(props: { to: string }) {
 
         {isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}
 
-        <Box height={(isGroup ? "470px" : "510px")}>
+        <Box height={"400px"}>
             <SessionMessageList id={id} />
         </Box>
         <Divider />

@@ -24,14 +24,14 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
 
     return (
         <Grid container style={{ boxShadow: "grey 6px 7px 15px 0px" }}>
-            <Grid item xs={1} style={{ height: "700px" }}>
-                <Bar />
-            </Grid>
-            <Grid item xs={11} style={{ height: "700px" }} sx={{ bgcolor: grey[50] }}>
+            {/* <Grid item xs={1} style={{ height: "700px" }}> */}
+                {/* <Bar /> */}
+            {/* </Grid> */}
+            <Grid item xs={12} style={{ height: "500px" }} sx={{ bgcolor: grey[50] }}>
                 <Switch>
                     <Route path={`${match.url}/session/:to`} children={<Chat />} />
-                    <Route path={`${match.url}/friends`} children={<ContactsList />} />
-                    <Route path={`${match.url}/square`} children={<Square />} />
+                    {/* <Route path={`${match.url}/friends`} children={<ContactsList />} /> */}
+                    {/* <Route path={`${match.url}/square`} children={<Square />} /> */}
                     <Route path={`${match.url}/session`} exact={true}>
                         <Redirect to={`${match.url}/session/${Account.getInstance().getSessionList().currentChatTo}`} />
                     </Route>

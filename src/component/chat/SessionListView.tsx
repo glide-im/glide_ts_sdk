@@ -12,7 +12,7 @@ interface SessionListProps extends RouteComponentProps {
 }
 
 export const SessionListView = withRouter((props: SessionListProps) => {
-    
+
     const sessionList = Account.getInstance().getSessionList();
 
     const [currentSession, setCurrentSession] = useState(props.selected)
@@ -79,29 +79,17 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     } else if (sessions.length === 0) {
         content = <Progress showProgress={false} msg={"Empty..."} />
     } else {
-        const list = sessions?.map((value: Session) =>
+        const items = sessions?.map((value: Session) =>
             <SessionListItem key={value.To} chat={value} selected={value.To === currentSession} onSelect={onSelect} />
         )
 
-        content = <List style={{ overflow: "auto" }}>
-            {list}
-            <ListItem>
-                <ListItemText primary={" "} />
-            </ListItem>
+        content = <List style={{ overflow: "auto", height: "100%" }} className="BeautyScrollBar">
+            {items}
         </List>
     }
 
     return <>
-        <Box m={2}>
-            <Typography variant={"caption"}>会话</Typography>
-            <IconButton size={"small"} onClick={onRefresh} style={{ float: "right" }}>
-                <Refresh />
-            </IconButton>
-        </Box>
-        <Divider />
-
         {content}
-
     </>
 });
 
