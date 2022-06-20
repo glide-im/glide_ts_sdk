@@ -42,8 +42,14 @@ export class Account {
             )
     }
 
-    public auth(): Observable<string> {
+    public guest(): Observable<string> {
+        return Api.guest("geust", "")
+            .pipe(
+                mergeMap(res => this.initAccount(res)),
+            )
+    }
 
+    public auth(): Observable<string> {
         return Api.auth(this.getToken())
             .pipe(
                 mergeMap(res => {
