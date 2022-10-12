@@ -1,17 +1,16 @@
-import { Chat as ChatIcon, PersonSearch } from "@mui/icons-material";
+import {Chat as ChatIcon, PersonSearch} from "@mui/icons-material";
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import { Avatar, Box, Button, Grid, IconButton, Typography } from "@mui/material";
-import { grey } from "@mui/material/colors";
-import React, { useEffect, useState } from "react";
-import { Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter } from "react-router-dom";
-import { State, Ws } from "src/im/ws";
-import { Account } from "../im/account";
-import { Chat } from "./chat/Chat";
-import { ContactsList } from "./friends/ContactsList";
-import { Square } from "./square/Square";
-import { Version } from "./version";
+import {Avatar, Box, Button, Grid, IconButton, Typography} from "@mui/material";
+import {grey} from "@mui/material/colors";
+import React, {useEffect, useState} from "react";
+import {Link, Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter} from "react-router-dom";
+import {State, Ws} from "src/im/ws";
+import {Account} from "../im/account";
+import {Chat} from "./chat/Chat";
+import {Version} from "./version";
+import {ContactsList} from "./friends/ContactsList";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
@@ -23,20 +22,20 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
     const match = useRouteMatch();
 
     return (
-        <Grid container style={{ boxShadow: "grey 6px 7px 15px 0px" }}>
-            {/* <Grid item xs={1} style={{ height: "700px" }}> */}
-                {/* <Bar /> */}
-            {/* </Grid> */}
-            <Grid item xs={12} style={{ height: "500px" }} sx={{ bgcolor: grey[50] }}>
+        <Grid container style={{boxShadow: "grey 6px 7px 15px 0px"}}>
+            <Grid item xs={1} style={{height: "700px"}}>
+                <Bar/>
+            </Grid>
+            <Grid item xs={11} style={{height: "700px"}} sx={{bgcolor: grey[50]}}>
                 <Switch>
-                    <Route path={`${match.url}/session/:to`} children={<Chat />} />
-                    {/* <Route path={`${match.url}/friends`} children={<ContactsList />} /> */}
-                    {/* <Route path={`${match.url}/square`} children={<Square />} /> */}
+                    <Route path={`${match.url}/session/:to`} children={<Chat/>}/>
+                    {/*<Route path={`${match.url}/friends`} children={<ContactsList/>}/>*/}
+                    {/*<Route path={`${match.url}/square`} children={<Square />} /> */}
                     <Route path={`${match.url}/session`} exact={true}>
-                        <Redirect to={`${match.url}/session/${Account.getInstance().getSessionList().currentChatTo}`} />
+                        <Redirect to={`${match.url}/session/${Account.getInstance().getSessionList().currentChatTo}`}/>
                     </Route>
                     <Route path={`${match.url}/`} exact={true}>
-                        <Redirect to={`${match.url}/session/0`} />
+                        <Redirect to={`${match.url}/session/0`}/>
                     </Route>
                 </Switch>
             </Grid>
@@ -67,7 +66,9 @@ export const Bar = withRouter((props: RouteComponentProps) => {
             }
         }
         Ws.addStateListener(l)
-        return () => { Ws.removeStateListener(l) }
+        return () => {
+            Ws.removeStateListener(l)
+        }
     }, []);
 
     const onExitClick = () => {
@@ -88,29 +89,29 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
     const menu = [
         {
-            icon: <ChatIcon color={"action"} />,
+            icon: <ChatIcon color={"action"}/>,
             path: "/im/session",
         },
         {
-            icon: <PeopleAltIcon />,
+            icon: <PeopleAltIcon/>,
             path: "/im/friends",
         },
         {
-            icon: <CropSquareIcon />,
+            icon: <CropSquareIcon/>,
             path: "/im/square",
         },
         {
-            icon: <PersonSearch />,
+            icon: <PersonSearch/>,
             path: "/im/search",
         },
     ]
 
-    return <Box bgcolor={"primary.dark"} style={{ height: "100%" }}>
+    return <Box bgcolor={"primary.dark"} style={{height: "100%"}}>
 
         <Grid justifyContent={"center"} container color={"primary.dark"}>
 
             <Grid container justifyContent={"center"} marginTop={"16px"}>
-                <Box mt={2}><Avatar src={avatar} /></Box>
+                <Box mt={2}><Avatar src={avatar}/></Box>
             </Grid>
 
             <Grid container justifyContent={"center"}>
@@ -134,7 +135,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
 
             <Grid container justifyContent={"center"}>
                 <IconButton onClick={onExitClick}>
-                    <ExitToAppIcon />
+                    <ExitToAppIcon/>
                 </IconButton>
 
             </Grid>
@@ -143,7 +144,7 @@ export const Bar = withRouter((props: RouteComponentProps) => {
         </Grid>
         <Grid container justifyContent={"center"}>
             <Box m={2}>
-                <Version />
+                <Version/>
             </Box>
         </Grid>
     </Box>

@@ -1,9 +1,9 @@
-import { map, mergeMap, Observable, Observer, timeout as timeoutOpt } from "rxjs";
-import { AckMessage, AckRequest, Actions, CommonMessage, Message } from "./message";
+import {map, mergeMap, Observable, Observer, timeout as timeoutOpt} from 'rxjs';
+import {AckMessage, AckRequest, Actions, CliCustomMessage, CommonMessage, Message} from './message';
 
-export type Listener = (msg: CommonMessage<any>) => void
+export type Listener = (msg: CommonMessage<any>) => void;
 
-export type StateListener = (state: State, msg: string) => void
+export type StateListener = (state: State, msg: string) => void;
 
 export enum State {
     CONNECTED,
@@ -13,27 +13,26 @@ export enum State {
     TIMEOUT,
 }
 
-export type Callback<T> = (success: boolean, result: T, msg: string) => void
+export type Callback<T> = (success: boolean, result: T, msg: string) => void;
 
 export interface Result<T> {
-    success: boolean
-    result: T
-    msg: string
+    success: boolean;
+    result: T;
+    msg: string;
 }
 
-const ackTimeout = 3000
-const heartbeatInterval = 30000
-const connectionTimeout = 3000
-const requestTimeout = 3000
+const ackTimeout = 3000;
+const heartbeatInterval = 30000;
+const connectionTimeout = 3000;
+const requestTimeout = 3000;
 
 export interface MessageListener {
-    (m: CommonMessage<any>): void
+    (m: CommonMessage<any>): void;
 }
 
-type MessageCallBack = (m: CommonMessage<any>) => void
+type MessageCallBack = (m: CommonMessage<any>) => void;
 
 class WebSocketClient {
-
     private websocket?: WebSocket | null;
 
     private stateChangeListener: StateListener[];
@@ -45,10 +44,8 @@ class WebSocketClient {
     private messageListener: MessageListener[] = [];
     private groupMessageListner: ((m: CommonMessage<any>) => void)[] = [];
 
-    private ackCallBacks = new Map<number, MessageCallBack>();
+    private ackCallBacks = new Map<string, MessageCallBack>();
     private apiCallbacks = new Map<number, MessageCallBack>();
-
-    private connectTimeout: NodeJS.Timeout | null = null
 
     constructor() {
         this.websocket = null;
@@ -58,75 +55,74 @@ class WebSocketClient {
     }
 
     private static slog(where: string, ...msg: any[]) {
-        console.log(`[WebSocket] ${where}:`, ...msg)
+        console.log(`[WebSocket] ${where}:`, ...msg);
     }
 
     public isConnected(): boolean {
-        return this.websocket !== null && this.websocket.readyState === this.websocket.OPEN
+        return this.websocket !== null && this.websocket.readyState === this.websocket.OPEN;
     }
 
     public connect(ws: string): Observable<string> {
         return new Observable((observer: Observer<string>) => {
             this.connectInternal(ws, (success, msg) => {
                 if (success) {
-                    observer.next("ws connected")
-                    observer.complete()
+                    observer.next('ws connected');
                 } else {
-                    observer.error(msg)
+                    observer.error(msg);
                 }
+                observer.complete();
             });
         });
     }
 
     private connectInternal(ws: string, callback: (success: boolean, msg: string) => void) {
         if (this.websocket != null) {
-            if (this.websocket.readyState !== WebSocket.CLOSED) {
-                this.websocket.close()
+            if (this.websocket.readyState === WebSocket.OPEN) {
+                this.websocket.close();
             }
         }
 
         let cb = callback;
-        this.stateChangeListener.forEach((value => value(State.CONNECTING, "")));
+        this.stateChangeListener.forEach(value => value(State.CONNECTING, ''));
+
         this.websocket = new WebSocket(ws);
-        this.connectTimeout = setTimeout(() => {
-            WebSocketClient.slog("connectInternal", "connect timeout")
+        this.messageListener = [];
+        setTimeout(() => {
             if (!this.websocket?.OPEN) {
                 if (cb != null) {
-                    cb(false, "timeout");
+                    cb(false, 'timeout');
                     cb = null;
                 }
                 this.websocket.close();
             }
         }, connectionTimeout);
 
-        this.websocket.onerror = (e) => {
-            clearTimeout(this.connectTimeout);
-            WebSocketClient.slog("onerror", "" + e)
+        this.websocket.onerror = e => {
+            console.error(e);
+            WebSocketClient.slog('onerror', '' + e);
             if (cb != null) {
-                cb(false, `ws connect failed ${e.type}`)
-                cb = null
+                cb(false, `ws connect failed ${e.type}`);
+                cb = null;
             }
-            this.close()
+            this.close();
         };
-        this.websocket.onclose = (e) => {
-            clearTimeout(this.connectTimeout);
-            WebSocketClient.slog("onclose", "" + e)
-            this.stateChangeListener.forEach((value => value(State.CLOSED, "error")))
+        this.websocket.onclose = e => {
+            WebSocketClient.slog('onclose', '' + e);
+            this.stateChangeListener.forEach(value => value(State.CLOSED, 'error'));
         };
-        this.websocket.onopen = (e) => {
-            clearTimeout(this.connectTimeout);
-            WebSocketClient.slog("onopen", "" + e)
-            this.stateChangeListener.forEach((value => value(State.CONNECTED, "connected")))
+        this.websocket.onopen = e => {
+            WebSocketClient.slog('onopen', '' + e);
+            this.stateChangeListener.forEach(value => value(State.CONNECTED, 'connected'));
 
             if (cb != null) {
-                cb(true, `ok`)
-                cb = null
+                cb(true, `ok`);
+                cb = null;
             }
         };
         this.websocket.onmessage = ev => {
-            this.onReceive(ev)
+            this.onReceive(ev);
         };
-        this.startHeartbeat()
+        this.startHeartbeat();
     }
 
     /**
@@ -135,32 +131,29 @@ class WebSocketClient {
      * @param data  the data to send
      */
     public request<T>(action: string, data?: any): Observable<T> {
-
         const d: string = data === null ? {} : data;
         const seq = this.seq++;
 
         const message: CommonMessage<any> = {
             action: action,
             data: d,
-            to: "",
             seq: seq,
-        }
+            to: null,
+            extra: null,
+        };
 
-        return this.send(message)
-            .pipe(
-                mergeMap(() => this.getApiRespObservable<T>(seq)),
-            )
+        return this.send(message).pipe(mergeMap(() => this.getApiRespObservable<T>(seq)));
     }
 
     public close() {
         if (this.websocket === null || this.websocket.readyState === WebSocket.CLOSED) {
-            return
+            return;
         }
-        this.websocket?.close(3001, "bye")
+        this.websocket?.close(3001, 'bye');
     }
 
     public addMessageListener(l: (m: CommonMessage<any>) => void) {
-        this.messageListener.push(l)
+        this.messageListener.push(l);
     }
 
     public removeChatMessageListener(l: (m: CommonMessage<any>) => void) {
@@ -171,7 +164,7 @@ class WebSocketClient {
     }
 
     public addStateListener(l: StateListener) {
-        this.stateChangeListener.push(l)
+        this.stateChangeListener.push(l);
     }
 
     public removeStateListener(l: StateListener) {
@@ -182,41 +175,56 @@ class WebSocketClient {
     }
 
     public sendChatMessage(m: Message): Observable<Message> {
-        return this.createCommonMessage(Actions.MessageChat, m, m.to)
-            .pipe(
-                mergeMap(msg => this.send(msg)),
-                mergeMap((msg) => this.getAckObservable(msg.data)),
-                map(msg => msg)
-            )
+        return this.createCommonMessage(m.to, Actions.MessageChat, m).pipe(
+            mergeMap(msg => this.send(msg)),
+            mergeMap(msg => this.getAckObservable(msg.data))
+        );
     }
 
-    private createCommonMessage<T>(action: string, data: T, to: string): Observable<CommonMessage<T>> {
+    public sendCliCustomMessage(m: CliCustomMessage): Observable<CliCustomMessage> {
+        return this.createCommonMessage(m.to, Actions.MessageCli, m).pipe(
+            mergeMap(msg => this.send(msg)),
+            map(() => m)
+        );
+    }
+
+    public sendRecallMessage(m: Message) {
+        return this.createCommonMessage(m.to, Actions.MessageChatRecall, m).pipe(
+            mergeMap(msg => this.send(msg)),
+            mergeMap(msg => this.getAckObservable(msg.data))
+        );
+    }
+
+    private createCommonMessage<T>(to: string | null, action: string, data: T): Observable<CommonMessage<T>> {
         return new Observable((observer: Observer<CommonMessage<T>>) => {
             const msg: CommonMessage<T> = {
                 action: action,
                 data: data,
-                to: to,
                 seq: this.seq++,
+                to: to,
+                extra: null,
             };
-            observer.next(msg)
-            observer.complete()
-        })
+            observer.next(msg);
+            observer.complete();
+        });
     }
 
     private send<T>(data: CommonMessage<T>): Observable<CommonMessage<T>> {
         return new Observable((observer: Observer<CommonMessage<T>>) => {
             if (this.websocket === undefined) {
-                observer.error("not initialized")
-                return
+                observer.error('not initialized');
+                return;
             }
+            console.log('this.websocket', this.websocket);
             if (this.websocket.readyState !== WebSocket.OPEN) {
-                observer.error("not connected")
-                return
+                observer.error('not connected');
+                return;
             }
             const json = JSON.stringify(data);
-            this.websocket.send(json)
-            observer.next(data)
-            observer.complete()
+            console.log('send:', json);
+            this.websocket.send(json);
+            observer.next(data);
+            observer.complete();
         });
     }
 
@@ -224,38 +232,37 @@ class WebSocketClient {
         clearInterval(this.heartbeat);
 
         this.heartbeat = setInterval(() => {
-            if (this.websocket === undefined || this.websocket?.readyState !== WebSocket.OPEN) {
-                return
+            if (this.websocket === undefined || this.websocket.readyState !== WebSocket.OPEN) {
+                return;
             }
             const hb: CommonMessage<{}> = {
                 action: Actions.Heartbeat,
                 data: {},
-                to: "",
                 seq: this.seq++,
-            }
-            this.send(hb)
-                .subscribe({
-                    next: (m: CommonMessage<any>) => {
-                        WebSocketClient.slog("heartbeat", "ok", m)
-                    },
-                    error: (e) => {
-                        WebSocketClient.slog("heartbeat", "failed", e)
-                    },
-                    complete: () => {
-                    }
-                })
-        }, heartbeatInterval)
+                to: null,
+                extra: null,
+            };
+            this.send(hb).subscribe({
+                next: (m: CommonMessage<any>) => {
+                    WebSocketClient.slog('heartbeat', 'ok', m);
+                },
+                error: e => {
+                    WebSocketClient.slog('heartbeat', 'failed', e);
+                },
+                complete: () => {
+                },
+            });
+        }, heartbeatInterval);
     }
 
     private getAckObservable(msg: Message): Observable<Message> {
         return new Observable<Message>((observer: Observer<Message>) => {
-            this.ackCallBacks.set(msg.mid, () => {
-                observer.next(msg)
-                observer.complete()
+            this.ackCallBacks.set(msg.cliMid, (m) => {
+                msg.mid = (m.data as AckMessage).mid
+                observer.next(msg);
+                observer.complete();
             });
-        }).pipe(
-            timeoutOpt(requestTimeout)
-        );
+        }).pipe(timeoutOpt(requestTimeout));
     }
 
     private getApiRespObservable<T>(seq: number): Observable<T> {
@@ -263,16 +270,13 @@ class WebSocketClient {
             this.apiCallbacks.set(seq, (m: CommonMessage<any>) => {
                 if (m.action === Actions.ApiSuccess) {
                     const obj = m.data;
-                    observer.next(obj as T)
+                    observer.next(obj as T);
                 } else {
-                    observer.error(m.data)
+                    observer.error(m.data);
                 }
-                observer.complete()
-            })
-        })
-            .pipe(
-                timeoutOpt(ackTimeout)
-            )
+                observer.complete();
+            });
+        }).pipe(timeoutOpt(ackTimeout));
     }
 
     private onIMMessage(msg: CommonMessage<any>) {
@@ -284,52 +288,46 @@ class WebSocketClient {
                 const m = msg.data as Message;
                 this.ackRequestMessage(m.from, m.mid);
                 break;
-            case Actions.MessageGroup:
-            case Actions.MessageGroupRecall:
-                // TODO
-                break;
             default:
-                WebSocketClient.slog("onIMMessage", "unknown message", msg)
+                WebSocketClient.slog('onIMMessage', 'unknown message', msg);
         }
     }
 
     private ackRequestMessage(from: string, mid: number) {
         const ackR: AckRequest = {
             mid: mid,
-            from: from
-        }
+            from: from,
+        };
 
-        this.createCommonMessage(Actions.AckRequest, ackR, from)
-            .pipe(
-                mergeMap(msg => this.send(msg)),
-            )
+        this.createCommonMessage(from, Actions.AckRequest, ackR)
+            .pipe(mergeMap(msg => this.send(msg)))
             .subscribe({
-                next: () => { },
-                error: (e) => {
-                    WebSocketClient.slog("ackRequestMessage", "failed", e)
-                }
-            })
+                next: () => {
+                },
+                error: e => {
+                    WebSocketClient.slog('ackRequestMessage', 'failed', e);
+                },
+            });
     }
 
     private onAckMessage(msg: CommonMessage<any>) {
         switch (msg.action) {
             case Actions.AckMessage:
-                console.log("ack", msg);
                 break;
             case Actions.AckNotify:
-                console.log("ack notify", msg);
+                console.log('ack notify', msg);
                 break;
             default:
-                WebSocketClient.slog("onAckMessage", "unknown", msg);
+                WebSocketClient.slog('onAckMessage', 'unknown', msg);
                 return;
         }
         const ack = msg.data as AckMessage;
-        const callback = this.ackCallBacks.get(ack.mid)
+        const callback = this.ackCallBacks.get(ack.cliMid);
 
         if (callback === undefined) {
-            WebSocketClient.slog("onAckMessage", "no callback", msg);
+            WebSocketClient.slog('onAckMessage', 'no callback', msg);
         } else {
-            callback(msg)
+            callback(msg);
         }
     }
 
@@ -340,26 +338,26 @@ class WebSocketClient {
     private onReceive(data: MessageEvent) {
         const msg: CommonMessage<any> = JSON.parse(data.data) as CommonMessage<any>;
 
-        if (msg.action.startsWith("api")) {
+        if (msg.action.startsWith('api')) {
             const callback = this.apiCallbacks.get(msg.seq);
             if (callback) {
-                callback(msg)
+                callback(msg);
             } else {
-                WebSocketClient.slog("onReceive", "no callback for api, data", msg)
+                WebSocketClient.slog('onReceive', 'no callback for api, data', msg);
             }
-            return
+            return;
         }
-        if (msg.action.startsWith("message")) {
-            this.onIMMessage(msg)
-            return
+        if (msg.action.startsWith('message')) {
+            this.onIMMessage(msg);
+            return;
         }
-        if (msg.action.startsWith("ack")) {
-            this.onAckMessage(msg)
-            return
+        if (msg.action.startsWith('ack')) {
+            this.onAckMessage(msg);
+            return;
         }
-        if (msg.action.startsWith("notify")) {
-            this.onNotifyMessage(msg)
-            return
+        if (msg.action.startsWith('notify')) {
+            this.onNotifyMessage(msg);
+            return;
         }
     }
 }

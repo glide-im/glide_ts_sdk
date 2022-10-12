@@ -1,15 +1,20 @@
-import { map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
-import { onErrorResumeNext } from "rxjs/operators";
-import { onNext } from "src/rx/next";
-import { timeStampSecToDate } from "src/utils/TimeUtils";
-import { Api } from "../api/api";
-import { SessionBean } from "../api/model";
-import { Account } from "./account";
-import { ChatMessage, SendingStatus } from "./chat_message";
-import { IMUserInfo } from "./def";
-import { Glide } from "./glide";
-import { Message, MessageType, SessionType } from "./message";
-import { Ws } from "./ws";
+import {map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
+import {onErrorResumeNext} from "rxjs/operators";
+import {onNext} from "src/rx/next";
+import {timeStampSecToDate} from "src/utils/TimeUtils";
+import {Api} from "../api/api";
+import {SessionBean} from "../api/model";
+import {Account} from "./account";
+import {ChatMessage, SendingStatus} from "./chat_message";
+import {IMUserInfo} from "./def";
+import {Glide} from "./glide";
+import {Message, MessageType} from "./message";
+import {Ws} from "./ws";
+
+enum SessionType {
+    Single = 1,
+    Group = 2
+}
 
 export interface SessionUpdateListener {
     (): void
@@ -23,7 +28,7 @@ export class Session {
     public UpdateAt: string;
     public LastMessageSender: string;
     public LastMessage: string;
-    public UnreadCount: number;
+    public UnreadCount: number = 0;
     public Type: number;
     public To: string;
 
@@ -91,7 +96,8 @@ export class Session {
         return this.userInfo;
     }
 
-    public getMessageHistry(beforeMid: number): Observable<ChatMessage[]> {
+    public getMessageHistory(beforeMid: number): Observable<ChatMessage[]> {
+
         if (beforeMid === 0 && this.messageList.length !== 0) {
             beforeMid = Number.MAX_SAFE_INTEGER;
         }
@@ -120,8 +126,10 @@ export class Session {
     }
 
     public onMessage(message: Message) {
-        console.log("onMessage", this, message);
+        console.log("onMessage", this.getSID(), message.type, message.content);
         const c = ChatMessage.create(message)
+        if (this.Type === 2) {
+        }
         this.UnreadCount++;
         this.addMessageByOrder(c);
     }
@@ -182,6 +190,10 @@ export class Session {
     }
 
     private getSID(): string {
+        if (this.Type === 2) {
+            return this.To;
+        }
+
         let lg = Account.getInstance().getUID();
         let sm = this.To;
 
@@ -195,35 +207,60 @@ export class Session {
 
     private send(content: string, type: number): Observable<ChatMessage> {
 
-        return Api.getMid()
-            .pipe(
-                map(resp => {
-                    const time = Date.parse(new Date().toString()) / 1000;
-                    return {
-                        content: content,
-                        from: Account.getInstance().getUID(),
-                        mid: resp.Mid,
-                        sendAt: time,
-                        seq: 0,
-                        to: this.To,
-                        type: type,
-                        status: 0,
-                    }
-                }),
-                onNext(msg => {
-                    const r = ChatMessage.create(msg);
-                    r.Sending = SendingStatus.Sending;
-                    this.addMessageByOrder(r);
-                }),
-                mergeMap(msg =>
-                    Ws.sendChatMessage(msg)
-                ),
-                map(resp => {
-                    const r = ChatMessage.create(resp);
-                    r.Sending = SendingStatus.Sent;
-                    this.addMessageByOrder(r);
-                    return r;
-                }),
-            )
+        const time = Date.parse(new Date().toString()) / 1000;
+        const from = Account.getInstance().getUID();
+        const m: Message = {
+            cliMid: uuid(32, 16),
+            content: content,
+            from: from,
+            mid: 0,
+            sendAt: time,
+            seq: 0,
+            to: this.To,
+            type: type,
+            status: 0,
+        };
+        const r = ChatMessage.create(m);
+        r.Sending = SendingStatus.Sending;
+        this.addMessageByOrder(r);
+
+        return Ws.sendChatMessage(m).pipe(
+            map(resp => {
+                const r = ChatMessage.create(resp);
+                r.Sending = SendingStatus.Sent;
+                this.addMessageByOrder(r);
+                return r;
+            })
+        );
     }
+}
+
+
+function uuid(len, radix) {
+    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+    var uuid = [], i;
+    radix = radix || chars.length;
+
+    if (len) {
+        // Compact form
+        for (i = 0; i < len; i++) uuid[i] = chars[0 | Math.random() * radix];
+    } else {
+        // rfc4122, version 4 form
+        var r;
+
+        // rfc4122 requires these characters
+        uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+        uuid[14] = '4';
+
+        // Fill in random data.  At i==19 set the high bits of clock sequence as
+        // per rfc4122, sec. 4.1.5
+        for (i = 0; i < 36; i++) {
+            if (!uuid[i]) {
+                r = 0 | Math.random() * 16;
+                uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+            }
+        }
+    }
+
+    return uuid.join('');
 }

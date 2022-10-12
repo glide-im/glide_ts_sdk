@@ -1,9 +1,9 @@
-import { map, mergeMap, Observable, of, toArray } from "rxjs";
-import { onNext } from "src/rx/next";
-import { Api } from "../api/api";
-import { Account } from "./account";
-import { Actions, Message } from "./message";
-import { Session } from "./session";
+import {map, mergeMap, Observable, of, toArray} from "rxjs";
+import {onNext} from "src/rx/next";
+import {Api} from "../api/api";
+import {Account} from "./account";
+import {Actions, Message} from "./message";
+import {Session} from "./session";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
@@ -30,8 +30,9 @@ export class SessionList {
             )
     }
 
-    public startChat(id: number): Promise<Session> {
-        return Promise.reject("not implemented")
+    public startChat(id: string): Promise<any> {
+        this.add(Session.create(id, 1));
+        return Promise.any("");
     }
 
     public setChatListUpdateListener(l: SessionListUpdateListener | null) {
@@ -76,8 +77,9 @@ export class SessionList {
             const session = this.get(s)
             session.onMessage(message)
         } else {
-            const sessionType = action.startsWith("group") ? 2 : 1
-            const ses = Session.create(message.from, sessionType)
+            const sessionType = action.indexOf("group") !== -1 ? 2 : 1
+
+            const ses = Session.create(sessionType === 2 ? message.to : message.from, sessionType)
             ses.onMessage(message)
             this.add(ses)
         }

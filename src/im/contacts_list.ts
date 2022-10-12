@@ -1,10 +1,9 @@
-import { filter, map, mergeMap, Observable, of, toArray } from "rxjs";
-import { onNext } from "src/rx/next";
-import { Api } from "../api/api";
-import { ContactsBean } from "../api/model";
-import { Contacts } from "./contacts";
-import { Glide } from "./glide";
-import { ContactNotify } from "./message";
+import {filter, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {onNext} from "src/rx/next";
+import {Api} from "../api/api";
+import {ContactsBean} from "../api/model";
+import {Contacts} from "./contacts";
+import {Glide} from "./glide";
 
 export class ContactsList {
 
@@ -19,7 +18,7 @@ export class ContactsList {
             )
     }
 
-    public onNewContactNotify(n: ContactNotify) {
+    public onNewContactNotify(n: any) {
         const ct: Contacts = new Contacts();
         ct.id = n.Id
         ct.type = n.Type

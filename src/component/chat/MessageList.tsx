@@ -1,9 +1,9 @@
-import { Box, List, ListItem, Typography } from "@mui/material";
-import React, { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
-import { Account } from "src/im/account";
-import { ChatMessage } from "src/im/chat_message";
-import { IMUserInfo } from "src/im/def";
-import { ChatMessageItem } from "./MessageItem";
+import {Box, List, ListItem, Typography} from "@mui/material";
+import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react";
+import {Account} from "src/im/account";
+import {ChatMessage} from "src/im/chat_message";
+import {IMUserInfo} from "src/im/def";
+import {ChatMessageItem} from "./MessageItem";
 
 export function SessionMessageList(props: { id: string }) {
 
@@ -13,6 +13,19 @@ export function SessionMessageList(props: { id: string }) {
     console.log("SessionMessageList", session)
 
     useEffect(() => {
+
+        session?.getMessageHistory(0)
+            .subscribe({
+                next: (r) => {
+                    setMessages(r)
+                },
+                error: (e) => {
+                    console.log("getMessageHistory", e)
+                },
+                complete: () => {
+                }
+            })
+
         if (session === null) {
             return
         }
@@ -30,7 +43,7 @@ export function SessionMessageList(props: { id: string }) {
     }, [session, messages])
 
     const loadHistory = () => {
-        session?.getMessageHistry(0)
+        session?.getMessageHistory(0)
             .subscribe({
                 next: (r) => {
                     setMessages(r)
@@ -44,7 +57,7 @@ export function SessionMessageList(props: { id: string }) {
     }
 
     if (props.id === "1") {
-        loadHistory()
+        // loadHistory()
     }
 
     if (session == null) {
@@ -64,7 +77,7 @@ export function SessionMessageList(props: { id: string }) {
     //     </Box>
     // }
 
-    return <MessageListView messages={messages} isGroup={session.isGroup()} userInfo={session.getUserInfo()} />
+    return <MessageListView messages={messages} isGroup={session.isGroup()} userInfo={session.getUserInfo()}/>
 }
 
 function scrollBottom(ele: HTMLUListElement | null) {
@@ -106,7 +119,8 @@ export function MessageListView(props: { messages: ChatMessage[], isGroup: boole
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.Mid}`} sx={{ padding: "0" }}><ChatMessageItem msg={value} userInfo={props.userInfo} /></ListItem>
+        return <ListItem key={`${value.Mid}`} sx={{padding: "0"}}><ChatMessageItem msg={value}
+                                                                                   userInfo={props.userInfo}/></ListItem>
     })
 
     return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>
