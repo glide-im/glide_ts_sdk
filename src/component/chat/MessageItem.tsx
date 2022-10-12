@@ -1,9 +1,9 @@
-import { Box, Typography, CircularProgress, Grid, Avatar } from "@mui/material"
-import { CSSProperties, useEffect, useState } from "react"
-import { Account } from "src/im/account"
-import { ChatMessage, SendingStatus } from "src/im/chat_message"
-import { IMUserInfo } from "src/im/def"
-import { Glide } from "src/im/glide"
+import {Box, Typography, CircularProgress, Grid, Avatar} from "@mui/material"
+import {CSSProperties, useEffect, useState} from "react"
+import {Account} from "src/im/account"
+import {ChatMessage, SendingStatus} from "src/im/chat_message"
+import {IMUserInfo} from "src/im/def"
+import {Glide} from "src/im/glide"
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -16,6 +16,7 @@ const messageBoxStyle = function (): CSSProperties {
 }
 
 export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo }) {
+
 
     const msg = props.msg
     const sender = Glide.getUserInfo(msg.From)
@@ -35,10 +36,16 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
 
     let name = <></>
 
+    if (msg.Type === 100 || msg.Type === 1001) {
+        return <Grid container padding={"4px 8px"}>
+            {msg.Content}-{msg.Type === 100 ? "上线" : "下线"}
+        </Grid>
+    }
+
     let direction: "row-reverse" | "row" = me ? "row-reverse" : "row"
 
     if (false) {
-        name = <Box style={{ padding: '0px 8px' }}>
+        name = <Box style={{padding: '0px 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
                 {msg.From}
             </Typography>
@@ -49,13 +56,13 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
 
     if (me && sending === SendingStatus.Sending) {
         status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
-            <CircularProgress size={12} />
+            <CircularProgress size={12}/>
         </Box>
     }
 
     return <Grid container direction={direction} padding={"4px 8px"}>
         <Grid item xs={1} justifyContent={"center"}>
-            <Avatar style={{ margin: "auto" }} src={sender?.avatar ?? ""} />
+            <Avatar style={{margin: "auto"}} src={sender?.avatar ?? ""}/>
         </Grid>
         <Grid item xs={10}>
             {name}

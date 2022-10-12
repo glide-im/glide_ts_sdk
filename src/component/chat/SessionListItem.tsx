@@ -1,7 +1,7 @@
-import { Avatar, Badge, ListItem, ListItemIcon, ListItemText } from "@mui/material";
-import { green } from "@mui/material/colors";
-import { useEffect, useState } from "react";
-import { Session } from "src/im/session";
+import {Avatar, Badge, ListItem, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
+import {green} from "@mui/material/colors";
+import {useEffect, useState} from "react";
+import {Session} from "src/im/session";
 
 export function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
@@ -9,7 +9,7 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
         props.chat.UnreadCount = 0;
     }
 
-    const [chat, setChat] = useState({ obj: props.chat })
+    const [chat, setChat] = useState({obj: props.chat})
 
     useEffect(() => {
         chat.obj.setSessionUpdateListener(() => {
@@ -17,7 +17,7 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
             if (props.selected) {
                 chat.obj.UnreadCount = 0;
             }
-            setChat({ obj: chat.obj })
+            setChat({obj: chat.obj})
         })
         return () => chat.obj.setSessionUpdateListener(null)
     }, [chat, props.selected])
@@ -32,13 +32,14 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
     }
 
     return <>
-        <ListItem button style={{ cursor: "pointer" }} sx={{ bgcolor: 'background.paper' }} onClick={onItemClick} selected={props.selected}>
-            <ListItemIcon >
-                <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"} >
-                    <Avatar variant="rounded" sx={{ bgcolor: green[500] }} src={chat.obj.Avatar} />
+        <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
+                        selected={props.selected}>
+            <ListItemIcon>
+                <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"}>
+                    <Avatar variant="rounded" sx={{bgcolor: green[500]}} src={chat.obj.Avatar}/>
                 </Badge>
             </ListItemIcon>
-            <ListItemText primary={chat.obj.Title} secondary={msg} />
-        </ListItem>
+            <ListItemText primary={chat.obj.Title} secondary={msg}/>
+        </ListItemButton>
     </>
 }

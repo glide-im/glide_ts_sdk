@@ -1,14 +1,14 @@
-import { catchError, concat, map, mergeMap, Observable, timeout } from "rxjs";
-import { onComplete } from "src/rx/next";
-import { Api } from "../api/api";
-import { setApiToken } from "../api/axios";
-import { AuthBean } from "../api/model";
-import { ContactsList } from "./contacts_list";
-import { IMUserInfo } from "./def";
-import { Glide } from "./glide";
-import { Actions, CommonMessage } from "./message";
-import { SessionList } from "./session_list";
-import { Ws } from "./ws";
+import {catchError, concat, map, mergeMap, Observable, timeout} from "rxjs";
+import {onComplete} from "src/rx/next";
+import {Api} from "../api/api";
+import {setApiToken} from "../api/axios";
+import {AuthBean} from "../api/model";
+import {ContactsList} from "./contacts_list";
+import {IMUserInfo} from "./def";
+import {Glide} from "./glide";
+import {Actions, CommonMessage} from "./message";
+import {SessionList} from "./session_list";
+import {Ws} from "./ws";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -26,7 +26,7 @@ export class Account {
     private uid: string;
     private sessions: SessionList = new SessionList(this);
     private contacts: ContactsList = new ContactsList();
-    private servers: string[] = [];
+    private servers: string[] = ["ws://localhost:8080/ws"];
     private token: string;
 
     private userInfo: IMUserInfo | null = null;
@@ -103,13 +103,12 @@ export class Account {
 
     private initAccount(auth: AuthBean): Observable<string> {
 
-        setApiToken(auth.Token);
-        this.uid = auth.Uid.toString();
-        this.servers = auth.Servers;
-        this.token = auth.Token;
-        Glide.storeToken(auth.Token);
+        setApiToken(auth.token);
+        this.uid = auth.uid.toString();
+        this.token = auth.token;
+        Glide.storeToken(auth.token);
 
-        const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.Uid.toString())
+        const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.uid.toString())
             .pipe(
                 map(us => {
                     this.userInfo = us[0];
@@ -126,7 +125,7 @@ export class Account {
 
     private connectIMServer(): Observable<string> {
 
-        const data = { Token: this.getToken() };
+        const data = {Token: this.getToken()};
         const server = this.servers[0];
 
         const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
@@ -146,9 +145,10 @@ export class Account {
     private onMessage(m: CommonMessage<any>) {
         console.log("onMessage", m);
         switch (m.action) {
-            case Actions.NotifyContact:
-                this.contacts.onNewContactNotify(m.data);
-                break;
+            // case Actions.NotifyContact:
+            //     this.contacts.onNewContactNotify(m.data);
+            //     break;
+            case Actions.NotifyGroup:
             case Actions.MessageChat:
             case Actions.MessageGroup:
             case Actions.MessageChatRecall:

@@ -1,19 +1,19 @@
-import { Observable } from "rxjs";
-import { getBaseUrl, post, setBaseUrl } from "./axios";
-import { AuthBean, ContactsBean, MessageBean, MidBean, ServerInfoBean, SessionBean, UserInfoBean } from "./model";
-import { rxios } from "./rxios";
+import {Observable} from "rxjs";
+import {getBaseUrl, post, setBaseUrl} from "./axios";
+import {AuthBean, ContactsBean, MessageBean, MidBean, ServerInfoBean, SessionBean, UserInfoBean} from "./model";
+import {rxios} from "./rxios";
 
 
 function login(account: string, password: string): Observable<AuthBean> {
     const param = {
-        Account: account,
+        Email: account,
         Device: 2,
         Password: password
     };
     return rxios.post("auth/signin", param)
 }
 
-function guest(nickname:string, avatar:string): Observable<AuthBean> {
+function guest(nickname: string, avatar: string): Observable<AuthBean> {
     const param = {
         Avatar: nickname,
         Nickname: avatar,
@@ -53,7 +53,7 @@ function getProfile(): Promise<UserInfoBean> {
 }
 
 function getUserInfo(...uids: string[]): Promise<UserInfoBean[]> {
-    return post("user/info", { Uid: uids.map(uid => parseInt(uid)) })
+    return post("user/info", {Uid: uids.map(uid => parseInt(uid))})
 }
 
 function getRecentSession(): Observable<SessionBean[]> {
@@ -61,11 +61,11 @@ function getRecentSession(): Observable<SessionBean[]> {
 }
 
 function getMessageHistry(uid: string, beforeMid: number): Observable<MessageBean[]> {
-    return rxios.post("msg/chat/history", { Uid: parseInt(uid), Before: beforeMid })
+    return rxios.post("msg/chat/history", {Uid: parseInt(uid), Before: beforeMid})
 }
 
 function getOrCreateSession(to: number): Promise<SessionBean> {
-    return post("session/get", { To: to })
+    return post("session/get", {To: to})
 }
 
 function getMid(): Observable<MidBean> {
