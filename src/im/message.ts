@@ -1,96 +1,113 @@
+const maskFromWeb = 1 << 30;
+const maskMessageType = (1 << 31) | maskFromWeb;
+
+// 客户端自定义消息的类型
+export enum ClientMessageType {
+    Inputing = 1,
+}
+
+// 聊天消息类型, 可以自定义, 但是需要客户端之间约定好
 export enum MessageType {
     Text = 1,
     Image = 2,
     Audio = 3,
-    Recall = 100,
-    GroupNotify = -1,
+    Recall = 4,
+    File = 5,
+    Video = 6,
+    Location = 7,
+    RedEnvelope = 8,
+    Transfer = 9,
+    System = 10,
 }
 
-export enum SessionType {
-    Single = 1,
-    Group = 2,
-}
+export const WebSocketUrl = process.env.REACT_APP_WS_URL;
 
+// IM 指令
 export enum Actions {
-    MessageChat = "message.chat",
-    MessageChatRecall = "message.chat.recall",
-    MessageChatResend = "message.chat.resend",
-    MessageChatRetry = "message.chat.retry",
-    MessageGroup = "message.group",
-    MessageGroupRecall = "message.group.recall",
+    // 聊天消息
+    MessageChat = 'message.chat',
+    // 消息撤回
+    MessageChatRecall = 'message.chat.recall',
+    MessageChatResend = 'message.chat.resend',
+    MessageChatRetry = 'message.chat.retry',
 
-    NotifyNeedAuth = "notify.auth",
-    NotifyContact = "notify.contact",
-    NotifyKickOut = "notify.kickout",
-    NotifyGroup = "notify.group",
-    NotifyAccountLogin = "notify.login",
+    MessageGroupRecall = 'message.group.recall',
+    MessageGroup = 'message.group',
 
-    AckMessage = "ack.message",
-    AckRequest = "ack.request",
-    AckGroupMsg = "ack.group.msg",
-    AckNotify = "ack.notify",
+    NotifyGroup = 'group.notify',
 
-    Api = "api",
-    ApiFailed = "api.failed",
-    ApiSuccess = "api.success",
-    ApiUserAuth = "api.auth",
-    Heartbeat = "heartbeat",
+    // 客户端控制消息
+    MessageCli = 'message.cli',
+    // 需要认证
+    NotifyNeedAuth = 'notify.auth',
+    // 被踢出
+    NotifyKickOut = 'notify.kickout',
+    // 新的联系人
+    NotifyNewContact = 'notify.contact',
+
+    AckMessage = 'ack.message',
+    AckRequest = 'ack.request',
+    AckNotify = 'ack.notify',
+
+    Api = 'api',
+    ApiFailed = 'api.failed',
+    ApiSuccess = 'api.success',
+    ApiUserAuth = 'api.auth',
+    ApiUserLogout = 'api.user.logout',
+    Heartbeat = 'heartbeat',
 }
 
+// 公共消息体
 export interface CommonMessage<T> {
-    seq: number
-    action: string
-    to: string
-    data: T
+    seq: number;
+    action: string;
+    data: T;
+    to: string | null;
+    extra: Map<string, string> | null;
 }
 
+// 聊天消息
 export interface Message {
-    mid: number
-    seq: number
-    from: string
-    to: string
-    type: number
-    content: string
-    sendAt: number
-    status: number
+    cliMid: string;
+    mid: number;
+    seq: number;
+    from: string;
+    to: string;
+    type: number;
+    content: string;
+    sendAt: number;
+    status: number;
+    isMe?: boolean;
+    isMeToo?: boolean;
 }
 
+// 接收者收到确认请求
 export interface AckRequest {
-    mid: number
-    from: string
+    mid: number;
+    from: string;
 }
 
-export interface AckGroupMessage {
-    seq: number
-    mid: number
-    gid: number
-}
-
+// 接收者收到确认通知
 export interface AckNotify {
-    mid: number
+    mid: number;
 }
 
+// 服务器收到确认
 export interface AckMessage {
-    mid: number
+    cliMid: string;
+    mid: number;
 }
 
+// 撤回
 export interface Recall {
-    mid: string,
-    recall_by: number,
+    mid: number;
+    recallBy: string;
 }
 
-export interface GroupNotify {
-    gid: number,
-    mid: number,
-    type: number,
-    timestamp: number,
-    seq: number,
-    data: string,
-}
-
-export interface ContactNotify {
-    FromId: string,
-    FromType: number,
-    Id: string,
-    Type: number
+// 客户端自定义控制类型消息
+export interface CliCustomMessage {
+    from: string;
+    to: string;
+    type: number;
+    content: string | null;
 }

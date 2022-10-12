@@ -47,7 +47,7 @@ class GlideIM {
                             return Api.getUserInfo(...ids)
                         }),
                         mergeMap(userInfos => of(...userInfos)),
-                        map<UserInfoBean, IMUserInfo>(u => ({ avatar: u.Avatar, name: u.Nickname, uid: u.Uid.toString() })),
+                        map<UserInfoBean, IMUserInfo>(u => ({ avatar: u.avatar, name: u.nickname, uid: u.uid.toString() })),
                     )
                 }
             }),

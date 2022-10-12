@@ -1,6 +1,6 @@
-import { MessageBean } from "src/api/model";
-import { Account } from "./account";
-import { Message } from "./message";
+import {MessageBean} from "src/api/model";
+import {Account} from "./account";
+import {Message} from "./message";
 
 export enum SendingStatus {
     Unknown,
@@ -24,6 +24,7 @@ export class ChatMessage {
     public Status: number;
     public IsMe: boolean;
     public IsGroup: boolean;
+    public Type: number;
 
     public Sending: SendingStatus = SendingStatus.Unknown;
 
@@ -54,6 +55,7 @@ export class ChatMessage {
         ret.SendAt = m.sendAt;
         ret.IsMe = m.from === Account.getInstance().getUID();
         ret.Status = m.status
+        ret.Type = m.type
         return ret;
     }
 
@@ -66,6 +68,7 @@ export class ChatMessage {
         this.IsMe = m.IsMe;
         this.Status = m.Status;
         this.Sending = m.Sending;
+        this.Type = m.Type;
 
         if (this.updateListener) {
             this.updateListener(this);
