@@ -46,6 +46,12 @@ export class Session {
         ret.Type = type;
         ret.ID = ret.getSID();
         ret.Title = ret.ID;
+        if (type === 1) {
+            ret.Title = Cache.getUserInfo(to).name ?? ret.ID;
+        }
+        if (to === "the_world_channel") {
+            ret.Title = 'World Channel'
+        }
         return ret;
     }
 
@@ -112,7 +118,7 @@ export class Session {
                 return Api.getMessageHistry(this.To, beforeMid)
                     .pipe(
                         mergeMap(resp => of(...resp)),
-                        map(msg => ChatMessage.create2(msg)),
+                        map(msg => ChatMessage.create2(msg, this.Type)),
                         onNext(msg => {
                             this.addMessageByOrder(msg)
                         }),
@@ -167,22 +173,22 @@ export class Session {
     }
 
     private addMessageByOrder(message: ChatMessage) {
-        if (this.messageMap.has(message.Mid)) {
-            this.messageMap.get(message.Mid).update(message);
+        if (this.messageMap.has(message.OrderKey)) {
+            this.messageMap.get(message.OrderKey).update(message);
         } else {
-            let index = this.messageList.findIndex(msg => msg.Mid > message.Mid);
+            let index = this.messageList.findIndex(msg => msg.OrderKey > message.OrderKey);
             if (index === -1) {
-                this.messageMap.set(message.Mid, message);
+                this.messageMap.set(message.OrderKey, message);
                 this.messageList.push(message);
             } else {
-                this.messageMap.set(message.Mid, message);
+                this.messageMap.set(message.OrderKey, message);
                 this.messageList.splice(index, 0, message);
             }
             this.messageListener?.(message)
         }
 
         if (this.messageList[this.messageList.length - 1] === message) {
-            this.LastMessage = message.Content;
+            this.LastMessage = message.getDisplayContent();
             if (this.Type === 2) {
                 this.LastMessageSender = message.From
             } else {
@@ -211,7 +217,7 @@ export class Session {
 
     private send(content: string, type: number): Observable<ChatMessage> {
 
-        const time = Date.parse(new Date().toString()) / 1000;
+        const time = Date.now();
         const from = Account.getInstance().getUID();
         const m: Message = {
             cliMid: uuid(32, 16),
@@ -226,6 +232,7 @@ export class Session {
         };
         const r = ChatMessage.create(m);
         r.Sending = SendingStatus.Sending;
+
         this.addMessageByOrder(r);
 
         return Ws.sendMessage(this.Type, m).pipe(
@@ -277,7 +284,7 @@ function uuid(len, radix) {
         for (i = 0; i < 36; i++) {
             if (!uuid[i]) {
                 r = 0 | Math.random() * 16;
-                uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+                uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
             }
         }
     }

@@ -8,10 +8,9 @@ import {Account} from "../../im/account";
 
 export function Chat() {
 
-    const {to} = useParams<{ to: string }>();
+    const {sid} = useParams<{ sid: string }>();
     const handleAddClick = function () {
-        Account.getInstance().getSessionList().startChat("543855").then(r => {
-        });
+        Account.getInstance().getSessionList().createSession("543855").then();
     }
 
     return <Box style={{height: "100%"}}>
@@ -26,7 +25,7 @@ export function Chat() {
                 </Box>
                 <Divider/>
                 <Box overflow={"hidden"} height={"90%"} className="BeautyScrollBar">
-                    <SessionListView selected={to} onSelect={(to: string) => {
+                    <SessionListView selected={sid} onSelect={(to: string) => {
 
                     }}/>
                 </Box>
@@ -35,7 +34,7 @@ export function Chat() {
 
             <Grid item xs={8} style={{height: "100%"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
-                <ChatRoomContainer to={to}/>
+                <ChatRoomContainer sid={sid}/>
             </Grid>
         </Grid>
 

@@ -92,7 +92,6 @@ class cache {
     }
 
     private _readObject(key: string): any | null {
-        return null
         const val = localStorage.getItem(key);
         if (val === null) {
             return null;

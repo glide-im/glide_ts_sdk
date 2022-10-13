@@ -44,11 +44,10 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     }, [sessionList])
 
     const onSelect = (s: Session) => {
-        setCurrentSession(s.To)
-        sessionList.currentChatTo = s.To
-        props.history.replace(`/im/session/${s.To}`)
-        props.onSelect?.(s.To)
-
+        setCurrentSession(s.ID)
+        sessionList.currentChatTo = s.ID
+        props.history.replace(`/im/session/${s.ID}`)
+        props.onSelect?.(s.ID)
     }
 
     const onRefresh = () => {
@@ -79,7 +78,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
         content = <Progress showProgress={false} msg={"Empty..."} />
     } else {
         const items = sessions?.map((value: Session) =>
-            <SessionListItem key={value.To} chat={value} selected={value.To === currentSession} onSelect={onSelect} />
+            <SessionListItem key={value.To} chat={value} selected={value.ID === currentSession} onSelect={onSelect} />
         )
 
         content = <List style={{ overflow: "auto", height: "100%" }} className="BeautyScrollBar">

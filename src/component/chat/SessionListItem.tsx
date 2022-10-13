@@ -1,4 +1,4 @@
-import {Avatar, Badge, ListItem, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
+import {Avatar, Badge, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
 import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
 import {Session} from "src/im/session";
@@ -31,9 +31,11 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
         msg = `${chat.obj.LastMessageSender}: ${chat.obj.LastMessage}`
     }
 
+    const selected = window.location.hash.indexOf(`/${chat.obj.ID}`) !== -1
+
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
-                        selected={props.selected}>
+                        selected={selected}>
             <ListItemIcon>
                 <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"}>
                     <Avatar variant="rounded" sx={{bgcolor: green[500]}} src={chat.obj.Avatar}/>
