@@ -179,7 +179,7 @@ class WebSocketClient {
             m.mid = new Date().getUTCMilliseconds()
             return this.sendChannelMessage(m)
         }
-        return this.sendChannelMessage(m)
+        return this.sendChatMessage(m)
     }
 
     public sendChannelMessage(m: Message): Observable<Message> {

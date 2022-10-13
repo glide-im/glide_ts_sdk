@@ -4,6 +4,7 @@ import {Api} from "../api/api";
 import {Account} from "./account";
 import {Actions, Message} from "./message";
 import {getSID, Session} from "./session";
+import {Cache} from "./cache";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
@@ -30,9 +31,15 @@ export class SessionList {
             )
     }
 
-    public startChat(id: string): Promise<any> {
-        this.add(Session.create(id, 1));
-        return Promise.any("");
+    public createSession(id: string): Promise<Session> {
+        if (this.getByUid(id) !== null) {
+            return Promise.resolve(this.getByUid(id))
+        }
+        return Cache.cacheUserInfo(id).then<Session>(() => {
+            const s = Session.create(id, 1);
+            this.add(s);
+            return s;
+        })
     }
 
     public setChatListUpdateListener(l: SessionListUpdateListener | null) {
@@ -69,14 +76,15 @@ export class SessionList {
 
     public onMessage(action: Actions, message: Message) {
         const sessionType = action.indexOf("group") !== -1 ? 2 : 1
+        const target = sessionType === 2 ? message.to : message.from
 
-        const sid = getSID(sessionType, message.to);
+        const sid = getSID(sessionType, target);
         const s = this.sessionMap.get(sid);
 
         if (s !== undefined) {
             s.onMessage(message)
         } else {
-            const ses = Session.create(sessionType === 2 ? message.to : message.from, sessionType)
+            const ses = Session.create(target, sessionType)
             ses.onMessage(message)
             this.add(ses)
         }
@@ -91,7 +99,14 @@ export class SessionList {
     }
 
     public get(sid: string): Session | null {
+        if (!this.sessionMap.has(sid)) {
+            return null
+        }
         return this.sessionMap.get(sid);
+    }
+
+    public getByUid(uid: string): Session | null {
+        return this.get(getSID(1, uid))
     }
 
     public clear() {

@@ -10,7 +10,6 @@ import {State, Ws} from "src/im/ws";
 import {Account} from "../im/account";
 import {Chat} from "./chat/Chat";
 import {Version} from "./version";
-import {ContactsList} from "./friends/ContactsList";
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
 
@@ -28,7 +27,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
             </Grid>
             <Grid item xs={11} style={{height: "700px"}} sx={{bgcolor: grey[50]}}>
                 <Switch>
-                    <Route path={`${match.url}/session/:to`} children={<Chat/>}/>
+                    <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
                     {/*<Route path={`${match.url}/friends`} children={<ContactsList/>}/>*/}
                     {/*<Route path={`${match.url}/square`} children={<Square />} /> */}
                     <Route path={`${match.url}/session`} exact={true}>

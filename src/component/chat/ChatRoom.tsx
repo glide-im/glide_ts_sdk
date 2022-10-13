@@ -10,10 +10,9 @@ function SessionList() {
     return Account.getInstance().getSessionList();
 }
 
-export function ChatRoomContainer(props: { to: string }) {
+export function ChatRoomContainer(props: { sid: string }) {
 
-    const id = props.to;
-    const session = SessionList().get(id);
+    const session = SessionList().get(props.sid);
 
     const isGroup = (session?.Type === 2)
 
@@ -51,7 +50,7 @@ export function ChatRoomContainer(props: { to: string }) {
         {/*{isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}*/}
 
         <Box height={"400px"}>
-            <SessionMessageList id={id} />
+            <SessionMessageList id={props.sid} />
         </Box>
         <Divider />
 
