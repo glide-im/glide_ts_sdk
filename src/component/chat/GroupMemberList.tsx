@@ -9,13 +9,12 @@ import {
     DialogTitle,
     TextField
 } from "@mui/material";
-import {Add} from "@mui/icons-material";
 import {useState} from "react";
 import {Cache} from "../../im/cache";
 
 export function GroupMemberList(props: { id: string }) {
 
-    const [showAddMember, setShowAddMember] = useState(true)
+    const [showAddMember, setShowAddMember] = useState(false)
 
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
     const avatars = []
@@ -53,11 +52,11 @@ export function GroupMemberList(props: { id: string }) {
             }}
                 className={"BeautyScrollBarHor"}>
                 {avatars}
-                <li style={style}>
-                    <Avatar style={{height: '30px', width: '30px', cursor: 'pointer'}} onClick={onAddMemberClick}>
-                        <Add/>
-                    </Avatar>
-                </li>
+                {/*<li style={style}>*/}
+                {/*    <Avatar style={{height: '30px', width: '30px', cursor: 'pointer'}} onClick={onAddMemberClick}>*/}
+                {/*        <Add/>*/}
+                {/*    </Avatar>*/}
+                {/*</li>*/}
             </ul>
         </Box>
     )

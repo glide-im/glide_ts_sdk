@@ -3,7 +3,7 @@ import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react"
 import {Account} from "src/im/account";
 import {ChatMessage} from "src/im/chat_message";
 import {IMUserInfo} from "src/im/def";
-import {ChatMessageItem} from "./MessageItem";
+import {ChatMessageItem} from "./MessageListItem";
 
 export function SessionMessageList(props: { id: string }) {
 
