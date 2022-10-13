@@ -1,36 +1,27 @@
-import {Box, Divider, Grid, IconButton, Typography} from "@mui/material";
-import React from "react";
+import {Avatar, Box, Button, Divider, Grid, Typography} from "@mui/material";
+import React, {useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {ChatRoomContainer} from "./ChatRoom";
 import {SessionListView} from "./SessionListView";
-import {AddBox} from "@mui/icons-material";
 import {Account} from "../../im/account";
+import {State, Ws} from "../../im/ws";
 
 export function Chat() {
 
     const {sid} = useParams<{ sid: string }>();
-    const handleAddClick = function () {
-        Account.getInstance().getSessionList().createSession("543855").then();
-    }
 
     return <Box style={{height: "100%"}}>
         <Grid alignItems={"center"} container style={{height: "100%"}}>
 
             <Grid item xs={4} style={{height: "100%"}}>
-                <Box m={2}>
-                    <Typography variant={"caption"}>Messages</Typography>
-                    <IconButton onClick={handleAddClick} size={"small"} style={{float: "right"}}>
-                        <AddBox/>
-                    </IconButton>
+                <Box height={"20%"}>
+                    <UserInfoComp/>
+                    <Divider/>
                 </Box>
-                <Divider/>
-                <Box overflow={"hidden"} height={"90%"} className="BeautyScrollBar">
-                    <SessionListView selected={sid} onSelect={(to: string) => {
-
-                    }}/>
+                <Box overflow={"hidden"} height={"80%"} className="BeautyScrollBar">
+                    <SessionListView selected={sid} onSelect={null}/>
                 </Box>
             </Grid>
-
 
             <Grid item xs={8} style={{height: "100%"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
@@ -38,5 +29,52 @@ export function Chat() {
             </Grid>
         </Grid>
 
+    </Box>
+}
+
+
+function UserInfoComp() {
+
+    let u = Account.getInstance().getUserInfo()
+    if (u === null) {
+        u = {
+            avatar: "-", name: "-", uid: "-"
+        }
+    }
+
+    const [online, setOnline] = useState(Ws.isConnected())
+
+    useEffect(() => {
+        const l = (s: State, _: any) => {
+            if (s === State.CLOSED) {
+                setOnline(false)
+            } else if (s === State.CONNECTED) {
+                setOnline(true)
+            }
+        }
+        Ws.addStateListener(l)
+        return () => {
+            Ws.removeStateListener(l)
+        }
+    }, []);
+
+    return <Box>
+        <Grid container justifyContent={"center"}>
+            <Box mt={2}><Avatar src={u.avatar}/></Box>
+        </Grid>
+        <Box width={"100%"}>
+            <Typography variant={"body2"} textAlign={"center"}>{u.name}</Typography>
+            <Typography variant={"body2"} textAlign={"center"}>uid: {u.uid}</Typography>
+        </Box>
+        <Box justifyContent={'end'}>
+            <Button size={'small'}>
+                退出登录
+            </Button>
+            {online ? <></> :
+                <Button size={'small'} color={'warning'}>
+                    重新连接
+                </Button>
+            }
+        </Box>
     </Box>
 }

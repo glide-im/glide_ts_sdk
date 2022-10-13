@@ -50,7 +50,7 @@ export class Session {
             ret.Title = Cache.getUserInfo(to).name ?? ret.ID;
         }
         if (to === "the_world_channel") {
-            ret.Title = 'World Channel'
+            ret.Title = '世界频道'
         }
         return ret;
     }

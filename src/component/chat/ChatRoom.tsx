@@ -1,10 +1,9 @@
-import { Send } from "@mui/icons-material";
-import { Box, Divider, IconButton, TextareaAutosize, Typography } from "@mui/material";
-import { grey } from "@mui/material/colors";
-import React, { CSSProperties } from "react";
-import { Account } from "../../im/account";
-import { GroupMemberList } from "./GroupMemberList";
-import { SessionMessageList } from "./MessageList";
+import {EmojiEmotionsOutlined, ImageOutlined, Send} from "@mui/icons-material";
+import {Box, Divider, IconButton, TextareaAutosize, Typography} from "@mui/material";
+import {grey} from "@mui/material/colors";
+import React, {CSSProperties, useRef} from "react";
+import {Account} from "../../im/account";
+import {SessionMessageList} from "./MessageList";
 
 function SessionList() {
     return Account.getInstance().getSessionList();
@@ -17,9 +16,9 @@ export function ChatRoomContainer(props: { sid: string }) {
     const isGroup = (session?.Type === 2)
 
     if (session == null) {
-        return <Box mt={"50%"}>
+        return <Box mt={"30%"}>
             <Typography variant="h6" textAlign={"center"}>
-                No Session
+                没有会话
             </Typography>
         </Box>
     }
@@ -28,7 +27,8 @@ export function ChatRoomContainer(props: { sid: string }) {
         if (session != null) {
             session.sendTextMessage(msg)
                 .subscribe({
-                    next: () => { },
+                    next: () => {
+                    },
                     error: (err) => {
                         alert(err)
                         // console.error(err)
@@ -39,32 +39,44 @@ export function ChatRoomContainer(props: { sid: string }) {
         }
     }
 
-    return (<Box height={"100"}>
-        <Box height={"70px"} paddingLeft={"16px"} color={'black'}>
-            <Typography variant={"h6"} style={{ lineHeight: "70px" }}>
+    return (<Box height={"100%"}>
+        <Box height={"10%"} paddingLeft={"16px"} color={'black'}>
+            <Typography variant={"h6"} style={{lineHeight: "60px"}}>
                 {session.Title}
             </Typography>
         </Box>
-        <Divider />
+        <Divider/>
 
-        {/*{isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}*/}
-
-        <Box height={"400px"}>
-            <SessionMessageList id={props.sid} />
+        <Box height={"70%"}>
+            {/*<Box height={"10%"}>*/}
+            {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
+            {/*</Box>*/}
+            <Box height={"100%"}>
+                <SessionMessageList id={props.sid}/>
+            </Box>
         </Box>
-        <Divider />
+        <Divider/>
 
-        <Box style={{ height: "100px", padding: "10px" }}>
-            <MessageInput onSend={sendMessage} />
+        <Box style={{height: "20%"}}>
+            <MessageInput onSend={sendMessage}/>
         </Box>
     </Box>)
 }
 
 const messageInputStyle: CSSProperties = {
-    height: "60px", width: "96%", border: "none", outline: "none", resize: "none", backgroundColor: grey[50], fontFamily: 'default'
+    width: "96%",
+    height: "100%",
+    border: "none",
+    outline: "none",
+    resize: "none",
+    backgroundColor: grey[50],
+    fontSize: '12pt',
+    fontFamily: 'default'
 }
 
 function MessageInput(props: { onSend: (msg: string) => void }) {
+
+    const input = useRef<HTMLTextAreaElement>()
 
     const onSend = (msg: string) => {
         const m = msg.trim();
@@ -74,18 +86,39 @@ function MessageInput(props: { onSend: (msg: string) => void }) {
         props.onSend(m)
     }
 
+    const handleSendClick = () => {
+        onSend(input.current.value)
+        input.current.value = ''
+    }
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter") {
-            e.preventDefault()
-            onSend(e.currentTarget.value)
-            e.currentTarget.value = ""
+            handleSendClick()
         }
     }
+    const handleEmojiClick = () => {
+        input.current.value = input.current.value + '😊'
+    }
+    const handleImageClick = () => {
 
-    return <>
-        <TextareaAutosize autoFocus style={messageInputStyle} onKeyPress={handleKeyDown} />
-        <IconButton color={"primary"} size={"small"} style={{ float: "right" }}>
-            <Send />
-        </IconButton>
-    </>
+    }
+
+    return <Box height={'100%'} mr={'8px'} ml={'8px'} position={'relative'}>
+        <Box alignItems={'right'} mt={'4px'} height={'20%'}>
+            <IconButton onClick={handleImageClick} size={"small"} color={"primary"}>
+                <ImageOutlined/>
+            </IconButton>
+            <IconButton onClick={handleEmojiClick} size={"small"} color={"primary"}>
+                <EmojiEmotionsOutlined/>
+            </IconButton>
+        </Box>
+
+        <Box height={'40%'} mt={'8px'} ml={'4px'} mr={'8px'}>
+            <TextareaAutosize ref={input} autoFocus style={messageInputStyle} onKeyPress={handleKeyDown}/>
+        </Box>
+        <Box height={'15%'}>
+            <IconButton onClick={handleSendClick} color={"primary"} size={"small"} style={{float: "right"}}>
+                <Send/>
+            </IconButton>
+        </Box>
+    </Box>
 }
