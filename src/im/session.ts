@@ -7,7 +7,7 @@ import {SessionBean} from "../api/model";
 import {Account} from "./account";
 import {ChatMessage, SendingStatus} from "./chat_message";
 import {IMUserInfo} from "./def";
-import {Glide} from "./glide";
+import {Cache} from "./cache";
 import {Message, MessageType} from "./message";
 import {Ws} from "./ws";
 
@@ -66,7 +66,7 @@ export class Session {
         if (this.isGroup()) {
             return of(this);
         } else {
-            return Glide.loadUserInfo(this.To)
+            return Cache.loadUserInfo(this.To)
                 .pipe(
                     mergeMap(userInfo => of(userInfo[0])),
                     onErrorResumeNext(new Observable<IMUserInfo>(subscriber => {
@@ -128,10 +128,10 @@ export class Session {
     public onMessage(message: Message) {
         console.log("onMessage", this.getSID(), message.type, message.content);
         const c = ChatMessage.create(message)
-        if (this.Type === 2) {
-        }
-        this.UnreadCount++;
-        this.addMessageByOrder(c);
+        Cache.cacheUserInfo(message.from).then(() => {
+            this.UnreadCount++;
+            this.addMessageByOrder(c);
+        })
     }
 
     public sendTextMessage(msg: string): Observable<ChatMessage> {
@@ -178,12 +178,16 @@ export class Session {
                 this.messageMap.set(message.Mid, message);
                 this.messageList.splice(index, 0, message);
             }
-            this.messageListener && this.messageListener(message);
+            this.messageListener?.(message)
         }
 
         if (this.messageList[this.messageList.length - 1] === message) {
             this.LastMessage = message.Content;
-            this.LastMessageSender = message.From === Account.getInstance().getUID() ? "me" : this.Title;
+            if (this.Type === 2) {
+                this.LastMessageSender = message.From
+            } else {
+                this.LastMessageSender = message.From === Account.getInstance().getUID() ? "me" : this.Title;
+            }
             this.UpdateAt = timeStampSecToDate(message.SendAt);
             this.sessionUpdateListener?.();
         }
@@ -224,7 +228,7 @@ export class Session {
         r.Sending = SendingStatus.Sending;
         this.addMessageByOrder(r);
 
-        return Ws.sendChatMessage(m).pipe(
+        return Ws.sendMessage(this.Type, m).pipe(
             map(resp => {
                 const r = ChatMessage.create(resp);
                 r.Sending = SendingStatus.Sent;
@@ -233,6 +237,22 @@ export class Session {
             })
         );
     }
+}
+
+export function getSID(type: number, to: string): string {
+    if (type === 2) {
+        return to;
+    }
+
+    let lg = Account.getInstance().getUID();
+    let sm = to;
+
+    if (lg < sm) {
+        let tmp = lg;
+        lg = sm;
+        sm = tmp;
+    }
+    return lg + "_" + sm;
 }
 
 

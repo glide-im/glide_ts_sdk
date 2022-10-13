@@ -5,7 +5,7 @@ import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
 import {ContactsList} from "./contacts_list";
 import {IMUserInfo} from "./def";
-import {Glide} from "./glide";
+import {Cache} from "./cache";
 import {Actions, CommonMessage} from "./message";
 import {SessionList} from "./session_list";
 import {Ws} from "./ws";
@@ -73,7 +73,7 @@ export class Account {
         this.uid = "";
         this.token = "";
         Ws.close();
-        Glide.storeToken("");
+        Cache.storeToken("");
     }
 
     public getSessionList(): SessionList {
@@ -94,7 +94,7 @@ export class Account {
     }
 
     public getToken(): string {
-        return Glide.getToken();
+        return Cache.getToken();
     }
 
     public getUserInfo(): IMUserInfo | null {
@@ -106,9 +106,9 @@ export class Account {
         setApiToken(auth.token);
         this.uid = auth.uid.toString();
         this.token = auth.token;
-        Glide.storeToken(auth.token);
+        Cache.storeToken(auth.token);
 
-        const initUserInfo: Observable<string> = Glide.loadUserInfo(auth.uid.toString())
+        const initUserInfo: Observable<string> = Cache.loadUserInfo(auth.uid.toString())
             .pipe(
                 map(us => {
                     this.userInfo = us[0];
@@ -143,7 +143,6 @@ export class Account {
     }
 
     private onMessage(m: CommonMessage<any>) {
-        console.log("onMessage", m);
         switch (m.action) {
             // case Actions.NotifyContact:
             //     this.contacts.onNewContactNotify(m.data);

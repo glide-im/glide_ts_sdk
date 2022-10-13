@@ -3,7 +3,7 @@ import {onNext} from "src/rx/next";
 import {Api} from "../api/api";
 import {ContactsBean} from "../api/model";
 import {Contacts} from "./contacts";
-import {Glide} from "./glide";
+import {Cache} from "./cache";
 
 export class ContactsList {
 
@@ -45,7 +45,7 @@ export class ContactsList {
                 filter(c => c.type === 1),
                 map(c => c.id),
                 toArray(),
-                mergeMap(ids => Glide.loadUserInfo(...ids)),
+                mergeMap(ids => Cache.loadUserInfo(...ids)),
                 onNext(userInfo => {
                     userInfo.forEach(u => {
                         this.contacts.get(u.uid)?.setInfo(u)

@@ -25,6 +25,7 @@ export class ChatMessage {
     public IsMe: boolean;
     public IsGroup: boolean;
     public Type: number;
+    public Target: string;
 
     public Sending: SendingStatus = SendingStatus.Unknown;
 
@@ -43,6 +44,7 @@ export class ChatMessage {
         ret.SendAt = m.SendAt;
         ret.IsMe = m.From === Account.getInstance().getUID();
         ret.Status = m.Status
+        ret.Target = ret.IsMe ? m.To : m.From
         return ret;
     }
 
@@ -56,6 +58,7 @@ export class ChatMessage {
         ret.IsMe = m.from === Account.getInstance().getUID();
         ret.Status = m.status
         ret.Type = m.type
+        ret.Target = ret.IsMe ? m.to : m.from
         return ret;
     }
 

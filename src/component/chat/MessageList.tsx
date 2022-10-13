@@ -10,7 +10,6 @@ export function SessionMessageList(props: { id: string }) {
     const session = Account.getInstance().getSessionList().get(props.id);
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-    console.log("SessionMessageList", session)
 
     useEffect(() => {
 
@@ -40,7 +39,7 @@ export function SessionMessageList(props: { id: string }) {
         return () => {
             session?.setMessageListener(null)
         }
-    }, [session, messages])
+    }, [session])
 
     const loadHistory = () => {
         session?.getMessageHistory(0)

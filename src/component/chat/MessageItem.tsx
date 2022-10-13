@@ -1,9 +1,9 @@
 import {Box, Typography, CircularProgress, Grid, Avatar} from "@mui/material"
-import {CSSProperties, useEffect, useState} from "react"
+import React, {CSSProperties, useEffect, useState} from "react"
 import {Account} from "src/im/account"
 import {ChatMessage, SendingStatus} from "src/im/chat_message"
 import {IMUserInfo} from "src/im/def"
-import {Glide} from "src/im/glide"
+import {Cache} from "src/im/cache"
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -17,9 +17,8 @@ const messageBoxStyle = function (): CSSProperties {
 
 export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo }) {
 
-
     const msg = props.msg
-    const sender = Glide.getUserInfo(msg.From)
+    const sender = Cache.getUserInfo(msg.From)
     const me = msg.From === Account.getInstance().getUID()
 
     const [sending, setSending] = useState(msg.Sending)
@@ -36,18 +35,22 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
 
     let name = <></>
 
-    if (msg.Type === 100 || msg.Type === 1001) {
+    if (msg.Type === 100 || msg.Type === 101) {
         return <Grid container padding={"4px 8px"}>
-            {msg.Content}-{msg.Type === 100 ? "上线" : "下线"}
+            <Box width={"100%"}>
+                <Typography variant={"body2"} textAlign={"center"}>
+                    {msg.Content}-{msg.Type === 100 ? "上线" : "下线"}
+                </Typography>
+            </Box>
         </Grid>
     }
 
     let direction: "row-reverse" | "row" = me ? "row-reverse" : "row"
 
-    if (false) {
+    if (!msg.IsMe) {
         name = <Box style={{padding: '0px 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
-                {msg.From}
+                {sender.name}
             </Typography>
         </Box>
     }
@@ -66,7 +69,7 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
         </Grid>
         <Grid item xs={10}>
             {name}
-            <Box display={"flex"} flexDirection={direction} height={"100%"}>
+            <Box display={"flex"} flexDirection={direction}>
                 <Box bgcolor={"info.main"} style={messageBoxStyle()}>
                     <Typography variant={"body1"}>{msg.Content}</Typography>
                 </Box>

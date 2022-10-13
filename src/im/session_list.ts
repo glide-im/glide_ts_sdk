@@ -3,7 +3,7 @@ import {onNext} from "src/rx/next";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {Actions, Message} from "./message";
-import {Session} from "./session";
+import {getSID, Session} from "./session";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
@@ -68,17 +68,14 @@ export class SessionList {
     }
 
     public onMessage(action: Actions, message: Message) {
-        const uid = this.account.getUID()
-        let s = message.from
-        if (message.from === uid) {
-            s = message.to
-        }
-        if (this.sessionMap.has(s)) {
-            const session = this.get(s)
-            session.onMessage(message)
-        } else {
-            const sessionType = action.indexOf("group") !== -1 ? 2 : 1
+        const sessionType = action.indexOf("group") !== -1 ? 2 : 1
 
+        const sid = getSID(sessionType, message.to);
+        const s = this.sessionMap.get(sid);
+
+        if (s !== undefined) {
+            s.onMessage(message)
+        } else {
             const ses = Session.create(sessionType === 2 ? message.to : message.from, sessionType)
             ses.onMessage(message)
             this.add(ses)
@@ -86,10 +83,10 @@ export class SessionList {
     }
 
     private add(s: Session) {
-        if (this.sessionMap.has(s.To)) {
+        if (this.sessionMap.has(s.ID)) {
             return
         }
-        this.sessionMap.set(s.To, s)
+        this.sessionMap.set(s.ID, s)
         this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
     }
 

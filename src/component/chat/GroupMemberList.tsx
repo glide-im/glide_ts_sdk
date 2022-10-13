@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import {Add} from "@mui/icons-material";
 import {useState} from "react";
-import {Glide} from "../../im/glide";
+import {Cache} from "../../im/cache";
 
 export function GroupMemberList(props: { id: string }) {
 
@@ -20,7 +20,7 @@ export function GroupMemberList(props: { id: string }) {
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
     const avatars = []
         .map(value => {
-                const u = Glide.getUserInfo(value.Uid)
+                const u = Cache.getUserInfo(value.Uid)
                 return <li style={style} key={value.Uid}>
                     <Avatar src={u?.avatar ?? ""} alt={u?.name ?? ""}
                             style={{height: '30px', width: '30px', border: '1px solid gray'}}/>

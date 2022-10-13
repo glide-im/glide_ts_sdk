@@ -13,7 +13,7 @@ export interface ContactsBean {
 export interface UserInfoBean {
     uid: number
     account: string
-    nickname: string
+    nick_name: string
     avatar: string
 }
 
