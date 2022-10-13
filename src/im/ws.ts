@@ -174,6 +174,21 @@ class WebSocketClient {
         }
     }
 
+    public sendMessage(type: number, m: Message): Observable<Message> {
+        if (type === 2) {
+            m.mid = new Date().getUTCMilliseconds()
+            return this.sendChannelMessage(m)
+        }
+        return this.sendChannelMessage(m)
+    }
+
+    public sendChannelMessage(m: Message): Observable<Message> {
+        return this.createCommonMessage(m.to, Actions.MessageGroup, m).pipe(
+            mergeMap(msg => this.send(msg)),
+            mergeMap(msg => this.getAckObservable(msg.data))
+        );
+    }
+
     public sendChatMessage(m: Message): Observable<Message> {
         return this.createCommonMessage(m.to, Actions.MessageChat, m).pipe(
             mergeMap(msg => this.send(msg)),

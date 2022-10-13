@@ -1,14 +1,21 @@
-import { groupBy, map, mergeMap, Observable, of, toArray } from "rxjs";
-import { UserInfoBean } from "src/api/model";
-import { onNext } from "src/rx/next";
-import { getCookie, setCookie } from "src/utils/Cookies";
-import { Api } from "../api/api";
-import { IMGroupMember, IMUserInfo } from "./def";
+import {groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {UserInfoBean} from "src/api/model";
+import {onNext} from "src/rx/next";
+import {getCookie, setCookie} from "src/utils/Cookies";
+import {Api} from "../api/api";
+import {IMUserInfo} from "./def";
 
-class GlideIM {
+class cache {
 
     private tempUserInfo = new Map<string, IMUserInfo>();
-    private tempGroupMember = new Map<number, IMGroupMember[]>();
+
+    constructor() {
+        this.tempUserInfo.set('system', {
+            avatar: "",
+            name: "system",
+            uid: "system",
+        })
+    }
 
     public getToken(): string {
         return getCookie("token");
@@ -20,13 +27,32 @@ class GlideIM {
 
     public getUserInfo(id: string): IMUserInfo | null {
         let i = this.tempUserInfo.get(id);
-        if (i != null) {
+        if (i !== null && i !== undefined) {
             return i
         }
+        const res = this._readObject(`ui_${id}`);
+        if (res !== null) {
+            this.tempUserInfo.set(id, res);
+            console.log(res)
+            return res
+        }
         return null
-        // const res = this._readObject(`ui_${id}`);
-        // this.tempUserInfo.set(id, res);
-        // return res
+    }
+
+    public cacheUserInfo(id: string): Promise<any> {
+        const execute = (resolved, reject) => {
+            if (this.tempUserInfo.has(id)) {
+                resolved()
+                return
+            }
+            this.loadUserInfo(id).subscribe(r => {
+                console.log('cache user info', this.tempUserInfo.get(id))
+                resolved()
+            }, r => {
+                resolved()
+            })
+        }
+        return new Promise<any>(execute)
     }
 
     public loadUserInfo(...id: string[]): Observable<IMUserInfo[]> {
@@ -47,7 +73,11 @@ class GlideIM {
                             return Api.getUserInfo(...ids)
                         }),
                         mergeMap(userInfos => of(...userInfos)),
-                        map<UserInfoBean, IMUserInfo>(u => ({ avatar: u.avatar, name: u.nickname, uid: u.uid.toString() })),
+                        map<UserInfoBean, IMUserInfo>(u => ({
+                            avatar: u.avatar,
+                            name: u.nick_name,
+                            uid: u.uid.toString()
+                        })),
                     )
                 }
             }),
@@ -61,11 +91,8 @@ class GlideIM {
         )
     }
 
-    public loadGroupMember(id: number): Promise<IMGroupMember> {
-        return Promise.reject("not implemented");
-    }
-
     private _readObject(key: string): any | null {
+        return null
         const val = localStorage.getItem(key);
         if (val === null) {
             return null;
@@ -78,4 +105,4 @@ class GlideIM {
     }
 }
 
-export const Glide = new GlideIM();
+export const Cache = new cache();

@@ -48,7 +48,7 @@ export function ChatRoomContainer(props: { to: string }) {
         </Box>
         <Divider />
 
-        {isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}
+        {/*{isGroup && (<Box><GroupMemberList id={session.To} /><Divider /></Box>)}*/}
 
         <Box height={"400px"}>
             <SessionMessageList id={id} />

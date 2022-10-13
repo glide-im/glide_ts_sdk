@@ -1,10 +1,9 @@
-import { Refresh } from "@mui/icons-material";
-import { Box, CircularProgress, Divider, IconButton, List, ListItem, ListItemText, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { Account } from "src/im/account";
-import { Session } from "src/im/session";
-import { SessionListItem } from "./SessionListItem";
+import {Box, CircularProgress, List, Typography} from "@mui/material";
+import {useEffect, useState} from "react";
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Account} from "src/im/account";
+import {Session} from "src/im/session";
+import {SessionListItem} from "./SessionListItem";
 
 interface SessionListProps extends RouteComponentProps {
     selected: string,
@@ -70,7 +69,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
             })
     }
 
-    let content = <></>
+    let content: JSX.Element
 
     if (loadSate) {
         content = <Progress showProgress={true} msg={"Loading"} />

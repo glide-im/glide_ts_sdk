@@ -4,7 +4,7 @@ import { Api } from "src/api/api";
 import { OnlineUserInfoBean, ServerInfoBean } from "src/api/model";
 import { Account } from "src/im/account";
 import { IMUserInfo } from "src/im/def";
-import { Glide } from "src/im/glide";
+import { Cache } from "src/im/cache";
 
 export function Square() {
 
@@ -85,7 +85,7 @@ function UserCard(props: { u: OnlineUserInfoBean }) {
     const [user, setUser] = useState<IMUserInfo | null>(null)
 
     useEffect(() => {
-        Glide.loadUserInfo(props.u.ID)
+        Cache.loadUserInfo(props.u.ID)
             .subscribe({
                 next: (data) => {
                     setUser(data[0])
