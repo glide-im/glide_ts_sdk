@@ -1,6 +1,6 @@
 import {Avatar, Box, Button, Divider, Grid, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {ChatRoomContainer} from "./ChatRoom";
 import {SessionListView} from "./SessionListView";
 import {Account} from "../../im/account";
@@ -33,7 +33,7 @@ export function Chat() {
 }
 
 
-function UserInfoComp() {
+const UserInfoComp = withRouter((props: RouteComponentProps) => {
 
     let u = Account.getInstance().getUserInfo()
     if (u === null) {
@@ -58,6 +58,11 @@ function UserInfoComp() {
         }
     }, []);
 
+    const onExitClick = () => {
+        Account.getInstance().clearAuth()
+        props.history.replace("/auth")
+    }
+
     return <Box>
         <Grid container justifyContent={"center"}>
             <Box mt={2}><Avatar src={u.avatar}/></Box>
@@ -67,7 +72,7 @@ function UserInfoComp() {
             <Typography variant={"body2"} textAlign={"center"}>uid: {u.uid}</Typography>
         </Box>
         <Box justifyContent={'end'}>
-            <Button size={'small'}>
+            <Button size={'small'} onClick={onExitClick}>
                 退出登录
             </Button>
             {online ? <></> :
@@ -77,4 +82,4 @@ function UserInfoComp() {
             }
         </Box>
     </Box>
-}
+})
