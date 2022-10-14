@@ -1,5 +1,16 @@
-import {Avatar, Box, Button, Divider, Grid, IconButton, Typography} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import {
+    Avatar,
+    Box,
+    Button,
+    Dialog, DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider, FormControl,
+    Grid,
+    IconButton, InputLabel, MenuItem, Select, TextField,
+    Typography
+} from "@mui/material";
+import React, {useEffect, useRef, useState} from "react";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {ChatRoomContainer} from "./ChatRoom";
 import {SessionListView} from "./SessionListView";
@@ -79,10 +90,12 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
             <Typography variant={"body2"} textAlign={"center"}>uid: {u.uid}</Typography>
         </Box>
         <Box width={'100%'}>
-            <Box ml={1} mr={1}>
+            <Box ml={1} mr={1} display={"flex"}>
                 <Button size={'small'} onClick={onExitClick}>
                     退出登录
                 </Button>
+                <CreateSessionButton/>
+
                 {online ? <></> :
                     <Button size={'small'} color={'warning'}>
                         重新连接
@@ -92,3 +105,48 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
         </Box>
     </Box>
 })
+
+function CreateSessionButton() {
+
+    const [show, setShow] = useState(false)
+    const onCreateSessionClick = () => {
+        setShow(true)
+    }
+
+    return <>
+        <CreateSessionDialog open={show} callback={(uid) => {
+            if (uid.length > 2) {
+                Account.getInstance().getSessionList().createSession(uid).then()
+            }
+            setShow(false)
+        }}/>
+        <Button size={'small'} onClick={onCreateSessionClick}>
+            创建会话
+        </Button>
+    </>
+}
+
+function CreateSessionDialog(props: { open: boolean, callback: (uid: string) => void }) {
+
+    const input = useRef<HTMLInputElement>()
+
+    return <Box>
+        <Dialog fullWidth open={props.open} onClose={() => {
+            props.callback('')
+        }} aria-labelledby="form-dialog-title">
+            <DialogTitle id="form-dialog-title">创建会话</DialogTitle>
+            <DialogContent>
+                <TextField inputRef={input} autoFocus margin="dense" id="text" label="用户 UID"
+                           type="text"
+                           fullWidth defaultValue={''}/>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => {
+                    props.callback(input.current.value)
+                }} color="primary">
+                    创建
+                </Button>
+            </DialogActions>
+        </Dialog>
+    </Box>
+}

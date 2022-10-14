@@ -31,6 +31,10 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
         msg = `${chat.obj.LastMessageSender}: ${chat.obj.LastMessage}`
     }
 
+    if (msg === undefined || msg.length === 0) {
+        msg = ' '
+    }
+
     const selected = window.location.hash.indexOf(`/${chat.obj.ID}`) !== -1
 
     return <>
