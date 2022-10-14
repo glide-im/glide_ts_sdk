@@ -71,17 +71,16 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     let content: JSX.Element
 
     if (loadSate) {
-        content = <Progress showProgress={true} msg={"Loading"} />
+        content = <Progress showProgress={true} msg={"Loading"}/>
     } else if (loadError) {
-        content = <Progress showProgress={false} msg={loadError} />
+        content = <Progress showProgress={false} msg={loadError}/>
     } else if (sessions.length === 0) {
-        content = <Progress showProgress={false} msg={"Empty..."} />
+        content = <Progress showProgress={false} msg={"Empty..."}/>
     } else {
         const items = sessions?.map((value: Session) =>
-            <SessionListItem key={value.To} chat={value} selected={value.ID === currentSession} onSelect={onSelect} />
+            <SessionListItem key={value.To} chat={value} selected={value.ID === currentSession} onSelect={onSelect}/>
         )
-
-        content = <List style={{ overflow: "auto", height: "100%" }} className="BeautyScrollBar">
+        content = <List style={{overflow: "auto", height: "100%"}} disablePadding className="BeautyScrollBar">
             {items}
         </List>
     }
@@ -94,7 +93,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
 function Progress(props: { showProgress?: boolean, msg?: string }) {
 
     return <Box display={"flex"} flexDirection={"column"} paddingTop={"50%"}>
-        {props.showProgress !== false ? <CircularProgress style={{ margin: "auto" }} /> : <></>}
+        {props.showProgress !== false ? <CircularProgress style={{margin: "auto"}}/> : <></>}
         {props.msg ? <Typography variant={"caption"} textAlign={"center"}>{props.msg}</Typography> : <></>}
     </Box>
 }

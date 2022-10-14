@@ -18,7 +18,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
 
     return (
         <Grid container style={{boxShadow: "grey 6px 7px 15px 0px"}}>
-            <Grid item xs={12} style={{height: "600px"}} sx={{bgcolor: grey[50]}}>
+            <Grid item xs={12} style={{height: "600px"}} sx={{bgcolor: grey[100]}}>
                 <Switch>
                     <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
                     <Route path={`${match.url}/friends`} children={<ContactsList/>}/>

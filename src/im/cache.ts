@@ -3,7 +3,7 @@ import {UserInfoBean} from "src/api/model";
 import {onNext} from "src/rx/next";
 import {getCookie, setCookie} from "src/utils/Cookies";
 import {Api} from "../api/api";
-import {IMUserInfo} from "./def";
+import {ChannelInfo, IMUserInfo} from "./def";
 
 class cache {
 
@@ -11,8 +11,8 @@ class cache {
 
     constructor() {
         this.tempUserInfo.set('system', {
-            avatar: "",
-            name: "system",
+            avatar: "system.png",
+            name: "系统",
             uid: "system",
         })
     }
@@ -53,6 +53,13 @@ class cache {
             })
         }
         return new Promise<any>(execute)
+    }
+
+    public getChannelInfo(id: string): ChannelInfo | null {
+        if (id === 'world_channel') {
+            return {avatar: "world_channel.jpg", id: id, name: "世界频道"}
+        }
+        return {avatar: "", id: id, name: id}
     }
 
     public loadUserInfo(...id: string[]): Observable<IMUserInfo[]> {

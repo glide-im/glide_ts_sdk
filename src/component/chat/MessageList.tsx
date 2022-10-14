@@ -76,7 +76,7 @@ export function SessionMessageList(props: { id: string }) {
     //     </Box>
     // }
 
-    return <MessageListView messages={messages} isGroup={session.isGroup()} userInfo={session.getUserInfo()}/>
+    return <MessageListView messages={messages} isGroup={session.isGroup()}/>
 }
 
 function scrollBottom(ele: HTMLUListElement | null) {
@@ -96,17 +96,16 @@ const messageListStyle: CSSProperties = {
 
 type MessageListItemData = string | ChatMessage
 
-export function MessageListView(props: { messages: ChatMessage[], isGroup: boolean, userInfo?: IMUserInfo }) {
+export function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
 
     const messages: MessageListItemData[] = useMemo(() => {
-        return ["", "2022-3-31 08:49", ...props.messages]
+        return ["", ...props.messages]
     }, [props.messages])
 
     const messageListEle = useRef<HTMLUListElement>()
 
     useEffect(() => {
         // const p = messageListEle.current.scrollTop + messageListEle.current.clientTop
-
         scrollBottom(messageListEle.current)
     }, [messages])
 
@@ -118,8 +117,7 @@ export function MessageListView(props: { messages: ChatMessage[], isGroup: boole
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.Mid}`} sx={{padding: "0"}}><ChatMessageItem msg={value}
-                                                                                   userInfo={props.userInfo}/></ListItem>
+        return <ListItem key={`${value.Mid}`} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
     })
 
     return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>

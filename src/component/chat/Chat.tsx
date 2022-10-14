@@ -1,4 +1,4 @@
-import {Avatar, Box, Button, Divider, Grid, Typography} from "@mui/material";
+import {Avatar, Box, Button, Divider, Grid, IconButton, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {ChatRoomContainer} from "./ChatRoom";
@@ -14,11 +14,11 @@ export function Chat() {
         <Grid alignItems={"center"} container style={{height: "100%"}}>
 
             <Grid item xs={4} style={{height: "100%"}}>
-                <Box height={"20%"}>
+                <Box height={"25%"}>
                     <UserInfoComp/>
-                    <Divider/>
                 </Box>
-                <Box overflow={"hidden"} height={"80%"} className="BeautyScrollBar">
+                <Divider/>
+                <Box overflow={"hidden"} height={"74%"} className="BeautyScrollBar">
                     <SessionListView selected={sid} onSelect={null}/>
                 </Box>
             </Grid>
@@ -62,24 +62,33 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
         Account.getInstance().clearAuth()
         props.history.replace("/auth")
     }
+    const onAvatarClick = () => {
+
+    }
 
     return <Box>
         <Grid container justifyContent={"center"}>
-            <Box mt={2}><Avatar src={u.avatar}/></Box>
+            <Box mt={2}>
+                <IconButton onClick={onAvatarClick}>
+                    <Avatar src={u.avatar}/>
+                </IconButton>
+            </Box>
         </Grid>
-        <Box width={"100%"}>
+        <Box width={"100%"} color={"#666"}>
             <Typography variant={"body2"} textAlign={"center"}>{u.name}</Typography>
             <Typography variant={"body2"} textAlign={"center"}>uid: {u.uid}</Typography>
         </Box>
-        <Box justifyContent={'end'}>
-            <Button size={'small'} onClick={onExitClick}>
-                退出登录
-            </Button>
-            {online ? <></> :
-                <Button size={'small'} color={'warning'}>
-                    重新连接
+        <Box width={'100%'}>
+            <Box ml={1} mr={1}>
+                <Button size={'small'} onClick={onExitClick}>
+                    退出登录
                 </Button>
-            }
+                {online ? <></> :
+                    <Button size={'small'} color={'warning'}>
+                        重新连接
+                    </Button>
+                }
+            </Box>
         </Box>
     </Box>
 })

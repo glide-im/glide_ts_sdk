@@ -1,10 +1,12 @@
-import {Avatar, Box, CircularProgress, Grid, Typography} from "@mui/material"
+import {Avatar, Box, CircularProgress, Grid, IconButton, Typography} from "@mui/material"
 import React, {CSSProperties, useEffect, useState} from "react"
 import {Account} from "src/im/account"
 import {ChatMessage, SendingStatus} from "src/im/chat_message"
 import {IMUserInfo} from "src/im/def"
 import {Cache} from "src/im/cache"
 import {RouteComponentProps, withRouter} from "react-router-dom";
+import {MessageType} from "../../im/message";
+import {Audiotrack, FileDownload, Map} from "@mui/icons-material";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -16,7 +18,7 @@ const messageBoxStyle = function (): CSSProperties {
     }
 }
 
-export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo }) {
+export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     const msg = props.msg
     let sender: IMUserInfo = Cache.getUserInfo(msg.From)
@@ -41,7 +43,7 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
 
     let name = <></>
 
-    if (msg.Type === 100 || msg.Type === 101) {
+    if (msg.Type === 100 || msg.Type === 101 || msg.Type === 99) {
         return <Grid container padding={"4px 8px"}>
             <Box width={"100%"}>
                 <Typography variant={"body2"} textAlign={"center"}>
@@ -69,6 +71,43 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
         </Box>
     }
 
+    let msgContent: JSX.Element
+    switch (msg.Type) {
+        case MessageType.Image:
+            msgContent = <img src={msg.Content} alt={msg.Content}/>
+            break;
+        case MessageType.Text:
+            msgContent = <Typography variant={"body1"} color={'#444'}>{msg.Content}</Typography>
+            break;
+        case MessageType.Audio:
+            msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                <IconButton color={'info'} title={'语音消息'}>
+                    <Audiotrack/>
+                </IconButton>
+                <Typography variant={"body2"} color={'#5dccce'}>语音消息</Typography>
+            </Box>
+            break;
+        case MessageType.Location:
+            msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                <IconButton color={'info'} title={'语音消息'}>
+                    <Map/>
+                </IconButton>
+                <Typography variant={"body2"} color={'#5dccce'}>位置</Typography>
+            </Box>
+            break;
+        case MessageType.File:
+            msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                <IconButton color={'info'} title={'语音消息'}>
+                    <FileDownload/>
+                </IconButton>
+                <Typography variant={"body2"} color={'#5dccce'}>文件</Typography>
+            </Box>
+            break;
+        default:
+            msgContent = <Typography variant={"body1"} color={'#444'}>{msg.Content}</Typography>
+            break;
+    }
+
     return <Grid container direction={direction} padding={"4px 8px"}>
         <Grid item xs={1} justifyContent={"center"}>
             <AvatarComp ui={sender}/>
@@ -76,8 +115,8 @@ export function ChatMessageItem(props: { msg: ChatMessage, userInfo: IMUserInfo 
         <Grid item xs={10}>
             {name}
             <Box display={"flex"} flexDirection={direction}>
-                <Box bgcolor={"info.main"} style={messageBoxStyle()}>
-                    <Typography variant={"body1"}>{msg.Content}</Typography>
+                <Box bgcolor={"white"} style={messageBoxStyle()}>
+                    {msgContent}
                 </Box>
                 {status}
             </Box>
@@ -104,6 +143,7 @@ const AvatarComp = withRouter((props: Props) => {
     }
 
     return <>
-        <Avatar onClick={handleClick} style={{margin: "auto", cursor: isSelf ? 'default' : 'pointer'}} src={props.ui.avatar}/>
+        <Avatar onClick={handleClick} style={{margin: "auto", cursor: isSelf ? 'default' : 'pointer'}}
+                src={props.ui.avatar}/>
     </>
 })

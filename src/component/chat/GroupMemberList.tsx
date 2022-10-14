@@ -9,33 +9,39 @@ import {
     DialogTitle,
     TextField
 } from "@mui/material";
-import {useState} from "react";
-import {Cache} from "../../im/cache";
+import {useEffect, useState} from "react";
+import {ChannelList} from "../../im/channel";
 
 export function GroupMemberList(props: { id: string }) {
 
     const [showAddMember, setShowAddMember] = useState(false)
 
     const style = {margin: '4px 1px', display: 'inline-block', justifyContent: 'center'}
-    const avatars = []
+
+    const ch = ChannelList.getChannel(props.id);
+
+    useEffect(() => {
+    }, [props.id])
+
+    if (ch === null) {
+        return <></>
+    }
+
+    const avatars = ch.getMembers()
         .map(value => {
-                const u = Cache.getUserInfo(value.Uid)
-                return <li style={style} key={value.Uid}>
-                    <Avatar src={u?.avatar ?? ""} alt={u?.name ?? ""}
+                return <li style={style} key={value.uid}>
+                    <Avatar src={value.avatar} alt={value.name}
                             style={{height: '30px', width: '30px', border: '1px solid gray'}}/>
                 </li>
             }
         )
-
-    const onAddMemberClick = () => {
-        setShowAddMember(true)
-    }
     const addMember = (id: number) => {
         if (id > 0) {
             // group.inviteToGroup(group.Gid, [id]).then()
         }
         setShowAddMember(false)
     }
+
 
     return (
         <Box style={{height: "40px", width: '100%', background: "white"}}>

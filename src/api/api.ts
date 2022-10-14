@@ -15,10 +15,14 @@ function login(account: string, password: string): Observable<AuthBean> {
 
 function guest(nickname: string, avatar: string): Observable<AuthBean> {
     const param = {
-        Avatar: nickname,
-        Nickname: avatar,
+        avatar: nickname,
+        nickname: avatar,
     };
     return rxios.post("auth/guest", param)
+}
+
+function verifyCode(email: string): Observable<any> {
+    return rxios.post('auth/verifyCode', {email: email, mode: 'register'})
 }
 
 function auth(token: string): Observable<AuthBean> {
@@ -28,10 +32,12 @@ function auth(token: string): Observable<AuthBean> {
     return rxios.post("auth/token", param)
 }
 
-function register(account: string, password: string): Promise<AuthBean> {
+function register(email: string, nickname: string, captcha: string, password: string): Promise<AuthBean> {
     const param = {
-        Account: account,
-        Password: password
+        nickname: nickname,
+        email: email,
+        captcha: captcha,
+        password: password
     };
     return post("auth/register", param)
 }
@@ -76,6 +82,13 @@ function getServerInfo(): Observable<ServerInfoBean> {
     return rxios.get("app/info")
 }
 
+function updateProfile(avatar: string, nickname: string): Observable<any> {
+    return rxios.post('profile/update', {
+        avatar: avatar,
+        nick_name: nickname
+    })
+}
+
 export const Api = {
     setBaseUrl,
     getBaseUrl,
@@ -86,6 +99,8 @@ export const Api = {
     addContacts,
     getContacts,
     register,
+    updateProfile,
+    verifyCode,
     auth,
     login,
     getMid,

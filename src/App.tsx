@@ -1,14 +1,14 @@
-import { Box, CircularProgress, Container, Grid } from "@mui/material";
-import React, { useEffect, useState } from 'react';
-import { HashRouter, Redirect, Route, Switch } from "react-router-dom";
-import { Api } from "./api/api";
+import {Box, CircularProgress, Container, Grid} from "@mui/material";
+import React, {useEffect, useState} from 'react';
+import {HashRouter, Redirect, Route, Switch} from "react-router-dom";
+import {Api} from "./api/api";
 import './App.css';
-import { Auth } from "./component/auth/Auth";
-import { Register } from "./component/auth/Register";
-import { MainPanel } from "./component/MainPanel";
-import { showSnack, SnackBar } from "./component/SnackBar";
-import { Account } from "./im/account";
-import { getCookie } from "./utils/Cookies";
+import {Auth} from "./component/auth/Auth";
+import {Register} from "./component/auth/Register";
+import {MainPanel} from "./component/MainPanel";
+import {showSnack, SnackBar} from "./component/SnackBar";
+import {Account} from "./im/account";
+import {getCookie} from "./utils/Cookies";
 
 function App() {
 
@@ -20,8 +20,12 @@ function App() {
 
     useEffect(() => {
         const base = getCookie("baseUrl")
+        const ws = getCookie('wsUrl')
         if (base) {
             Api.setBaseUrl(base)
+        }
+        if (ws) {
+            Account.getInstance().server = ws
         }
     }, [])
 
@@ -56,28 +60,28 @@ function App() {
 
     return (
         <div className="App">
-            <SnackBar />
-            <Container color={"text.disabled"} style={{ height: "100vh" }}>
+            <SnackBar/>
+            <Container color={"text.disabled"} style={{height: "100vh"}}>
                 <HashRouter>
-                    <Grid container color={"text.disabled"} style={{ height: "100vh", width: "1000px", margin: "auto" }}
-                        alignItems={"center"}>
+                    <Grid container color={"text.disabled"} style={{height: "100vh", width: "1000px", margin: "auto"}}
+                          alignItems={"center"}>
 
-                        {state.isLoading ? <Loading /> :
+                        {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>
-                                    <Auth />
+                                    <Auth/>
                                 </Route>
                                 <Route path={"/auth/signup"} exact={true}>
-                                    <Register />
+                                    <Register/>
                                 </Route>
                                 <Route path={"/auth"} exact={true}>
-                                    <Redirect to={'/auth/signin'} />
+                                    <Redirect to={'/auth/signin'}/>
                                 </Route>
                                 <Route path={"/im"}>
-                                    <MainPanel />
+                                    <MainPanel/>
                                 </Route>
                                 <Route path={"/"} strict={true}>
-                                    {state.isAuthenticated ? <Redirect to={'/im'} /> : <Redirect to={'/auth'} />}
+                                    {state.isAuthenticated ? <Redirect to={'/im'}/> : <Redirect to={'/auth'}/>}
                                 </Route>
                             </Switch>
                         }
@@ -92,7 +96,7 @@ function Loading(props: { msg?: string }) {
     return (
         <Grid container justifyContent={"center"}>
             <Box>
-                <CircularProgress />
+                <CircularProgress/>
                 {/*<Typography variant={"h5"} component={"p"}>{props.msg}</Typography>*/}
             </Box>
         </Grid>
