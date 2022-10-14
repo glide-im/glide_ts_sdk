@@ -47,7 +47,7 @@ export class Session {
         ret.ID = ret.getSID();
         ret.Title = ret.ID;
         if (type === 1) {
-            ret.Title = Cache.getUserInfo(to).name ?? ret.ID;
+            ret.Title = Cache.getUserInfo(to)?.name ?? ret.ID;
         }
         if (to === "the_world_channel") {
             ret.Title = '世界频道'
@@ -71,8 +71,8 @@ export class Session {
 
     public init(): Observable<Session> {
         if (this.isGroup()) {
-            this.Avatar = Cache.getChannelInfo(this.To).avatar ?? ""
-            this.Title = Cache.getChannelInfo(this.To).name ?? ''
+            this.Avatar = Cache.getChannelInfo(this.To)?.avatar ?? ""
+            this.Title = Cache.getChannelInfo(this.To)?.name ?? ''
             return of(this);
         } else {
             return Cache.loadUserInfo(this.To)
@@ -194,7 +194,7 @@ export class Session {
             this.messageListener?.(message)
         }
 
-        if (this.messageList[this.messageList.length - 1] === message) {
+        if (this.messageList[this.messageList.length - 1].Mid === message.Mid) {
             this.LastMessage = message.getDisplayContent();
             if (this.Type === 2) {
                 this.LastMessageSender = message.From

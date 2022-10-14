@@ -27,6 +27,7 @@ import React, {CSSProperties, useRef, useState} from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
 import {MessageType} from "../../im/message";
+import {showSnack} from "../SnackBar";
 
 function SessionList() {
     return Account.getInstance().getSessionList();
@@ -48,7 +49,7 @@ export function ChatRoomContainer(props: { sid: string }) {
 
     const sendMessage = (msg: string, type: number) => {
         if (session != null) {
-            session.send(msg, type).subscribe({error: (err) => alert(err)})
+            session.send(msg, type).subscribe({error: (err) => showSnack(err.toString())})
         }
     }
 
