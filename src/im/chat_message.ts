@@ -1,6 +1,6 @@
 import {MessageBean} from "src/api/model";
 import {Account} from "./account";
-import {Message} from "./message";
+import {Message, MessageType} from "./message";
 
 export enum SendingStatus {
     Unknown,
@@ -72,6 +72,14 @@ export class ChatMessage {
                 return `用户 ${this.Content} 上线`;
             case 101:
                 return `用户 ${this.Content} 离开`;
+            case MessageType.Image:
+                return '[图片]'
+            case MessageType.Audio:
+                return '[声音]'
+            case MessageType.Location:
+                return '[位置]'
+            case MessageType.File:
+                return '[文件]'
             default:
                 return this.Content;
         }

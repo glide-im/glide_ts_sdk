@@ -26,7 +26,7 @@ export class Account {
     private uid: string;
     private sessions: SessionList = new SessionList(this);
     private contacts: ContactsList = new ContactsList();
-    private servers: string[] = ["ws://localhost:8080/ws"];
+    server: string = process.env.REACT_APP_WS_URL;
     private token: string;
 
     private userInfo: IMUserInfo | null = null;
@@ -42,8 +42,8 @@ export class Account {
             )
     }
 
-    public guest(): Observable<string> {
-        return Api.guest("geust", "")
+    public guest(nickname: string, avatar: string): Observable<string> {
+        return Api.guest(nickname, avatar)
             .pipe(
                 mergeMap(res => this.initAccount(res)),
             )
@@ -126,7 +126,7 @@ export class Account {
     private connectIMServer(): Observable<string> {
 
         const data = {Token: this.getToken()};
-        const server = this.servers[0];
+        const server = this.server;
 
         const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
             .pipe(

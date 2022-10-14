@@ -1,11 +1,11 @@
 import GitHubIcon from '@mui/icons-material/GitHub';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Avatar, Box, Button, Grid, IconButton, Paper, TextField, Typography } from "@mui/material";
-import React, { useRef, useState } from "react";
-import { Link as RtLink, RouteComponentProps, withRouter } from "react-router-dom";
-import { Account } from "../../im/account";
-import { Version } from '../version';
-import { SettingDialog } from './SettingsDialog';
+import {Avatar, Box, Button, Grid, IconButton, Paper, TextField, Typography} from "@mui/material";
+import React, {useRef, useState} from "react";
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Account} from "../../im/account";
+import {Version} from '../version';
+import {SettingDialog} from './SettingsDialog';
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 
@@ -44,61 +44,59 @@ export const Auth = withRouter((props: RouteComponentProps) => {
     }
 
     const onGithubClick = () => {
-        window.open("https://github.com/Glide-IM/Glide-IM-Web")
+        window.open("https://github.com/glide-im/glide_ts_sdk")
+    }
+
+    const onGuestClick = () => {
+        Account.getInstance().guest('', '').subscribe({
+            error: (e) => {
+                alert(e)
+            },
+            complete: () => {
+                props.history.push('/im')
+            }
+        })
     }
 
     return (
         <Grid container justifyContent={"center"}>
-            <SettingDialog show={open} onClose={() => { setOpen(false) }} />
-            <Box style={{ position: "absolute", display: "block", top: "10px", right: "10px" }}>
+            <SettingDialog show={open} onClose={() => {
+                setOpen(false)
+            }}/>
+            <Box style={{position: "absolute", display: "block", top: "10px", right: "10px"}}>
                 <IconButton onClick={onSettingClick}>
-                    <SettingsIcon />
+                    <SettingsIcon/>
                 </IconButton>
                 <IconButton onClick={onGithubClick}>
-                    <GitHubIcon />
+                    <GitHubIcon/>
                 </IconButton>
             </Box>
             <Paper variant={"outlined"}>
                 <Box width={"400px"} padding={"16px"}>
-                    <Grid container justifyContent={"center"} marginTop={"20px"}>
-                        <Avatar sizes={"100px"} />
+                    <Grid container justifyContent={"center"} mt={2}>
+                        <Avatar sizes={"100px"}/>
                     </Grid>
-                    <Typography variant="h4" style={{ marginTop: "30px", marginBottom: "16px" }}>
-                        Sign In
+                    <Typography variant="h4" mt={2} mb={2}>
+
                     </Typography>
 
-                    <TextField inputRef={accountInput} required autoFocus margin="dense" id="account" label="Account"
-                        type="text"
-                        fullWidth />
-                    <TextField inputRef={passwordInput} required margin="dense" id="password" label="Password"
-                        type="password"
-                        fullWidth />
+                    <TextField inputRef={accountInput} required autoFocus margin="dense" id="account" label="账号"
+                               type="text"
+                               fullWidth/>
+                    <TextField inputRef={passwordInput} required margin="dense" id="password" label="密码"
+                               type="password"
+                               fullWidth/>
                 </Box>
                 <Grid container padding={"0px 16px 32px 16px"}>
-                    <Grid item xs={12}>
-                        <Grid container justifyContent={"right"}>
-
-                            <RtLink to={"./reset"}>
-                                Forgot Password?
-                            </RtLink>
-                            <Typography variant={"body1"}>
-                                &nbsp;&nbsp;or&nbsp;&nbsp;
-                            </Typography>
-                            <RtLink to={"./signup"}>
-                                Register
-                            </RtLink>
-                        </Grid>
+                    <Grid xs={8} mt={2}>
+                        <Button onClick={onGuestClick}>游客登录</Button>
+                        <Button onClick={() => props.history.push('/auth/signup')}>注册账号</Button>
                     </Grid>
-                    <Grid item xs={12} marginTop={"60px"}>
-                        <Grid container justifyContent={"right"}>
-                            {/*<CircularProgress color="inherit" />*/}
-                            <Button variant="contained" color="primary" style={{ marginTop: "20px" }} onClick={submit}>
-                                Submit
-                            </Button>
-                        </Grid>
+                    <Grid xs={4} justifyContent={"right"} display={"flex"} mt={2}>
+                        <Button variant="contained" color="primary" onClick={submit}>登录</Button>
                     </Grid>
                 </Grid>
-                <Version />
+                <Version/>
             </Paper>
         </Grid>
     )

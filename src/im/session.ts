@@ -51,6 +51,7 @@ export class Session {
         }
         if (to === "the_world_channel") {
             ret.Title = '世界频道'
+            ret.Avatar = 'world_channel.png'
         }
         return ret;
     }
@@ -70,6 +71,8 @@ export class Session {
 
     public init(): Observable<Session> {
         if (this.isGroup()) {
+            this.Avatar = Cache.getChannelInfo(this.To).avatar ?? ""
+            this.Title = Cache.getChannelInfo(this.To).name ?? ''
             return of(this);
         } else {
             return Cache.loadUserInfo(this.To)
@@ -144,6 +147,10 @@ export class Session {
         return this.send(msg, MessageType.Text);
     }
 
+    public sendImageMessage(img: string): Observable<ChatMessage> {
+        return this.send(img, MessageType.Image)
+    }
+
     public setSessionUpdateListener(listener: SessionUpdateListener | null) {
         this.sessionUpdateListener = listener;
     }
@@ -192,7 +199,7 @@ export class Session {
             if (this.Type === 2) {
                 this.LastMessageSender = message.From
             } else {
-                this.LastMessageSender = message.From === Account.getInstance().getUID() ? "me" : this.Title;
+                this.LastMessageSender = message.From === Account.getInstance().getUID() ? "我" : this.Title;
             }
             this.UpdateAt = timeStampSecToDate(message.SendAt);
             this.sessionUpdateListener?.();
@@ -215,7 +222,7 @@ export class Session {
         return lg + "_" + sm;
     }
 
-    private send(content: string, type: number): Observable<ChatMessage> {
+    public send(content: string, type: number): Observable<ChatMessage> {
 
         const time = Date.now();
         const from = Account.getInstance().getUID();
