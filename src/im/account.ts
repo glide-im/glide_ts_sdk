@@ -69,6 +69,8 @@ export class Account {
     }
 
     public logout() {
+        this.sessions = new SessionList(this)
+        this.contacts = new ContactsList()
         this.clearAuth()
         Ws.close()
     }
