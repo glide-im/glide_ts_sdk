@@ -112,9 +112,10 @@ export class Session {
         }
 
         const res = this.getMessageBeforeMid(beforeMid);
-        if (res.length !== 0) {
+        // if (res.length !== 0) {
             return of(res);
-        }
+        // }
+
 
         switch (this.Type) {
             case SessionType.Single:

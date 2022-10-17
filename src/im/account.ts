@@ -9,6 +9,7 @@ import {Cache} from "./cache";
 import {Actions, CommonMessage} from "./message";
 import {SessionList} from "./session_list";
 import {Ws} from "./ws";
+import {getCookie} from "../utils/Cookies";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -27,7 +28,11 @@ export class Account {
     private sessions: SessionList = new SessionList(this);
     private contacts: ContactsList = new ContactsList();
     server: string = process.env.REACT_APP_WS_URL;
-    private token: string;
+    token: string;
+
+    constructor() {
+        this.token = getCookie('token')
+    }
 
     private userInfo: IMUserInfo | null = null;
 
@@ -50,7 +55,7 @@ export class Account {
     }
 
     public auth(): Observable<string> {
-        return Api.auth(this.getToken())
+        return Api.auth(this.token)
             .pipe(
                 mergeMap(res => {
                     return this.initAccount(res)
@@ -85,16 +90,11 @@ export class Account {
     }
 
     public isAuthenticated(): boolean {
-        const tk = this.getToken()
-        return tk && tk !== "";
+        return this.token && this.token !== "";
     }
 
     public getUID(): string {
         return this.uid;
-    }
-
-    public getToken(): string {
-        return Cache.getToken();
     }
 
     public getUserInfo(): IMUserInfo | null {
@@ -125,7 +125,7 @@ export class Account {
 
     private connectIMServer(): Observable<string> {
 
-        const data = {Token: this.getToken()};
+        const data = {Token: this.token};
         const server = this.server;
 
         const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
