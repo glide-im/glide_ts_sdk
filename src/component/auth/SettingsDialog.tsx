@@ -9,17 +9,19 @@ import {
 } from "@mui/material";
 import {useRef} from "react";
 import {Api} from "src/api/api";
-import {setCookie} from "src/utils/Cookies";
+import {isEnableCookie, setCookie, setEnableCookie} from "src/utils/Cookies";
 import {Account} from "../../im/account";
 
 export function SettingDialog(props: { show: boolean, onClose: () => void }) {
 
     const baseUrl = useRef<HTMLInputElement>(null)
     const wsUrl = useRef<HTMLInputElement>(null)
-    const ackNotify = useRef<any>(null)
+    const ackNotify = useRef<HTMLInputElement>(null)
+    const enableCache = useRef<HTMLInputElement>(null)
 
     const url = Api.getBaseUrl()
     const ws = Account.getInstance().server
+    const enableCookie = isEnableCookie()
 
     const onApply = () => {
         const u = baseUrl.current.value
@@ -28,6 +30,7 @@ export function SettingDialog(props: { show: boolean, onClose: () => void }) {
         Account.getInstance().server = w
         setCookie("baseUrl", u, 100)
         setCookie('wsUrl', w, 100)
+        setEnableCookie(enableCache.current.checked)
         props.onClose()
     }
 
@@ -40,7 +43,9 @@ export function SettingDialog(props: { show: boolean, onClose: () => void }) {
                 <TextField inputRef={wsUrl} autoFocus margin="dense" id="baseUrl" label="IM WebSocket Server Url"
                            type="url"
                            fullWidth defaultValue={ws}/>
-                <FormControlLabel disabled control={<Switch ref={ackNotify}/>} label="启用接收者确认收到"/>
+                <FormControlLabel disabled control={<Switch inputRef={ackNotify}/>} label="启用接收者确认收到"/>
+                <FormControlLabel control={<Switch  defaultChecked={enableCookie} inputRef={enableCache}/>}
+                                  label="启用 Cookie"/>
             </DialogContent>
             <DialogActions>
                 <Button onClick={props.onClose} color="primary">取消</Button>

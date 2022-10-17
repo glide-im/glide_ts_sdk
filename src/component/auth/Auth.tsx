@@ -12,7 +12,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
     const accountInput = useRef<HTMLInputElement>(null)
     const passwordInput = useRef<HTMLInputElement>(null)
 
-    const token = Account.getInstance().getToken()
+    const token = Account.getInstance().token
     const [open, setOpen] = useState(false)
 
     if (token) {

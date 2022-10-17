@@ -76,6 +76,9 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
     const onAvatarClick = () => {
 
     }
+    const reconnect = () => {
+        Account.getInstance().auth().subscribe()
+    }
 
     return <Box>
         <Grid container justifyContent={"center"}>
@@ -97,7 +100,7 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
                 <CreateSessionButton/>
 
                 {online ? <></> :
-                    <Button size={'small'} color={'warning'}>
+                    <Button onClick={reconnect} size={'small'} color={'warning'}>
                         重新连接
                     </Button>
                 }

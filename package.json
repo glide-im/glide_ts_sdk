@@ -25,7 +25,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:prod": "dotenv -e .env.prod react-app-rewired start",
+    "start:prod": "dotenv -e .env.dev react-app-rewired start",
     "build:prod": "dotenv -e .env.prod react-app-rewired build",
     "build": "react-scripts build",
     "test": "react-scripts test",
