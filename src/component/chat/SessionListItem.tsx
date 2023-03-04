@@ -32,16 +32,19 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
     }
 
     if (msg === undefined || msg.length === 0) {
-        msg = ' '
+        msg = '-'
     }
 
+    if (msg.length > 30) {
+        msg = msg.substring(0, 30) + " ..."
+    }
     const selected = window.location.hash.indexOf(`/${chat.obj.ID}`) !== -1
 
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
                         selected={selected}>
             <ListItemIcon>
-                <Badge badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"}>
+                <Badge variant={'dot'} badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"}>
                     <Avatar variant="rounded" sx={{bgcolor: green[500]}} src={chat.obj.Avatar}/>
                 </Badge>
             </ListItemIcon>

@@ -113,7 +113,7 @@ export class Session {
 
         const res = this.getMessageBeforeMid(beforeMid);
         // if (res.length !== 0) {
-            return of(res);
+        return of(res);
         // }
 
 
@@ -185,17 +185,17 @@ export class Session {
             this.messageMap.get(message.OrderKey).update(message);
         } else {
             let index = this.messageList.findIndex(msg => msg.OrderKey > message.OrderKey);
+            this.messageMap.set(message.OrderKey, message);
             if (index === -1) {
-                this.messageMap.set(message.OrderKey, message);
                 this.messageList.push(message);
             } else {
-                this.messageMap.set(message.OrderKey, message);
                 this.messageList.splice(index, 0, message);
             }
             this.messageListener?.(message)
         }
 
-        if (this.messageList[this.messageList.length - 1].Mid === message.Mid) {
+        console.log(this.messageList)
+        if (this.messageList.length > 0 && this.messageList[this.messageList.length - 1].Mid === message.Mid) {
             this.LastMessage = message.getDisplayContent();
             if (this.Type === 2) {
                 this.LastMessageSender = message.From
@@ -224,7 +224,6 @@ export class Session {
     }
 
     public send(content: string, type: number): Observable<ChatMessage> {
-
         const time = Date.now();
         const from = Account.getInstance().getUID();
         const m: Message = {

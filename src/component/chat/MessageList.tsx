@@ -117,7 +117,7 @@ export function MessageListView(props: { messages: ChatMessage[], isGroup: boole
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.Mid}`} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
+        return <ListItem key={`${value.SendAt}`} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
     })
 
     return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>
