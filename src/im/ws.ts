@@ -176,7 +176,6 @@ class WebSocketClient {
 
     public sendMessage(type: number, m: Message): Observable<Message> {
         if (type === 2) {
-            m.mid = new Date().getUTCMilliseconds()
             return this.sendChannelMessage(m)
         }
         return this.sendChatMessage(m)

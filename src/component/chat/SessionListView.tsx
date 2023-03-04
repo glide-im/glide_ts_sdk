@@ -78,7 +78,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
         content = <Progress showProgress={false} msg={"Empty..."}/>
     } else {
         const items = sessions?.map((value: Session) =>
-            <SessionListItem key={value.To} chat={value} selected={value.ID === currentSession} onSelect={onSelect}/>
+            <SessionListItem key={value.ID} chat={value} selected={value.ID === currentSession} onSelect={onSelect}/>
         )
         content = <List style={{overflow: "auto", height: "100%"}} disablePadding className="BeautyScrollBar">
             {items}
