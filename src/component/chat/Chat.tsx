@@ -2,12 +2,14 @@ import {
     Avatar,
     Box,
     Button,
-    Dialog, DialogActions,
+    Dialog,
+    DialogActions,
     DialogContent,
     DialogTitle,
-    Divider, FormControl,
+    Divider,
     Grid,
-    IconButton, InputLabel, MenuItem, Select, TextField,
+    IconButton,
+    TextField,
     Typography
 } from "@mui/material";
 import React, {useEffect, useRef, useState} from "react";
@@ -21,7 +23,7 @@ export function Chat() {
 
     const {sid} = useParams<{ sid: string }>();
 
-    return <Box style={{height: "100%"}}>
+    return <Box style={{height: "100%"}} >
         <Grid alignItems={"center"} container style={{height: "100%"}}>
 
             <Grid item xs={4} style={{height: "100%"}}>

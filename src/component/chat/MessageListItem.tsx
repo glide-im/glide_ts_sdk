@@ -108,11 +108,11 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
             break;
     }
 
-    return <Grid container direction={direction} padding={"4px 8px"}>
-        <Grid item xs={1} justifyContent={"center"}>
+    return <Grid container direction={direction}  px={0} py={1}>
+        <Grid item xs={2} md={1} justifyContent={"center"}>
             <AvatarComp ui={sender}/>
         </Grid>
-        <Grid item xs={10}>
+        <Grid item xs={8} md={10}>
             {name}
             <Box display={"flex"} flexDirection={direction}>
                 <Box bgcolor={"white"} style={messageBoxStyle()}>

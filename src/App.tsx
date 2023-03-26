@@ -3,12 +3,14 @@ import React, {useEffect, useState} from 'react';
 import {HashRouter, Redirect, Route, Switch} from "react-router-dom";
 import {Api} from "./api/api";
 import './App.css';
-import {Auth} from "./component/auth/Auth";
 import {Register} from "./component/auth/Register";
 import {MainPanel} from "./component/MainPanel";
 import {showSnack, SnackBar} from "./component/SnackBar";
 import {Account} from "./im/account";
 import {getCookie} from "./utils/Cookies";
+import {Guest} from "./component/auth/Guest";
+import {MessageInput} from "./component/chat/MessageInput";
+
 
 function App() {
 
@@ -54,6 +56,8 @@ function App() {
                         })
                     }
                 });
+        } else {
+            Account.getInstance().logout()
         }
     }, [authed])
 
@@ -61,21 +65,27 @@ function App() {
     return (
         <div className="App">
             <SnackBar/>
-            <Container color={"text.disabled"} style={{height: "100vh"}}>
+            <Container color={"text.disabled"} sx={{padding: "0px", height: "100vh"}}>
                 <HashRouter>
-                    <Grid container color={"text.disabled"} style={{height: "100vh", width: "1000px", margin: "auto"}}
+                    <Grid container color={"text.disabled"} style={{height: "100vh", margin: "auto"}}
                           alignItems={"center"}>
 
                         {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>
-                                    <Auth/>
+                                    {/*<Auth/>*/}
+                                    <Guest/>
                                 </Route>
                                 <Route path={"/auth/signup"} exact={true}>
                                     <Register/>
                                 </Route>
                                 <Route path={"/auth"} exact={true}>
                                     <Redirect to={'/auth/signin'}/>
+                                </Route>
+                                <Route path={'/t'} exact={true}>
+                                    <Box height={'200px'} width={'100%'} bgcolor={"blue"}>
+                                        <MessageInput onSend={()=>{}}/>
+                                    </Box>
                                 </Route>
                                 <Route path={"/im"}>
                                     <MainPanel/>
@@ -89,7 +99,8 @@ function App() {
                 </HashRouter>
             </Container>
         </div>
-    );
+    )
+        ;
 }
 
 function Loading(props: { msg?: string }) {
