@@ -175,7 +175,7 @@ export class Session {
     }
 
     private addMessageByOrder(message: ChatMessage) {
-        if (message.From !== Account.getInstance().getUID()) {
+        if (message.From !== Account.getInstance().getUID() && Account.getInstance().getSessionList().currentChatTo !== this.To) {
             this.UnreadCount++;
         }
         if (this.messageMap.has(message.OrderKey)) {
