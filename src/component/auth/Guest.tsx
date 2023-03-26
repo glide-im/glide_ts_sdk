@@ -9,7 +9,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
     const accountInput = useRef<HTMLInputElement>(null)
 
     const onSubmit = () => {
-        Account.getInstance().guest(accountInput.current.value, 'https://www.lx-blog.cn/static/img/logo.jpg').subscribe({
+        Account.getInstance().guest(accountInput.current.value, '').subscribe({
             error: (e) => {
                 alert(e)
             },
