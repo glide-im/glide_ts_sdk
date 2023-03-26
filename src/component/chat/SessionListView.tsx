@@ -22,9 +22,9 @@ export const SessionListView = withRouter((props: SessionListProps) => {
 
     useEffect(() => {
         sessionList.setChatListUpdateListener(r => {
+            console.log('SessionListView', 'onChatListUpdate')
             setSessions(r)
         })
-        return () => sessionList.setChatListUpdateListener(null)
     }, [sessionList]);
 
     useEffect(() => {
@@ -44,6 +44,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     }, [sessionList])
 
     const onSelect = (s: Session) => {
+        s.clearUnread()
         setCurrentSession(s.ID)
         sessionList.currentChatTo = s.ID
         props.history.push(`/im/session/${s.ID}`)

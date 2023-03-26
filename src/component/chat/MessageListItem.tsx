@@ -137,7 +137,7 @@ const AvatarComp = withRouter((props: Props) => {
         if (isSelf) {
             return
         }
-        Account.getInstance().getSessionList().createSession(props.ui.uid).then((ses) => {
+        Account.getInstance().getSessionList().createSession(props.ui.uid).subscribe((ses) => {
             props.history.push(`/im/session/${ses.ID}`);
         })
     }

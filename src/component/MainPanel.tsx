@@ -18,6 +18,7 @@ import {Square} from "./square/Square";
 import {SessionListView} from "./chat/SessionListView";
 import {ManageAccountsOutlined, MessageOutlined} from "@mui/icons-material";
 import {ChatRoomContainerMobile} from "./chat/ChatRoom";
+import { Profile } from "./Profile";
 
 
 export const MainPanel = withRouter((props: RouteComponentProps) => {
@@ -81,13 +82,11 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
                 </Route>
                 <Route path={`${match.url}/profile`} exact>
                     <Box height={"calc(100vh - 56px)"}>
-                        <Box>
-                            1
-                        </Box>
+                        <Profile/>
                     </Box>
                 </Route>
                 <Route path={`${match.url}/session/:sid`}>
-                    <ChatRoomContainerMobile sid={"the_world_channel"}/>
+                    <ChatRoomContainerMobile/>
                 </Route>
                 <Route path={`${match.url}/`} exact={true}>
                     <Redirect to={`${match.url}/session/`}/>

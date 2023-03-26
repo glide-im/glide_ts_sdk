@@ -1,5 +1,4 @@
-import {map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
-import {onErrorResumeNext} from "rxjs/operators";
+import {first, map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
 import {onNext} from "src/rx/next";
 import {timeStampSecToDate} from "src/utils/TimeUtils";
 import {Api} from "../api/api";
@@ -49,10 +48,6 @@ export class Session {
         if (type === 1) {
             ret.Title = Cache.getUserInfo(to)?.name ?? ret.ID;
         }
-        if (to === "the_world_channel") {
-            ret.Title = '世界频道'
-            ret.Avatar = 'world_channel.png'
-        }
         return ret;
     }
 
@@ -69,30 +64,30 @@ export class Session {
         return session;
     }
 
+    public clearUnread() {
+        this.UnreadCount = 0;
+        this.sessionUpdateListener?.();
+    }
+
     public init(): Observable<Session> {
+        console.log('Session', 'init...')
         if (this.isGroup()) {
             this.Avatar = Cache.getChannelInfo(this.To)?.avatar ?? ""
             this.Title = Cache.getChannelInfo(this.To)?.name ?? ''
             return of(this);
         } else {
-            return Cache.loadUserInfo(this.To)
+            return Cache.loadUserInfo1(this.To)
                 .pipe(
-                    mergeMap(userInfo => of(userInfo[0])),
-                    onErrorResumeNext(new Observable<IMUserInfo>(subscriber => {
-                        subscriber.next({
-                            avatar: "-",
-                            name: `${this.To}`,
-                            uid: this.To,
-                        });
-                        subscriber.complete();
-                    })),
                     onNext(info => {
                         this.userInfo = info;
                         this.Title = info.name;
                         this.Avatar = info.avatar;
+                        console.log('Session', 'info updated', info)
+                        this.sessionUpdateListener?.()
                     }),
                     // mergeMap(() => this.getMessageHistry(0)),
                     mergeMap(() => of(this)),
+                    first(),
                 );
         }
     }
@@ -136,10 +131,9 @@ export class Session {
     }
 
     public onMessage(message: Message) {
-        console.log("onMessage", this.getSID(), message.type, message.content);
+        console.log("Session", "onMessage", this.getSID(), message.type, message.content);
         const c = ChatMessage.create(message)
         Cache.cacheUserInfo(message.from).then(() => {
-            this.UnreadCount++;
             this.addMessageByOrder(c);
         })
     }
@@ -181,6 +175,9 @@ export class Session {
     }
 
     private addMessageByOrder(message: ChatMessage) {
+        if (message.From !== Account.getInstance().getUID()) {
+            this.UnreadCount++;
+        }
         if (this.messageMap.has(message.OrderKey)) {
             this.messageMap.get(message.OrderKey).update(message);
         } else {
@@ -194,8 +191,8 @@ export class Session {
             this.messageListener?.(message)
         }
 
-        console.log(this.messageList)
         if (this.messageList.length > 0 && this.messageList[this.messageList.length - 1].Mid === message.Mid) {
+            console.log("Session", "update session last message", this.getSID(), message.getDisplayContent());
             this.LastMessage = message.getDisplayContent();
             if (this.Type === 2) {
                 this.LastMessageSender = message.From
@@ -203,8 +200,11 @@ export class Session {
                 this.LastMessageSender = message.From === Account.getInstance().getUID() ? "我" : this.Title;
             }
             this.UpdateAt = timeStampSecToDate(message.SendAt);
-            this.sessionUpdateListener?.();
         }
+        if (!this.sessionUpdateListener) {
+            console.log("Session", "sessionUpdateListener is null")
+        }
+        this.sessionUpdateListener?.();
     }
 
     private getSID(): string {

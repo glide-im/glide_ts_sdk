@@ -10,6 +10,7 @@ import {Account} from "./im/account";
 import {getCookie} from "./utils/Cookies";
 import {Guest} from "./component/auth/Guest";
 import {MessageInput} from "./component/chat/MessageInput";
+import {Loading} from "./component/Loading";
 
 
 function App() {
@@ -102,16 +103,4 @@ function App() {
     )
         ;
 }
-
-function Loading(props: { msg?: string }) {
-    return (
-        <Grid container justifyContent={"center"}>
-            <Box>
-                <CircularProgress/>
-                {/*<Typography variant={"h5"} component={"p"}>{props.msg}</Typography>*/}
-            </Box>
-        </Grid>
-    );
-}
-
 export default App;
