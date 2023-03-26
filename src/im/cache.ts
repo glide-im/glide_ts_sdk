@@ -1,9 +1,10 @@
-import {groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {UserInfoBean} from "src/api/model";
 import {onNext} from "src/rx/next";
 import {getCookie, setCookie} from "src/utils/Cookies";
 import {Api} from "../api/api";
 import {ChannelInfo, IMUserInfo} from "./def";
+import {onErrorResumeNext} from "rxjs/operators";
 
 class cache {
 
@@ -56,10 +57,36 @@ class cache {
     }
 
     public getChannelInfo(id: string): ChannelInfo | null {
-        if (id === 'world_channel') {
-            return {avatar: "world_channel.jpg", id: id, name: "世界频道"}
+        if (id === 'the_world_channel') {
+            return {avatar: "world_channel.png", id: id, name: "世界频道"}
         }
         return {avatar: "", id: id, name: id}
+    }
+
+    public loadUserInfo1(id: string): Observable<IMUserInfo> {
+        const cache = this.getUserInfo(id);
+        if (cache !== null) {
+            return of(cache)
+        }
+
+        return from(Api.getUserInfo(id)).pipe(
+            map<UserInfoBean[], IMUserInfo>((us, i) => {
+                const u = us[0];
+                const m: IMUserInfo = {
+                    avatar: u.avatar,
+                    name: u.nick_name,
+                    uid: u.uid.toString()
+                }
+                this._writeObject(`ui_${id}`, u);
+                this.tempUserInfo.set(m.uid, m);
+                return m;
+            }),
+            onErrorResumeNext(of({
+                avatar: "-",
+                name: `${id}`,
+                uid: `${id}`,
+            })),);
+
     }
 
     public loadUserInfo(...id: string[]): Observable<IMUserInfo[]> {

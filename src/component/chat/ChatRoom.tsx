@@ -1,17 +1,12 @@
-import {AppBar, Box, Divider, Grid, IconButton, TextField, Toolbar, Typography} from "@mui/material";
+import {AppBar, Box, Divider, IconButton, Toolbar, Typography} from "@mui/material";
 import React from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
 import {showSnack} from "../SnackBar";
 import {MessageInput} from "./MessageInput";
-import {
-    ArrowBack,
-    EmojiEmotionsOutlined,
-    FolderOutlined,
-    ImageOutlined,
-    KeyboardVoiceOutlined, LocationOnOutlined, Send
-} from "@mui/icons-material";
-import {MessageType} from "../../im/message";
+import {ArrowBack} from "@mui/icons-material";
+import {Loading} from "../Loading";
+import {useParams} from "react-router-dom";
 
 function SessionList() {
     return Account.getInstance().getSessionList();
@@ -61,16 +56,14 @@ export function ChatRoomContainer(props: { sid: string }) {
     </Box>)
 }
 
-export function ChatRoomContainerMobile(props: { sid: string }) {
+export function ChatRoomContainerMobile() {
 
-    const session = Account.getInstance().getSessionList().get(props.sid);
+    const {sid} = useParams<{ sid: string }>();
+    const session = Account.getInstance().getSessionList().get(sid);
 
-    if (session == null) {
-        return <Box mt={"30%"}>
-            <Typography variant="h6" textAlign={"center"}>
-                无效会话
-            </Typography>
-        </Box>
+    if (session === null) {
+        window.location.href = "/im/session"
+        return <Loading/>
     }
 
     const sendMessage = (msg: string, type: number) => {
@@ -82,13 +75,14 @@ export function ChatRoomContainerMobile(props: { sid: string }) {
     return (<Box height={"100vh"}>
         <AppBar position="static">
             <Toolbar>
-                <IconButton edge="start" color="inherit" aria-label="menu" onClick={()=>{
+                <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => {
+                    session.clearUnread()
                     window.history.back()
                 }}>
                     <ArrowBack/>
                 </IconButton>
                 <Typography variant="h6">
-                    {session.Title}
+                    {session?.Title ?? "无效会话"}
                 </Typography>
             </Toolbar>
         </AppBar>
@@ -97,7 +91,7 @@ export function ChatRoomContainerMobile(props: { sid: string }) {
             {/*<Box height={"10%"}>*/}
             {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
             {/*</Box>*/}
-            <SessionMessageList id={props.sid}/>
+            <SessionMessageList id={sid}/>
         </Box>
         <Box height={'80px'} bgcolor={"white"}>
             <MessageInput onSend={sendMessage}/>

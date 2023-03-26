@@ -83,7 +83,7 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
             <Box pr={1} pl={1}>
                 <Grid container spacing={2}>
                     <Grid item xs={11}>
-                        <TextField fullWidth variant={'standard'} inputRef={input} autoFocus
+                        <TextField fullWidth variant={'standard'} inputRef={input} autoComplete={"off"}
                                    onKeyPress={handleKeyDown}/>
                     </Grid>
                     <Grid item xs={1}>

@@ -1,10 +1,9 @@
-import {map, mergeMap, Observable, of, toArray} from "rxjs";
+import {delay, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {onNext} from "src/rx/next";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {Actions, Message} from "./message";
 import {getSID, Session} from "./session";
-import {Cache} from "./cache";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
@@ -31,15 +30,13 @@ export class SessionList {
             )
     }
 
-    public createSession(id: string): Promise<Session> {
+    public createSession(id: string): Observable<Session> {
         if (this.getByUid(id) !== null) {
-            return Promise.resolve(this.getByUid(id))
+            return of(this.getByUid(id))
         }
-        return Cache.cacheUserInfo(id).then<Session>(() => {
-            const s = Session.create(id, 1);
-            this.add(s);
-            return s;
-        })
+        return Session.create(id, 1).init().pipe(onNext((r) => {
+            this.add(r);
+        }))
     }
 
     public setChatListUpdateListener(l: SessionListUpdateListener | null) {
@@ -58,12 +55,12 @@ export class SessionList {
             .pipe(
                 mergeMap(res => of(...res)),
                 onNext(res => {
-                    console.log("session list loaded: ", res)
+                    console.log("SessionList", "session list loaded: ", res)
                 }),
                 map(s => Session.fromSessionBean(s)),
                 mergeMap(s => s.init()),
                 onNext(s => {
-                    console.log("session inited: ", s)
+                    console.log("SessionList", "session inited: ", s)
                     this.add(s)
                 }),
                 toArray(),
@@ -85,8 +82,10 @@ export class SessionList {
             s.onMessage(message)
         } else {
             const ses = Session.create(target, sessionType)
-            ses.onMessage(message)
             this.add(ses)
+            ses.init().pipe(delay(500)).subscribe(() => {
+                ses.onMessage(message)
+            })
         }
     }
 
@@ -95,6 +94,7 @@ export class SessionList {
             return
         }
         this.sessionMap.set(s.ID, s)
+        console.log('SessionList', "session added: ", s, this.sessionMap.values())
         this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
     }
 

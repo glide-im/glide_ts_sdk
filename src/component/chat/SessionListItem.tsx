@@ -5,50 +5,44 @@ import {Session} from "src/im/session";
 
 export function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
-    if (props.selected) {
-        props.chat.UnreadCount = 0;
-    }
-
-    const [chat, setChat] = useState({obj: props.chat})
+    const [msg, setMsg] = useState(props.chat.LastMessage)
 
     useEffect(() => {
-        chat.obj.setSessionUpdateListener(() => {
-            console.log("ChatItem", "chat updated")
-            if (props.selected) {
-                chat.obj.UnreadCount = 0;
-            }
-            setChat({obj: chat.obj})
+        console.log("SessionListItem", "init", props.chat)
+        props.chat.setSessionUpdateListener(() => {
+            console.log("SessionListItem", "chat updated", props.chat)
+            setMsg(props.chat.LastMessage)
         })
-        return () => chat.obj.setSessionUpdateListener(null)
-    }, [chat, props.selected])
+    }, [props.chat])
 
     const onItemClick = () => {
-        props.onSelect(chat.obj)
+        props.chat.clearUnread()
+        props.onSelect(props.chat)
     }
 
-    let msg = chat.obj.LastMessage
-    if (chat.obj.isGroup() || chat.obj.LastMessageSender === 'me') {
-        msg = `${chat.obj.LastMessageSender}: ${chat.obj.LastMessage}`
+    let lastMsg = msg
+    if (props.chat.isGroup() || props.chat.LastMessageSender === 'me') {
+        lastMsg = `${props.chat.LastMessageSender}: ${props.chat.LastMessage}`
     }
 
-    if (msg === undefined || msg.length === 0) {
-        msg = '-'
+    if (lastMsg === undefined || lastMsg.length === 0) {
+        lastMsg = '-'
     }
 
-    if (msg.length > 30) {
-        msg = msg.substring(0, 30) + " ..."
+    if (lastMsg.length > 30) {
+        lastMsg = lastMsg.substring(0, 30) + " ..."
     }
-    const selected = window.location.hash.indexOf(`/${chat.obj.ID}`) !== -1
+    const selected = window.location.hash.indexOf(`/${props.chat.ID}`) !== -1
 
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
                         selected={selected}>
             <ListItemIcon>
-                <Badge variant={'dot'} badgeContent={chat.obj.UnreadCount} overlap="rectangular" color={"secondary"}>
-                    <Avatar variant="rounded" sx={{bgcolor: green[500]}} src={chat.obj.Avatar}/>
+                <Badge variant={'dot'} badgeContent={props.chat.UnreadCount} overlap="rectangular" color={"secondary"}>
+                    <Avatar variant="rounded" sx={{bgcolor: green[500]}} src={props.chat.Avatar}/>
                 </Badge>
             </ListItemIcon>
-            <ListItemText primary={chat.obj.Title} secondary={msg}/>
+            <ListItemText primary={props.chat.Title} secondary={lastMsg}/>
         </ListItemButton>
     </>
 }

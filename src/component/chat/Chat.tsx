@@ -72,7 +72,7 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
     }, []);
 
     const onExitClick = () => {
-        Account.getInstance().clearAuth()
+        Account.getInstance().logout()
         props.history.replace("/auth")
     }
     const onAvatarClick = () => {
@@ -121,7 +121,7 @@ function CreateSessionButton() {
     return <>
         <CreateSessionDialog open={show} callback={(uid) => {
             if (uid.length > 2) {
-                Account.getInstance().getSessionList().createSession(uid).then()
+                Account.getInstance().getSessionList().createSession(uid).subscribe()
             }
             setShow(false)
         }}/>

@@ -27,7 +27,7 @@ export class Account {
     private uid: string;
     private sessions: SessionList = new SessionList(this);
     private contacts: ContactsList = new ContactsList();
-    server: string = process.env.REACT_APP_WS_URL;
+    server: string = 'wss://intercom.ink/ws';//process.env.REACT_APP_WS_URL;
     token: string;
 
     constructor() {
