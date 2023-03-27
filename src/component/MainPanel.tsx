@@ -33,7 +33,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
     return (
         <>
             <Hidden mdDown>
-                <Box height={'600px'} width={'100%'} sx={{bgcolor: grey[100], boxShadow: 'grey 6px 7px 15px 0px'}}>
+                <Box height={'100vh'} width={'100%'} sx={{bgcolor: grey[100]}}>
                     <Switch>
                         <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
                         <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
@@ -43,7 +43,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
                                 to={`${match.url}/session/${Account.getInstance().getSessionList().currentChatTo}`}/>
                         </Route>
                         <Route path={`${match.url}/`} exact={true}>
-                            <Redirect to={`${match.url}/session/0`}/>
+                            <Redirect to={`${match.url}/session/`}/>
                         </Route>
                     </Switch>
                 </Box>
@@ -62,7 +62,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
     const isMainPage = window.location.hash.match(/\/im\/(session\/?|profile\/?)$/g) != null;
 
     return (
-        <Box sx={{bgcolor: grey[100]}} width={'100%'} height={'100vh'}>
+        <Box  bgcolor={grey[100]} width={'100%'} height={'100vh'}>
             <Switch>
                 <Route path={`${match.url}/session`} exact={true}>
                     <Box height={"calc(100vh - 56px)"}>

@@ -15,8 +15,8 @@ function login(account: string, password: string): Observable<AuthBean> {
 
 function guest(nickname: string, avatar: string): Observable<AuthBean> {
     const param = {
-        avatar: nickname,
-        nickname: avatar,
+        avatar: avatar,
+        nickname: nickname,
     };
     return rxios.post("auth/guest", param)
 }

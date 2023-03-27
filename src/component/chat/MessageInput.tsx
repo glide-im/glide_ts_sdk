@@ -63,19 +63,19 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
                 setShowImageDialog(false)
             }}/>
             <Box>
-                <IconButton onClick={handleImageClick} size={"small"} color={"primary"}>
+                <IconButton onClick={handleImageClick} size={"small"} color={"primary"} disabled={true}>
                     <ImageOutlined/>
                 </IconButton>
-                <IconButton onClick={handleEmojiClick} size={"small"} color={"primary"}>
+                <IconButton onClick={handleEmojiClick} size={"small"} color={"primary"} disabled={true}>
                     <EmojiEmotionsOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.File)}>
+                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.File)} disabled={true}>
                     <FolderOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Audio)}>
+                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Audio)} disabled={true}>
                     <KeyboardVoiceOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Location)}>
+                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Location)} disabled={true}>
                     <LocationOnOutlined/>
                 </IconButton>
             </Box>

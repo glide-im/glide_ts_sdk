@@ -68,8 +68,8 @@ function App() {
             <SnackBar/>
             <Container color={"text.disabled"} sx={{padding: "0px", height: "100vh"}}>
                 <HashRouter>
-                    <Grid container color={"text.disabled"} style={{height: "100vh", margin: "auto"}}
-                          alignItems={"center"}>
+                    <Grid container color={"text.disabled"} style={{height: "100vh"}}
+                          alignItems={"center"} bgcolor={'whitesmoke'}>
 
                         {state.isLoading ? <Loading/> :
                             <Switch>
