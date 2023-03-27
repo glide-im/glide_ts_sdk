@@ -1,7 +1,7 @@
-import {Avatar, Badge, ListItemButton, ListItemIcon, ListItemText} from "@mui/material";
-import {green} from "@mui/material/colors";
-import {useEffect, useState} from "react";
-import {Session} from "src/im/session";
+import { Avatar, Badge, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { green } from "@mui/material/colors";
+import { useEffect, useState } from "react";
+import { Session } from "src/im/session";
 
 export function SessionListItem(props: { chat: Session, selected: boolean, onSelect: (c: Session) => void }) {
 
@@ -35,14 +35,14 @@ export function SessionListItem(props: { chat: Session, selected: boolean, onSel
     const selected = window.location.hash.indexOf(`/${props.chat.ID}`) !== -1
 
     return <>
-        <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
-                        selected={selected}>
+        <ListItemButton style={{ cursor: "pointer" }} sx={{ bgcolor: 'background.paper' }} onClick={onItemClick}
+            selected={selected}>
             <ListItemIcon>
                 <Badge variant={'dot'} badgeContent={props.chat.UnreadCount} overlap="rectangular" color={"secondary"}>
-                    <Avatar variant="rounded" sx={{bgcolor: green[500]}} src={props.chat.Avatar}/>
+                    <Avatar variant="rounded" sx={{ bgcolor: green[500] }} src={props.chat.Avatar} />
                 </Badge>
             </ListItemIcon>
-            <ListItemText primary={props.chat.Title} secondary={lastMsg}/>
+            <ListItemText primary={props.chat.Title} secondary={lastMsg} primaryTypographyProps={{ style: { color: 'black'} }} secondaryTypographyProps={{ style: { fontSize: 13 } }} />
         </ListItemButton>
     </>
 }

@@ -1,12 +1,14 @@
-import {Avatar, Box, CircularProgress, Grid, IconButton, Typography} from "@mui/material"
-import React, {CSSProperties, useEffect, useState} from "react"
-import {Account} from "src/im/account"
-import {ChatMessage, SendingStatus} from "src/im/chat_message"
-import {IMUserInfo} from "src/im/def"
-import {Cache} from "src/im/cache"
-import {RouteComponentProps, withRouter} from "react-router-dom";
-import {MessageType} from "../../im/message";
-import {Audiotrack, FileDownload, Map} from "@mui/icons-material";
+import { Avatar, Box, CircularProgress, Grid, IconButton, Typography } from "@mui/material"
+import React, { CSSProperties, useEffect, useState } from "react"
+import { Account } from "src/im/account"
+import { ChatMessage, SendingStatus } from "src/im/chat_message"
+import { IMUserInfo } from "src/im/def"
+import { Cache } from "src/im/cache"
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { MessageType } from "../../im/message";
+import { Audiotrack, FileDownload, Map } from "@mui/icons-material";
+import { ImageViewer } from "../ImageViewer";
+import { Markdown } from "../Markdown";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -22,6 +24,8 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     const msg = props.msg
     let sender: IMUserInfo = Cache.getUserInfo(msg.From)
+
+    const [open, setOpen] = useState(false);
 
     const [sending, setSending] = useState(msg.Sending)
 
@@ -56,7 +60,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
     let direction: "row-reverse" | "row" = msg.IsMe ? "row-reverse" : "row"
 
     if (!msg.IsMe) {
-        name = <Box style={{padding: '0px 8px'}}>
+        name = <Box style={{ padding: '0px 8px' }}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
                 {sender.name}
             </Typography>
@@ -67,14 +71,20 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     if (msg.IsMe && sending === SendingStatus.Sending) {
         status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
-            <CircularProgress size={12}/>
+            <CircularProgress size={12} />
         </Box>
     }
 
     let msgContent: JSX.Element
     switch (msg.Type) {
         case MessageType.Image:
-            msgContent = <img src={msg.Content} alt={msg.Content}/>
+            msgContent = <>
+                <ImageViewer imageUrl={msg.Content} onClose={() => { setOpen(false) }} open={open} />
+                <img src={msg.Content} alt={msg.Content} width={'100%'} onClick={() => { setOpen(true) }} />
+            </>
+            break;
+        case MessageType.Markdown:
+            msgContent = <Markdown source={msg.Content} />
             break;
         case MessageType.Text:
             msgContent = <Typography variant={"body1"} color={'#444'}>{msg.Content}</Typography>
@@ -82,7 +92,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         case MessageType.Audio:
             msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
                 <IconButton color={'info'} title={'语音消息'}>
-                    <Audiotrack/>
+                    <Audiotrack />
                 </IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>语音消息</Typography>
             </Box>
@@ -90,7 +100,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         case MessageType.Location:
             msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
                 <IconButton color={'info'} title={'语音消息'}>
-                    <Map/>
+                    <Map />
                 </IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>位置</Typography>
             </Box>
@@ -98,7 +108,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         case MessageType.File:
             msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
                 <IconButton color={'info'} title={'语音消息'}>
-                    <FileDownload/>
+                    <FileDownload />
                 </IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>文件</Typography>
             </Box>
@@ -108,11 +118,11 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
             break;
     }
 
-    return <Grid container direction={direction}  px={0} py={1}>
+    return <Grid container direction={direction} px={0} py={1}>
         <Grid item xs={2} md={1} justifyContent={"center"}>
-            <AvatarComp ui={sender}/>
+            <AvatarComp ui={sender} />
         </Grid>
-        <Grid item xs={8} md={10}>
+        <Grid item xs={9} md={10}>
             {name}
             <Box display={"flex"} flexDirection={direction}>
                 <Box bgcolor={"white"} style={messageBoxStyle()}>
@@ -143,7 +153,7 @@ const AvatarComp = withRouter((props: Props) => {
     }
 
     return <>
-        <Avatar onClick={handleClick} style={{margin: "auto", cursor: isSelf ? 'default' : 'pointer'}}
-                src={props.ui.avatar}/>
+        <Avatar onClick={handleClick} style={{ margin: "auto", cursor: isSelf ? 'default' : 'pointer' }}
+            src={props.ui.avatar} />
     </>
 })

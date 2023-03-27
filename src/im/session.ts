@@ -1,14 +1,14 @@
-import {first, map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
-import {onNext} from "src/rx/next";
-import {timeStampSecToDate} from "src/utils/TimeUtils";
-import {Api} from "../api/api";
-import {SessionBean} from "../api/model";
-import {Account} from "./account";
-import {ChatMessage, SendingStatus} from "./chat_message";
-import {IMUserInfo} from "./def";
-import {Cache} from "./cache";
-import {Message, MessageType} from "./message";
-import {Ws} from "./ws";
+import { delay, first, map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
+import { onNext } from "src/rx/next";
+import { timeStampSecToDate } from "src/utils/TimeUtils";
+import { Api } from "../api/api";
+import { SessionBean } from "../api/model";
+import { Account } from "./account";
+import { ChatMessage, SendingStatus } from "./chat_message";
+import { IMUserInfo } from "./def";
+import { Cache } from "./cache";
+import { Message, MessageType } from "./message";
+import { Ws } from "./ws";
 
 enum SessionType {
     Single = 1,
@@ -74,10 +74,19 @@ export class Session {
         if (this.isGroup()) {
             this.Avatar = Cache.getChannelInfo(this.To)?.avatar ?? ""
             this.Title = Cache.getChannelInfo(this.To)?.name ?? ''
+            if (this.To == "the_world_channel") {
+                of("Hi, 我来了").pipe(
+                    delay(2000),
+                    mergeMap(msg => this.sendTextMessage(msg)),
+                ).subscribe(msg => {
+
+                })
+            }
             return of(this);
         } else {
             return Cache.loadUserInfo1(this.To)
                 .pipe(
+                    delay(500),
                     onNext(info => {
                         this.userInfo = info;
                         this.Title = info.name;

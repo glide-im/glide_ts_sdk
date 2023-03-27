@@ -55,6 +55,7 @@ export class Account {
     }
 
     public auth(): Observable<string> {
+        Cache.clean()
         return Api.auth(this.token)
             .pipe(
                 mergeMap(res => {

@@ -125,6 +125,12 @@ class cache {
         )
     }
 
+    public clean(){
+        // this.tempUserInfo.clear();
+        // TODO fix
+        localStorage.clear();
+    }
+
     private _readObject(key: string): any | null {
         const val = localStorage.getItem(key);
         if (val === null) {

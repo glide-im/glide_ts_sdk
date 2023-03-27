@@ -32,7 +32,7 @@ export function ChatRoomContainer(props: { sid: string }) {
         }
     }
 
-    return (<Box height={"600px"}>
+    return (<Box height={"100vh"}>
         <Box height={"60px"} paddingLeft={"16px"} color={'black'}>
             <Typography variant={"h6"} style={{lineHeight: "60px"}}>
                 {session.Title}
@@ -40,7 +40,7 @@ export function ChatRoomContainer(props: { sid: string }) {
         </Box>
         <Divider/>
 
-        <Box height={"458px"}>
+        <Box height={"calc(100vh - 60px - 82px)"}>
             {/*<Box height={"10%"}>*/}
             {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
             {/*</Box>*/}
@@ -82,7 +82,7 @@ export function ChatRoomContainerMobile() {
                     <ArrowBack/>
                 </IconButton>
                 <Typography variant="h6">
-                    {session?.Title ?? "无效会话"}
+                    {session?.Title ?? "-"}
                 </Typography>
             </Toolbar>
         </AppBar>

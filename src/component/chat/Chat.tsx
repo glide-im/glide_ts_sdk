@@ -27,11 +27,11 @@ export function Chat() {
         <Grid alignItems={"center"} container style={{height: "100%"}}>
 
             <Grid item xs={4} style={{height: "100%"}}>
-                <Box height={"25%"}>
+                <Box height={"21%"}>
                     <UserInfoComp/>
                 </Box>
                 <Divider/>
-                <Box overflow={"hidden"} height={"74%"} className="BeautyScrollBar">
+                <Box overflow={"hidden"} height={"77%"} className="BeautyScrollBar">
                     <SessionListView selected={sid} onSelect={null}/>
                 </Box>
             </Grid>

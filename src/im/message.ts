@@ -18,6 +18,7 @@ export enum MessageType {
     RedEnvelope = 8,
     Transfer = 9,
     System = 10,
+    Markdown = 11,
 }
 
 export const WebSocketUrl = process.env.REACT_APP_WS_URL;
