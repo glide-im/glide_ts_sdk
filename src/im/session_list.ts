@@ -2,7 +2,7 @@ import {delay, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {onNext} from "src/rx/next";
 import {Api} from "../api/api";
 import {Account} from "./account";
-import {Actions, Message} from "./message";
+import {CliCustomMessage, CommonMessage, Message} from "./message";
 import {getSID, Session} from "./session";
 
 export interface SessionListUpdateListener {
@@ -71,20 +71,21 @@ export class SessionList {
         return Array.from(this.sessionMap.values())
     }
 
-    public onMessage(action: Actions, message: Message) {
+    public onMessage(message: CommonMessage<Message | CliCustomMessage>) {
+        const action = message.action;
         const sessionType = action.indexOf("group") !== -1 ? 2 : 1
-        const target = sessionType === 2 ? message.to : message.from
+        const target = sessionType === 2 ? message.data.to : message.data.from
 
         const sid = getSID(sessionType, target);
         const s = this.sessionMap.get(sid);
 
         if (s !== undefined) {
-            s.onMessage(message)
+            s.onMessage(message.data as Message)
         } else {
             const ses = Session.create(target, sessionType)
             this.add(ses)
             ses.init().pipe(delay(500)).subscribe(() => {
-                ses.onMessage(message)
+                ses.onMessage(message.data as Message)
             })
         }
     }

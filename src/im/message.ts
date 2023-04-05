@@ -19,6 +19,10 @@ export enum MessageType {
     Transfer = 9,
     System = 10,
     Markdown = 11,
+
+    Steam = 100,
+    SteamFinish = 101,
+    SteamCancel = 102,
 }
 
 export const WebSocketUrl = process.env.REACT_APP_WS_URL;
@@ -63,8 +67,9 @@ export interface CommonMessage<T> {
     seq: number;
     action: string;
     data: T;
-    to: string | null;
-    extra: Map<string, string> | null;
+    to?: string | null;
+    from?: string | null;
+    extra?: Map<string, string> | null;
 }
 
 // 聊天消息
@@ -78,8 +83,6 @@ export interface Message {
     content: string;
     sendAt: number;
     status: number;
-    isMe?: boolean;
-    isMeToo?: boolean;
 }
 
 // 接收者收到确认请求
@@ -110,5 +113,6 @@ export interface CliCustomMessage {
     from: string;
     to: string;
     type: number;
+    id: string;
     content: string | null;
 }

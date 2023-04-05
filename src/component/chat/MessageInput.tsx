@@ -10,19 +10,27 @@ import {
     FormControl,
     Grid,
     IconButton,
+    InputBase,
     InputLabel,
     MenuItem,
+    Paper,
+    Popover,
     Select,
     TextField
 } from "@mui/material";
 import {
+    AttachFileRounded,
     EmojiEmotionsOutlined,
+    EmojiEmotionsRounded,
     FolderOutlined,
     ImageOutlined,
     KeyboardVoiceOutlined,
     LocationOnOutlined,
-    Send
+    Send,
+    SendRounded
 } from "@mui/icons-material";
+import {makeStyles} from "@material-ui/core/styles";
+import {grey} from "@mui/material/colors";
 
 
 export function MessageInput(props: { onSend: (msg: string, type: number) => void }) {
@@ -69,13 +77,15 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
                 <IconButton onClick={handleEmojiClick} size={"small"} color={"primary"} disabled={true}>
                     <EmojiEmotionsOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.File)} disabled={true}>
+                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.File)}
+                            disabled={true}>
                     <FolderOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Audio)} disabled={true}>
+                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Audio)}
+                            disabled={true}>
                     <KeyboardVoiceOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Location)} disabled={true}>
+                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Steam)}>
                     <LocationOnOutlined/>
                 </IconButton>
             </Box>
@@ -96,6 +106,83 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
         </Box>
     </>
 
+}
+
+export function MessageInputV2(props: { onSend: (msg: string, type: number) => void }) {
+
+    const input = useRef<HTMLInputElement>(null)
+    const [showImageDialog, setShowImageDialog] = useState(false)
+
+
+    const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+    const [open, setOpen] = React.useState(false);
+
+    const onSend = (msg: string) => {
+        const m = msg.trim();
+        if (m.length === 0) {
+            return
+        }
+        props.onSend(m, MessageType.Text)
+    }
+
+    const onEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+        setOpen(!open);
+    };
+
+    const handleSendClick = () => {
+        onSend(input.current.value)
+        input.current.value = ''
+    }
+    const onAttachFileClick = () => {
+
+    }
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            handleSendClick()
+        }
+    }
+    return <Grid container>
+        <Grid item xs={11}>
+            <Paper
+                component="form"
+                sx={{p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%', borderRadius:'100px'}}
+            >
+                <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }} anchorEl={anchorEl} transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }} open={open}>
+                    <EmojiList onclick={(e) => {
+                        input.current.value = input.current.value + e
+                        setOpen(false)
+                    }}/>
+                </Popover>
+                <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onEmojiClick}>
+                    <EmojiEmotionsRounded/>
+                </IconButton>
+                <InputBase inputRef={input}
+                           autoComplete={"off"}
+                           size={"medium"}
+                           sx={{ml: 1, flex: 1, fontFamily: 'MS-YaHei',}} fullWidth
+                           placeholder="说点什么"
+                           onKeyPress={handleKeyDown}
+                           inputProps={{'aria-label': 'search google maps'}}/>
+                <IconButton aria-describedby={'id1'} sx={{p: '10px'}}  onClick={onAttachFileClick}>
+                    <AttachFileRounded/>
+                </IconButton>
+            </Paper>
+        </Grid>
+        <Grid item xs={1} justifyContent="center" alignItems="center" display={"flex"}>
+            <Box sx={{bgcolor: grey[50], borderRadius: '50%'}}>
+                <IconButton color={'primary'} size={"large"} onClick={handleSendClick}>
+                    <SendRounded/>
+                </IconButton>
+            </Box>
+        </Grid>
+    </Grid>
 }
 
 function SendImageDialog(props: { open: boolean, callback: (url: string) => void }) {
@@ -138,4 +225,43 @@ function SendImageDialog(props: { open: boolean, callback: (url: string) => void
             </DialogActions>
         </Dialog>
     </Box>
+}
+
+
+const useStyles = makeStyles((theme) => ({
+    root: {
+        flexGrow: 1,
+        padding: theme.spacing(2),
+    },
+    paper: {
+        padding: theme.spacing(2),
+        textAlign: 'center',
+        color: theme.palette.text.secondary,
+    },
+}));
+
+const emojis = [
+    '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉', '😊',
+    '😋', '😎', '😍', '😘', '😗', '😙', '😚', '🙂', '🤗', '🤔',
+    '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
+];
+
+function EmojiList(props: { onclick: (emoji: string) => void }) {
+    const classes = useStyles();
+
+    return (
+        <Box>
+            <Grid container p={1}>
+                {emojis.map((emoji) => (
+                    <Grid item xs={2} key={emoji} justifyContent="center" alignItems="center" display={"flex"}
+                          width={10}>
+                        <IconButton size={"small"} onClick={() => props.onclick(emoji)}>
+                            {/*<EmojiFlagsSharp fontSize="large" />*/}
+                            <div>{emoji}</div>
+                        </IconButton>
+                    </Grid>
+                ))}
+            </Grid>
+        </Box>
+    );
 }

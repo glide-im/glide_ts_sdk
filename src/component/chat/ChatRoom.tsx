@@ -1,9 +1,9 @@
-import {AppBar, Box, Divider, IconButton, Toolbar, Typography} from "@mui/material";
+import {AppBar, Box, Container, Divider, IconButton, Toolbar, Typography} from "@mui/material";
 import React from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
 import {showSnack} from "../SnackBar";
-import {MessageInput} from "./MessageInput";
+import {MessageInput, MessageInputV2} from "./MessageInput";
 import {ArrowBack} from "@mui/icons-material";
 import {Loading} from "../Loading";
 import {useParams} from "react-router-dom";
@@ -39,19 +39,25 @@ export function ChatRoomContainer(props: { sid: string }) {
             </Typography>
         </Box>
         <Divider/>
+        <Box style={{
+            backgroundImage: `url(chat_bg.jpg)`,
+            backgroundRepeat: 'repeat',
+        }} width={'100%'}>
+            <Container maxWidth={'lg'}>
+                <Box height={"calc(100vh - 60px - 82px)"}>
+                    {/*<Box height={"10%"}>*/}
+                    {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
+                    {/*</Box>*/}
+                    <Box height={'100%'}>
+                        <SessionMessageList id={props.sid}/>
+                    </Box>
+                </Box>
 
-        <Box height={"calc(100vh - 60px - 82px)"}>
-            {/*<Box height={"10%"}>*/}
-            {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
-            {/*</Box>*/}
-            <Box height={'100%'}>
-                <SessionMessageList id={props.sid}/>
-            </Box>
-        </Box>
-        <Divider/>
+                <Box height={'80px'}>
+                    <MessageInputV2 onSend={sendMessage}/>
+                </Box>
+            </Container>
 
-        <Box height={'80px'}>
-            <MessageInput onSend={sendMessage}/>
         </Box>
     </Box>)
 }
@@ -87,11 +93,14 @@ export function ChatRoomContainerMobile() {
             </Toolbar>
         </AppBar>
 
-        <Box height={"calc(100vh - 138px)"}>
+        <Box height={"calc(100vh - 138px)"}  style={{
+            backgroundImage: `url(chat_bg.jpg)`,
+            backgroundRepeat: 'repeat',
+        }} width={'100%'}>
             {/*<Box height={"10%"}>*/}
             {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
             {/*</Box>*/}
-            <SessionMessageList id={sid}/>
+            <SessionMessageList id={sid} />
         </Box>
         <Box height={'80px'} bgcolor={"white"}>
             <MessageInput onSend={sendMessage}/>

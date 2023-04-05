@@ -33,7 +33,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
     return (
         <>
             <Hidden mdDown>
-                <Box height={'100vh'} width={'100%'} sx={{bgcolor: grey[100]}}>
+                <Box height={'100vh'} width={'100%'}>
                     <Switch>
                         <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
                         <Route path={`${match.url}/friends`} children={<ContactsList/>}/>

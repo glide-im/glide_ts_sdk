@@ -150,12 +150,14 @@ export class Account {
             // case Actions.NotifyContact:
             //     this.contacts.onNewContactNotify(m.data);
             //     break;
+            case Actions.MessageCli:
+                break;
             case Actions.NotifyGroup:
             case Actions.MessageChat:
             case Actions.MessageGroup:
             case Actions.MessageChatRecall:
             case Actions.MessageGroupRecall:
-                this.sessions.onMessage(m.action, m.data);
+                this.sessions.onMessage(m);
                 break;
             case Actions.NotifyKickOut:
                 alert("kick out");
