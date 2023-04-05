@@ -1,9 +1,9 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+import {makeStyles} from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import ReactMarkdown from 'react-markdown';
-import { Variant } from '@mui/material/styles/createTypography';
+import {Variant} from '@mui/material/styles/createTypography';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -75,7 +75,7 @@ const useStyles = makeStyles((theme) => ({
             padding: theme.spacing(0.2, 0.5),
             color: theme.palette.text.primary,
             borderRadius: 4,
-            whiteSpace: 'no-wrap', 
+            whiteSpace: 'no-wrap',
         },
     },
 }));
@@ -88,9 +88,9 @@ export function MarkdownRenderer(props) {
             <ReactMarkdown
                 {...props}
                 renderers={{
-                    root: ({ children }) => <Typography component="div">{children}</Typography>,
-                    paragraph: ({ children }) => <Typography variant="body1">{children}</Typography>,
-                    heading: ({ level, children }) => {
+                    root: ({children}) => <Typography component="div">{children}</Typography>,
+                    paragraph: ({children}) => <Typography variant="body1">{children}</Typography>,
+                    heading: ({level, children}) => {
                         const variant: Variant | null = `h${level}` as Variant | null;
                         return (
                             <Typography variant={variant} gutterBottom>
@@ -98,22 +98,22 @@ export function MarkdownRenderer(props) {
                             </Typography>
                         );
                     },
-                    link: ({ href, children }) => (
+                    link: ({href, children}) => (
                         <Typography variant="body1" component="a" href={href} target="_blank" rel="noopener">
                             {children}
                         </Typography>
                     ),
-                    list: ({ ordered, children }) => {
+                    list: ({ordered, children}) => {
                         const Component = ordered ? 'ol' : 'ul';
                         return <Box component={Component}>{children}</Box>;
                     },
-                    listItem: ({ children }) => (
+                    listItem: ({children}) => (
                         <Box component="li">
                             <Typography variant="body1">{children}</Typography>
                         </Box>
                     ),
-                    blockquote: ({ children }) => <blockquote>{children}</blockquote>,
-                    code: ({ language, value }) => (
+                    blockquote: ({children}) => <blockquote>{children}</blockquote>,
+                    code: ({language, value}) => (
                         <pre>
                             <code className={`language-${language}`}>{value}</code>
                         </pre>

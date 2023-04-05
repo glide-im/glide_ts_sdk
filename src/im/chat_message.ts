@@ -1,6 +1,9 @@
 import {MessageBean} from "src/api/model";
 import {Account} from "./account";
-import {Message, MessageType} from "./message";
+import {CliCustomMessage, Message, MessageType} from "./message";
+import {Cache} from "./cache";
+import {Observable} from "rxjs";
+import {IMUserInfo} from "./def";
 
 export enum SendingStatus {
     Unknown,
@@ -51,6 +54,20 @@ export class ChatMessage {
         return ret;
     }
 
+    public static fromClientCustomMessage(m: CliCustomMessage): ChatMessage {
+        const ret = new ChatMessage();
+        ret.From = m.from;
+        ret.To = m.to;
+        ret.Content = m.content;
+        ret.Mid = 0;
+        ret.SendAt = Date.now();
+        ret.IsMe = m.from === Account.getInstance().getUID();
+        ret.Status = SendingStatus.Sent;
+        ret.Target = ret.IsMe ? m.to : m.from
+        ret.OrderKey = Date.now()
+        return ret;
+    }
+
     public static create(m: Message): ChatMessage {
         const ret = new ChatMessage();
         ret.From = m.from;
@@ -66,12 +83,27 @@ export class ChatMessage {
         return ret;
     }
 
-    public getDisplayContent(): string {
+    public getDisplayTime(): string {
+        const date = new Date(this.SendAt);
+        return date.getHours() + ":" + date.getMinutes();
+    }
+
+    public getUserInfo(): Observable<IMUserInfo> {
         switch (this.Type) {
             case 100:
-                return `用户 ${this.Content} 上线`;
             case 101:
-                return `用户 ${this.Content} 离开`;
+                return Cache.loadUserInfo1(this.Content)
+        }
+        return Cache.loadUserInfo1(this.From)
+    }
+
+    public getDisplayContent(): string {
+        const userInfo = Cache.getUserInfo(this.Content);
+        switch (this.Type) {
+            case 100:
+                return `${userInfo.name} 加入频道`;
+            case 101:
+                return `${userInfo.name} 离开频道`;
             case MessageType.Image:
                 return '[图片]'
             case MessageType.Audio:

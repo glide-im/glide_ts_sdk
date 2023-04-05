@@ -1,4 +1,4 @@
-import {Box, CircularProgress, Container, Grid} from "@mui/material";
+import {Box, Grid} from "@mui/material";
 import React, {useEffect, useState} from 'react';
 import {HashRouter, Redirect, Route, Switch} from "react-router-dom";
 import {Api} from "./api/api";
@@ -66,10 +66,9 @@ function App() {
     return (
         <div className="App">
             <SnackBar/>
-            <Container color={"text.disabled"} sx={{padding: "0px", height: "100vh"}}>
+            <Box sx={{height: "100vh", width: '100%'}}>
                 <HashRouter>
-                    <Grid container color={"text.disabled"} style={{height: "100vh"}}
-                          alignItems={"center"} bgcolor={'whitesmoke'}>
+                    <Grid container style={{height: "100vh"}} alignItems={"center"} bgcolor={'white'}>
 
                         {state.isLoading ? <Loading/> :
                             <Switch>
@@ -85,7 +84,8 @@ function App() {
                                 </Route>
                                 <Route path={'/t'} exact={true}>
                                     <Box height={'200px'} width={'100%'} bgcolor={"blue"}>
-                                        <MessageInput onSend={()=>{}}/>
+                                        <MessageInput onSend={() => {
+                                        }}/>
                                     </Box>
                                 </Route>
                                 <Route path={"/im"}>
@@ -98,9 +98,10 @@ function App() {
                         }
                     </Grid>
                 </HashRouter>
-            </Container>
+            </Box>
         </div>
     )
         ;
 }
+
 export default App;

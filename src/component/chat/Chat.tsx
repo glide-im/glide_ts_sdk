@@ -18,25 +18,26 @@ import {ChatRoomContainer} from "./ChatRoom";
 import {SessionListView} from "./SessionListView";
 import {Account} from "../../im/account";
 import {State, Ws} from "../../im/ws";
+import {grey} from "@mui/material/colors";
 
 export function Chat() {
 
     const {sid} = useParams<{ sid: string }>();
 
-    return <Box style={{height: "100%"}} >
+    return <Box style={{height: "100%"}}>
         <Grid alignItems={"center"} container style={{height: "100%"}}>
 
-            <Grid item xs={4} style={{height: "100%"}}>
-                <Box height={"21%"}>
+            <Grid item xs={3} style={{height: "100%"}}>
+                <Box>
                     <UserInfoComp/>
                 </Box>
                 <Divider/>
-                <Box overflow={"hidden"} height={"77%"} className="BeautyScrollBar">
+                <Box overflow={"hidden"} className="BeautyScrollBar">
                     <SessionListView selected={sid} onSelect={null}/>
                 </Box>
             </Grid>
 
-            <Grid item xs={8} style={{height: "100%"}}>
+            <Grid item xs={9} style={{height: "100%"}}>
                 <Divider orientation={"vertical"} style={{float: "left"}}/>
                 <ChatRoomContainer sid={sid}/>
             </Grid>
@@ -85,22 +86,24 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
     return <Box>
         <Grid container justifyContent={"center"}>
             <Box mt={2}>
-                <IconButton onClick={onAvatarClick}>
-                    <Avatar src={u.avatar}/>
+                <IconButton onClick={onAvatarClick} size={'large'}>
+                    <Avatar src={u.avatar} sx={{width: 80, height: 80, bgcolor: grey[400]}}/>
                 </IconButton>
             </Box>
         </Grid>
         <Box width={"100%"} color={"#666"}>
-            <Typography variant={"body2"} textAlign={"center"}>{u.name}</Typography>
-            <Typography variant={"body2"} textAlign={"center"}>uid: {u.uid}</Typography>
+            <Typography variant={"h5"} fontWeight={"bold"} color={"black"} textAlign={"center"}>{u.name}</Typography>
+            <Typography variant={"body1"} textAlign={"center"}>UID: {u.uid}</Typography>
         </Box>
-        <Box width={'100%'}>
-            <Box ml={1} mr={1} display={"flex"}>
+        <Box width={'100%'} mt={1}>
+            <Box m={1} display={"flex"} justifyContent={"flex-end"} gap={1}>
+                <Button size={'small'} onClick={() => window.open("https://github.com/glide-im/glide_ts_sdk")}>
+                    GitHub
+                </Button>
                 <Button size={'small'} onClick={onExitClick}>
                     退出登录
                 </Button>
                 <CreateSessionButton/>
-
                 {online ? <></> :
                     <Button onClick={reconnect} size={'small'} color={'warning'}>
                         重新连接
