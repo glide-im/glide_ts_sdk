@@ -151,7 +151,6 @@ export class Account {
             //     this.contacts.onNewContactNotify(m.data);
             //     break;
             case Actions.MessageCli:
-                break;
             case Actions.NotifyGroup:
             case Actions.MessageChat:
             case Actions.MessageGroup:

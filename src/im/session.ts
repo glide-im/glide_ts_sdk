@@ -1,14 +1,15 @@
-import {delay, first, map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
-import {onNext} from "src/rx/next";
-import {timeStampSecToDate} from "src/utils/TimeUtils";
-import {Api} from "../api/api";
-import {SessionBean} from "../api/model";
-import {Account} from "./account";
-import {ChatMessage, SendingStatus} from "./chat_message";
-import {IMUserInfo} from "./def";
-import {Cache} from "./cache";
-import {Message, MessageType} from "./message";
-import {Ws} from "./ws";
+import { delay, first, map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
+import { onNext } from "src/rx/next";
+import { timeStampSecToDate } from "src/utils/TimeUtils";
+import { Api } from "../api/api";
+import { SessionBean } from "../api/model";
+import { Account } from "./account";
+import { ChatMessage, SendingStatus } from "./chat_message";
+import { IMUserInfo } from "./def";
+import { Cache } from "./cache";
+import { Actions, CliCustomMessage, Message, MessageType } from "./message";
+import { Ws } from "./ws";
+import { makeStyles } from "@mui/material";
 
 enum SessionType {
     Single = 1,
@@ -34,7 +35,7 @@ export class Session {
     private userInfo: IMUserInfo | null = null;
 
     private messageList = new Array<ChatMessage>();
-    private messageMap = new Map<number, ChatMessage>();
+    private messageMap = new Map<string, ChatMessage>();
 
     private messageListener: ((message: ChatMessage) => void) | null = null;
     private sessionUpdateListener: SessionUpdateListener | null = null;
@@ -139,9 +140,16 @@ export class Session {
         }
     }
 
-    public onMessage(message: Message) {
-        console.log("Session", "onMessage", this.getSID(), message.type, message.content);
+
+
+    public onMessage(action: string, message: Message) {
         const c = ChatMessage.create(message)
+        const mid = c.getId();
+        console.log("Session", "onMessage", mid, this.getSID(), message.type, message.content);
+        if (action == Actions.MessageCli && this.messageMap.has(mid)) {
+            this.messageMap.get(mid).update2(message)
+            return;
+        }
         Cache.cacheUserInfo(message.from).then(() => {
             this.addMessageByOrder(c);
         })
@@ -184,14 +192,14 @@ export class Session {
     }
 
     private addMessageByOrder(message: ChatMessage) {
-        if (message.From !== Account.getInstance().getUID() && Account.getInstance().getSessionList().currentChatTo !== this.To) {
+        if (message.From !== Account.getInstance().getUID() && Account.getInstance().getSessionList().currentSession !== this.ID) {
             this.UnreadCount++;
         }
-        if (this.messageMap.has(message.OrderKey)) {
-            this.messageMap.get(message.OrderKey).update(message);
+        if (this.messageMap.has(message.getId())) {
+            this.messageMap.get(message.getId()).update(message);
         } else {
             let index = this.messageList.findIndex(msg => msg.OrderKey > message.OrderKey);
-            this.messageMap.set(message.OrderKey, message);
+            this.messageMap.set(message.getId(), message);
             if (index === -1) {
                 this.messageList.push(message);
             } else {
@@ -200,7 +208,7 @@ export class Session {
             this.messageListener?.(message)
         }
 
-        if (this.messageList.length > 0 && this.messageList[this.messageList.length - 1].Mid === message.Mid) {
+        if (this.messageList.length > 0 && this.messageList[this.messageList.length - 1].getId() === message.getId()) {
             console.log("Session", "update session last message", this.getSID(), message.getDisplayContent());
             this.LastMessage = message.getDisplayContent();
             if (this.Type === 2) {

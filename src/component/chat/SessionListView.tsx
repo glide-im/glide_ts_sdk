@@ -46,7 +46,7 @@ export const SessionListView = withRouter((props: SessionListProps) => {
     const onSelect = (s: Session) => {
         s.clearUnread()
         setCurrentSession(s.ID)
-        sessionList.currentChatTo = s.ID
+        sessionList.currentSession = s.ID
         props.history.push(`/im/session/${s.ID}`)
         props.onSelect?.(s.ID)
     }
