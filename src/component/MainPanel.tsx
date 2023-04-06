@@ -40,7 +40,7 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
                         <Route path={`${match.url}/square`} children={<Square/>}/>
                         <Route path={`${match.url}/session`} exact={true}>
                             <Redirect
-                                to={`${match.url}/session/${Account.getInstance().getSessionList().currentChatTo}`}/>
+                                to={`${match.url}/session/${Account.getInstance().getSessionList().currentSession}`}/>
                         </Route>
                         <Route path={`${match.url}/`} exact={true}>
                             <Redirect to={`${match.url}/session/`}/>

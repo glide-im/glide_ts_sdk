@@ -18,6 +18,7 @@ export interface MessageUpdateListener {
 
 export class ChatMessage {
 
+    public CliId: string;
     public From: string;
     public To: string;
     public Content: string;
@@ -34,10 +35,13 @@ export class ChatMessage {
 
     public Sending: SendingStatus = SendingStatus.Unknown;
 
-    private updateListener: MessageUpdateListener | null = null;
+    private updateListener: Array<MessageUpdateListener> = [];
 
-    public setUpdateListener(l: MessageUpdateListener): void {
-        this.updateListener = l;
+    public addUpdateListener(l: MessageUpdateListener): () => void {
+        this.updateListener.push(l)
+        return () => {
+            this.updateListener.unshift(l)
+        }
     }
 
     public static create2(m: MessageBean, type: number): ChatMessage {
@@ -54,20 +58,6 @@ export class ChatMessage {
         return ret;
     }
 
-    public static fromClientCustomMessage(m: CliCustomMessage): ChatMessage {
-        const ret = new ChatMessage();
-        ret.From = m.from;
-        ret.To = m.to;
-        ret.Content = m.content;
-        ret.Mid = 0;
-        ret.SendAt = Date.now();
-        ret.IsMe = m.from === Account.getInstance().getUID();
-        ret.Status = SendingStatus.Sent;
-        ret.Target = ret.IsMe ? m.to : m.from
-        ret.OrderKey = Date.now()
-        return ret;
-    }
-
     public static create(m: Message): ChatMessage {
         const ret = new ChatMessage();
         ret.From = m.from;
@@ -78,6 +68,7 @@ export class ChatMessage {
         ret.IsMe = m.from === Account.getInstance().getUID();
         ret.Status = m.status
         ret.Type = m.type
+        ret.CliId = m.cliMid
         ret.Target = ret.IsMe ? m.to : m.from
         ret.OrderKey = m.sendAt
         return ret;
@@ -86,6 +77,11 @@ export class ChatMessage {
     public getDisplayTime(): string {
         const date = new Date(this.SendAt);
         return date.getHours() + ":" + date.getMinutes();
+    }
+
+    public getId(): string {
+        // TODO fixme
+        return this.SendAt.toString()
     }
 
     public getUserInfo(): Observable<IMUserInfo> {
@@ -119,6 +115,25 @@ export class ChatMessage {
         }
     }
 
+    public update2(m: Message) {
+        switch (m.type) {
+            case MessageType.Steam:
+                this.Content = this.Content + m.content
+                this.Status = 1000
+                break;
+            case MessageType.SteamCancel:
+                this.Status = 1001
+                break;
+            case MessageType.SteamFinish:
+                this.Status =1002
+                break;
+            default:
+        }
+        this.updateListener.forEach((l) => {
+            l(this)
+        })
+    }
+
     public update(m: ChatMessage): void {
         this.From = m.From;
         this.To = m.To;
@@ -131,8 +146,8 @@ export class ChatMessage {
         this.Type = m.Type;
         this.OrderKey = m.SendAt
 
-        if (this.updateListener) {
-            this.updateListener(this);
-        }
+        this.updateListener.forEach((l) => {
+            l(this)
+        })
     }
 }

@@ -1,9 +1,9 @@
-import {delay, map, mergeMap, Observable, of, toArray} from "rxjs";
-import {onNext} from "src/rx/next";
-import {Api} from "../api/api";
-import {Account} from "./account";
-import {CliCustomMessage, CommonMessage, Message} from "./message";
-import {getSID, Session} from "./session";
+import { delay, map, mergeMap, Observable, of, toArray } from "rxjs";
+import { onNext } from "src/rx/next";
+import { Api } from "../api/api";
+import { Account } from "./account";
+import { CliCustomMessage, CommonMessage, Message } from "./message";
+import { getSID, Session } from "./session";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
@@ -12,7 +12,7 @@ export interface SessionListUpdateListener {
 export class SessionList {
 
     private account: Account;
-    public currentChatTo: string = "0";
+    public currentSession: string = "0";
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
     private sessionMap: Map<string, Session> = new Map<string, Session>()
@@ -80,12 +80,12 @@ export class SessionList {
         const s = this.sessionMap.get(sid);
 
         if (s !== undefined) {
-            s.onMessage(message.data as Message)
+            s.onMessage(action, message.data as Message)
         } else {
             const ses = Session.create(target, sessionType)
             this.add(ses)
             ses.init().pipe(delay(500)).subscribe(() => {
-                ses.onMessage(message.data as Message)
+                ses.onMessage(action, message.data as Message)
             })
         }
     }
@@ -111,7 +111,7 @@ export class SessionList {
     }
 
     public clear() {
-        this.currentChatTo = ""
+        this.currentSession = ""
         this.sessionMap = new Map<string, Session>()
         this.chatListUpdateListener?.([])
     }

@@ -1,5 +1,5 @@
-import {map, mergeMap, Observable, Observer, timeout as timeoutOpt} from 'rxjs';
-import {AckMessage, AckRequest, Actions, CliCustomMessage, CommonMessage, Message} from './message';
+import { map, mergeMap, Observable, Observer, timeout as timeoutOpt } from 'rxjs';
+import { AckMessage, AckRequest, Actions, CliCustomMessage, CommonMessage, Message } from './message';
 
 export type Listener = (msg: CommonMessage<any>) => void;
 
@@ -301,6 +301,8 @@ class WebSocketClient {
             case Actions.MessageChatRecall:
                 const m = msg.data as Message;
                 this.ackRequestMessage(m.from, m.mid);
+                break;
+            case Actions.MessageCli:
                 break;
             default:
                 WebSocketClient.slog('onIMMessage', 'unknown message', msg);

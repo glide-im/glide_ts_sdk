@@ -20,9 +20,12 @@ export enum MessageType {
     System = 10,
     Markdown = 11,
 
-    Steam = 100,
-    SteamFinish = 101,
-    SteamCancel = 102,
+    UserOnline = 100,
+    UserOffline = 101,
+
+    Steam = 1000,
+    SteamFinish = 1001,
+    SteamCancel = 1002,
 }
 
 export const WebSocketUrl = process.env.REACT_APP_WS_URL;
@@ -113,6 +116,6 @@ export interface CliCustomMessage {
     from: string;
     to: string;
     type: number;
-    id: string;
+    id: number;
     content: string | null;
 }
