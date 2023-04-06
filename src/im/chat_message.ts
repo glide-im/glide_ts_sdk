@@ -1,9 +1,9 @@
-import {MessageBean} from "src/api/model";
-import {Account} from "./account";
-import {CliCustomMessage, Message, MessageType} from "./message";
-import {Cache} from "./cache";
-import {Observable} from "rxjs";
-import {IMUserInfo} from "./def";
+import { MessageBean } from "src/api/model";
+import { Account } from "./account";
+import { CliCustomMessage, Message, MessageType } from "./message";
+import { Cache } from "./cache";
+import { Observable } from "rxjs";
+import { IMUserInfo } from "./def";
 
 export enum SendingStatus {
     Unknown,
@@ -98,12 +98,14 @@ export class ChatMessage {
     }
 
     public getDisplayContent(): string {
-        const userInfo = Cache.getUserInfo(this.Content);
+        const userInfo = Cache.getUserInfo(this.Content) ?? {
+            name: this.Content
+        }
         switch (this.Type) {
             case 100:
-                return `${userInfo.name} 加入频道`;
+                return this.IsMe ? "你已加入频道" : `${userInfo.name} 加入频道`;
             case 101:
-                return `${userInfo.name} 离开频道`;
+                return this.IsMe ? "你已离开频道" : `${userInfo.name} 离开频道`;
             case MessageType.Image:
                 return '[图片]'
             case MessageType.Audio:
