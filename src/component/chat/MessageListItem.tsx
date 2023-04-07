@@ -142,7 +142,8 @@ function MessageContent(props: { msg: ChatMessage }) {
                 }} />
             </>
             break;
-        case MessageType.Markdown:
+            // TODO
+        case MessageType.Markdown, MessageType.Steam:
             msgContent = <Markdown source={content} />
             break;
         case MessageType.Text:

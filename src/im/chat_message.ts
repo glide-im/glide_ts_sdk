@@ -116,6 +116,7 @@ export class ChatMessage {
     }
 
     public update2(m: Message) {
+        // TODO fixme
         switch (m.type) {
             case MessageType.Steam:
                 this.Content = this.Content + m.content
