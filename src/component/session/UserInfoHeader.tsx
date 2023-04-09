@@ -1,3 +1,7 @@
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Account} from "../../im/account";
+import React, {useEffect, useRef, useState} from "react";
+import {State, Ws} from "../../im/ws";
 import {
     Avatar,
     Box,
@@ -6,48 +10,15 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
     Grid,
     IconButton,
     TextField,
     Typography
 } from "@mui/material";
-import React, {useEffect, useRef, useState} from "react";
-import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
-import {ChatRoomContainer} from "./ChatRoom";
-import {SessionListView} from "./SessionListView";
-import {Account} from "../../im/account";
-import {State, Ws} from "../../im/ws";
 import {grey} from "@mui/material/colors";
 
-export function Chat() {
 
-    const {sid} = useParams<{ sid: string }>();
-
-    return <Box style={{height: "100%"}}>
-        <Grid alignItems={"center"} container style={{height: "100%"}}>
-
-            <Grid item xs={3} style={{height: "100%"}}>
-                <Box>
-                    <UserInfoComp/>
-                </Box>
-                <Divider/>
-                <Box overflow={"hidden"} className="BeautyScrollBar">
-                    <SessionListView selected={sid} onSelect={null}/>
-                </Box>
-            </Grid>
-
-            <Grid item xs={9} style={{height: "100%"}}>
-                <Divider orientation={"vertical"} style={{float: "left"}}/>
-                <ChatRoomContainer sid={sid}/>
-            </Grid>
-        </Grid>
-
-    </Box>
-}
-
-
-const UserInfoComp = withRouter((props: RouteComponentProps) => {
+export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
 
     let u = Account.getInstance().getUserInfo()
     if (u === null) {
@@ -113,6 +84,7 @@ const UserInfoComp = withRouter((props: RouteComponentProps) => {
         </Box>
     </Box>
 })
+
 
 function CreateSessionButton() {
 

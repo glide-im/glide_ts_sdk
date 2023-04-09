@@ -4,7 +4,6 @@ import {Avatar, Box, Button, Grid, IconButton, Paper, TextField, Typography} fro
 import React, {useRef, useState} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
-import {Version} from '../version';
 import {SettingDialog} from './SettingsDialog';
 
 export const Auth = withRouter((props: RouteComponentProps) => {
@@ -96,7 +95,6 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                         <Button variant="contained" color="primary" onClick={submit}>登录</Button>
                     </Grid>
                 </Grid>
-                <Version/>
             </Paper>
         </Grid>
     )

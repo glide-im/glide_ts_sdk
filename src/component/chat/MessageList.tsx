@@ -2,7 +2,7 @@ import {Box, List, ListItem, Typography} from "@mui/material";
 import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react";
 import {Account} from "src/im/account";
 import {ChatMessage} from "src/im/chat_message";
-import {ChatMessageItem} from "./MessageListItem";
+import {ChatMessageItem} from "./Message";
 
 export function SessionMessageList(props: { id: string }) {
 
@@ -95,7 +95,7 @@ const messageListStyle: CSSProperties = {
 
 type MessageListItemData = string | ChatMessage
 
-export function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
+function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
 
     const messages: MessageListItemData[] = useMemo(() => {
         return ["", ...props.messages]
