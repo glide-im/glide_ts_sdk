@@ -2,7 +2,7 @@ import {Avatar, Box, Button, Grid, Paper, TextField, Typography} from "@mui/mate
 import React, {useRef} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Api} from "src/api/api";
-import {showSnack} from "../SnackBar";
+import {showSnack} from "../widget/SnackBar";
 
 export const Register = withRouter((props: RouteComponentProps) => {
 

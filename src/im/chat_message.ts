@@ -1,9 +1,9 @@
-import { MessageBean } from "src/api/model";
-import { Account } from "./account";
-import { CliCustomMessage, Message, MessageType } from "./message";
-import { Cache } from "./cache";
-import { Observable } from "rxjs";
-import { IMUserInfo } from "./def";
+import {MessageBean} from "src/api/model";
+import {Account} from "./account";
+import {Message, MessageStatus, MessageType} from "./message";
+import {Cache} from "./cache";
+import {Observable} from "rxjs";
+import {IMUserInfo} from "./def";
 
 export enum SendingStatus {
     Unknown,
@@ -23,6 +23,7 @@ export class ChatMessage {
     public To: string;
     public Content: string;
     public Mid: number;
+    public Seq: number;
     public SendAt: number;
 
     public Status: number;
@@ -35,6 +36,7 @@ export class ChatMessage {
 
     public Sending: SendingStatus = SendingStatus.Unknown;
 
+    private streamMessages = new Array<Message>();
     private updateListener: Array<MessageUpdateListener> = [];
 
     public addUpdateListener(l: MessageUpdateListener): () => void {
@@ -71,6 +73,7 @@ export class ChatMessage {
         ret.CliId = m.cliMid
         ret.Target = ret.IsMe ? m.to : m.from
         ret.OrderKey = m.sendAt
+        ret.Seq = m.seq
         return ret;
     }
 
@@ -116,17 +119,31 @@ export class ChatMessage {
     }
 
     public update2(m: Message) {
-        // TODO fixme
-        switch (m.type) {
-            case MessageType.Steam:
-                this.Content = this.Content + m.content
-                this.Status = 1000
+        if (m.type !== MessageType.StreamMarkdown && m.type !== MessageType.StreamText) {
+            console.log("update a non stream message")
+            return;
+        }
+        this.Status = m.status
+        switch (m.status) {
+            case MessageStatus.StreamStart:
                 break;
-            case MessageType.SteamCancel:
-                this.Status = 1001
+            case MessageStatus.StreamSending:
+                if (!this.Content) {
+                    this.Content = ""
+                }
+                this.streamMessages.push(m)
+                this.streamMessages = this.streamMessages.sort((a, b) => {
+                    return a.seq - b.seq
+                })
+                this.Content = this.streamMessages.map((m) => m.content).join("")
                 break;
-            case MessageType.SteamFinish:
-                this.Status =1002
+            case MessageStatus.StreamFinish:
+                break;
+            case MessageStatus.StreamCancel:
+                this.Content = m.content
+                setTimeout(() => {
+                    this.streamMessages = []
+                }, 2000)
                 break;
             default:
         }

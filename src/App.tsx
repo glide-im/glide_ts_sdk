@@ -4,14 +4,13 @@ import {HashRouter, Redirect, Route, Switch} from "react-router-dom";
 import {Api} from "./api/api";
 import './App.css';
 import {Register} from "./component/auth/Register";
-import {MainPanel} from "./component/MainPanel";
-import {showSnack, SnackBar} from "./component/SnackBar";
+import {AppMainPanel} from "./component/AppMainPanel";
+import {showSnack, SnackBar} from "./component/widget/SnackBar";
 import {Account} from "./im/account";
 import {getCookie} from "./utils/Cookies";
 import {Guest} from "./component/auth/Guest";
-import {MessageInput} from "./component/chat/MessageInput";
-import {Loading} from "./component/Loading";
-
+import {Loading} from "./component/widget/Loading";
+import {Subscription} from "rxjs";
 
 function App() {
 
@@ -33,10 +32,10 @@ function App() {
     }, [])
 
     useEffect(() => {
-        if (authed) {
-            console.log("start auth");
 
-            Account.getInstance().auth()
+        let subscription: Subscription | null = null
+        if (authed) {
+            subscription = Account.getInstance().auth()
                 .subscribe({
                     next: (r) => {
                         console.log(r)
@@ -50,7 +49,6 @@ function App() {
                         showSnack(e.message)
                     },
                     complete: () => {
-                        console.log("auth complete");
                         setState({
                             isAuthenticated: true,
                             isLoading: false,
@@ -60,15 +58,27 @@ function App() {
         } else {
             Account.getInstance().logout()
         }
+        return (() => {
+            Account.getInstance().logout()
+            subscription?.unsubscribe()
+        })
     }, [authed])
 
 
     return (
         <div className="App">
             <SnackBar/>
-            <Box sx={{height: "100vh", width: '100%'}}>
+            <Box sx={{width: '100%', position: 'relative'}}>
+                <Box sx={{
+                    position: 'absolute',
+                    backgroundImage: "url('./app_bg.jpg')",
+                    zIndex: -1,
+                    width: '100%',
+                    height: '100vh',
+                    filter: 'saturate(0.6)',
+                }}/>
                 <HashRouter>
-                    <Grid container style={{height: "100vh"}} alignItems={"center"} bgcolor={'white'}>
+                    <Grid container style={{height: "100vh"}} alignItems={"center"}>
 
                         {state.isLoading ? <Loading/> :
                             <Switch>
@@ -82,14 +92,10 @@ function App() {
                                 <Route path={"/auth"} exact={true}>
                                     <Redirect to={'/auth/signin'}/>
                                 </Route>
-                                <Route path={'/t'} exact={true}>
-                                    <Box height={'200px'} width={'100%'} bgcolor={"blue"}>
-                                        <MessageInput onSend={() => {
-                                        }}/>
-                                    </Box>
-                                </Route>
                                 <Route path={"/im"}>
-                                    <MainPanel/>
+                                    <Box bgcolor={'white'} width={'100%'}>
+                                        <AppMainPanel/>
+                                    </Box>
                                 </Route>
                                 <Route path={"/"} strict={true}>
                                     {state.isAuthenticated ? <Redirect to={'/im'}/> : <Redirect to={'/auth'}/>}
@@ -100,8 +106,7 @@ function App() {
                 </HashRouter>
             </Box>
         </div>
-    )
-        ;
+    );
 }
 
 export default App;

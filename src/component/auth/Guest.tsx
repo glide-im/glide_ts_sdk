@@ -1,9 +1,9 @@
-import { Settings, GitHub } from "@mui/icons-material";
-import { Avatar, Box, Button, Grid, Hidden, IconButton, Paper, TextField } from "@mui/material";
-import { useRef, useState } from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { Account } from "../../im/account";
-import { SettingDialog } from "./SettingsDialog";
+import {GitHub, Settings} from "@mui/icons-material";
+import {Avatar, Box, Button, Grid, Hidden, IconButton, Paper, TextField} from "@mui/material";
+import {useRef, useState} from "react";
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Account} from "../../im/account";
+import {SettingDialog} from "./SettingsDialog";
 
 
 export const Guest = withRouter((props: RouteComponentProps) => {
@@ -36,35 +36,35 @@ export const Guest = withRouter((props: RouteComponentProps) => {
         <>
             <SettingDialog show={open} onClose={() => {
                 setOpen(false)
-            }} />
-            <Box style={{ position: "absolute", display: "block", top: "10px", right: "10px" }}>
+            }}/>
+            <Box style={{position: "absolute", display: "block", top: "10px", right: "10px"}}>
                 <IconButton onClick={onSettingClick}>
-                    <Settings />
+                    <Settings/>
                 </IconButton>
                 <IconButton onClick={onGithubClick}>
-                    <GitHub />
+                    <GitHub/>
                 </IconButton>
             </Box>
             <Hidden mdDown>
                 <Grid container justifyContent={"center"}>
                     <Paper variant={"outlined"}>
-                        <Grid container sx={{ p: 2 }} p={2}>
-                            <Grid container>
-                                <Grid container justifyContent={"center"} mt={2}>
-                                    <Avatar sizes={"100px"} />
+                        <Grid container sx={{p: 2}} p={2}>
+                            <Grid item xs={12}>
+                                <Grid item justifyContent={"center"} xs={12} container>
+                                    <Avatar src={'./logo.png'} sx={{width: 50, height: 50}}/>
                                 </Grid>
 
-                                <Grid container justifyContent={"center"} mt={2}>
+                                <Grid item justifyContent={"center"} xs={12} mt={4}>
                                     <TextField inputRef={accountInput} autoFocus margin="dense" id="account"
-                                        label="你的昵称 (不填随机)"
-                                        type="text"
-                                        fullWidth />
+                                               label="输入昵称 (不填随机)"
+                                               type="text"
+                                               fullWidth/>
                                 </Grid>
                             </Grid>
                             <Grid container mt={4} mb={2}>
                                 <Grid xs={8}>
                                     <Button onClick={() => props.history.push('/auth/signup')}
-                                        disabled={true}>注册账号</Button>
+                                            disabled={true}>注册账号</Button>
                                 </Grid>
                                 <Grid xs={4} justifyContent={"right"} display={"flex"}>
                                     <Button variant="contained" color="primary" onClick={onSubmit}>游客登录</Button>
@@ -75,17 +75,17 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                 </Grid>
             </Hidden>
             <Hidden mdUp>
-                <Grid container spacing={2} p={2}>
+                <Grid container spacing={2} p={2} bgcolor={'white'}>
                     <Grid item xs={12}>
                         <Grid item justifyContent={"center"} xs={12} container>
-                            <Avatar sizes={"100px"} />
+                            <Avatar src={'./logo.png'} sx={{width: 50, height: 50}}/>
                         </Grid>
 
                         <Grid item justifyContent={"center"} xs={12} mt={4}>
                             <TextField inputRef={accountInput} autoFocus margin="dense" id="account"
-                                label="输入一个好听的昵称"
-                                type="text"
-                                fullWidth />
+                                       label="输入昵称 (不填随机)"
+                                       type="text"
+                                       fullWidth/>
                         </Grid>
                     </Grid>
                     <Grid item xs={12}>
@@ -94,7 +94,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                         </Grid>
                         <Grid xs={4} mt={2}>
                             <Button onClick={() => props.history.push('/auth/signup')}
-                                disabled={true}>注册账号</Button>
+                                    disabled={true}>注册账号</Button>
                         </Grid>
                     </Grid>
                 </Grid>

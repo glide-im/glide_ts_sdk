@@ -2,19 +2,21 @@ import {AppBar, Box, Container, Divider, IconButton, Toolbar, Typography} from "
 import React from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
-import {showSnack} from "../SnackBar";
+import {showSnack} from "../widget/SnackBar";
 import {MessageInput, MessageInputV2} from "./MessageInput";
 import {ArrowBack} from "@mui/icons-material";
-import {Loading} from "../Loading";
+import {Loading} from "../widget/Loading";
 import {useParams} from "react-router-dom";
 
 function SessionList() {
     return Account.getInstance().getSessionList();
 }
 
-export function ChatRoomContainer(props: { sid: string }) {
+export function ChatRoomContainer() {
 
-    const session = SessionList().get(props.sid);
+    const {sid} = useParams<{ sid: string }>();
+
+    const session = SessionList().get(sid);
 
     const isGroup = (session?.Type === 2)
 
@@ -49,7 +51,7 @@ export function ChatRoomContainer(props: { sid: string }) {
                     {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
                     {/*</Box>*/}
                     <Box height={'100%'}>
-                        <SessionMessageList id={props.sid}/>
+                        <SessionMessageList id={sid}/>
                     </Box>
                 </Box>
 

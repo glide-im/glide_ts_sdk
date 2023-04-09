@@ -1,15 +1,15 @@
-import { Avatar, Box, CircularProgress, Grid, IconButton, Typography } from "@mui/material"
-import React, { CSSProperties, useEffect, useState } from "react"
-import { Account } from "src/im/account"
-import { ChatMessage, SendingStatus } from "src/im/chat_message"
-import { IMUserInfo } from "src/im/def"
-import { Cache } from "src/im/cache"
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { MessageType } from "../../im/message";
-import { Audiotrack, FileDownload, Map } from "@mui/icons-material";
-import { ImageViewer } from "../ImageViewer";
-import { Markdown } from "../Markdown";
-import { grey } from "@mui/material/colors";
+import {Avatar, Box, CircularProgress, Grid, IconButton, LinearProgress, Typography} from "@mui/material"
+import React, {CSSProperties, useEffect, useState} from "react"
+import {Account} from "src/im/account"
+import {ChatMessage, SendingStatus} from "src/im/chat_message"
+import {IMUserInfo} from "src/im/def"
+import {Cache} from "src/im/cache"
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {MessageStatus, MessageType} from "../../im/message";
+import {Audiotrack, ErrorOutline, FileDownload, Map} from "@mui/icons-material";
+import {ImageViewer} from "../widget/ImageViewer";
+import {Markdown} from "../widget/Markdown";
+import {grey} from "@mui/material/colors";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -49,7 +49,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         return <Grid container padding={"4px 8px"}>
             <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                 <Typography variant={"body2"} textAlign={"center"} px={1} component={'span'}
-                    sx={{ background: grey[100], borderRadius: "50px" }}>
+                            sx={{background: grey[100], borderRadius: "50px"}}>
                     {msg.getDisplayContent()}
                 </Typography>
             </Box>
@@ -59,7 +59,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
     let direction: "row-reverse" | "row" = msg.IsMe ? "row-reverse" : "row"
 
     if (!msg.IsMe) {
-        name = <Box style={{ padding: '0px 8px' }}>
+        name = <Box style={{padding: '0px 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
                 {sender.name}
             </Typography>
@@ -70,20 +70,20 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     if (msg.IsMe && sending === SendingStatus.Sending) {
         status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
-            <CircularProgress size={12} />
+            <CircularProgress size={12}/>
         </Box>
     }
 
 
     return <Grid container direction={direction} px={0} py={1}>
         <Grid item xs={2} md={1}>
-            <UserAvatar ui={sender} />
+            <UserAvatar ui={sender}/>
         </Grid>
         <Grid item xs={9} md={10} color={'palette.primary.main'}>
             <Typography variant={"body1"}>{name}</Typography>
             <Box display={"flex"} flexDirection={direction}>
                 <Box bgcolor={"white"} style={messageBoxStyle()}>
-                    <MessageContent msg={msg} />
+                    <MessageContent msg={msg}/>
                 </Box>
                 {status}
             </Box>
@@ -112,7 +112,7 @@ const UserAvatar = withRouter((props: Props) => {
     return <>
         <Avatar onClick={handleClick} sx={{
             margin: "auto", cursor: isSelf ? 'default' : 'pointer', bgcolor: grey[400]
-        }} src={props.ui.avatar} />
+        }} src={props.ui.avatar}/>
     </>
 })
 
@@ -121,62 +121,66 @@ function MessageContent(props: { msg: ChatMessage }) {
 
     const [open, setOpen] = useState(false);
 
-
     const [content, setContent] = useState(props.msg.getDisplayContent())
+    const [status, setStatus] = useState(props.msg.Status)
 
     useEffect(() => {
         return props.msg.addUpdateListener(() => {
             setContent(props.msg.getDisplayContent())
+            setStatus(props.msg.Status)
         })
     }, [])
 
-    let msgContent: JSX.Element
+
     switch (props.msg.Type) {
         case MessageType.Image:
-            msgContent = <>
+            return <>
                 <ImageViewer imageUrl={props.msg.Content} onClose={() => {
                     setOpen(false)
-                }} open={open} />
+                }} open={open}/>
                 <img src={props.msg.Content} alt={props.msg.Content} width={'100%'} onClick={() => {
                     setOpen(true)
-                }} />
+                }}/>
             </>
-            break;
-            // TODO
-        case MessageType.Markdown, MessageType.Steam:
-            msgContent = <Markdown source={content} />
-            break;
+        case MessageType.StreamMarkdown:
+        case MessageType.StreamText:
+            switch (status) {
+                case MessageStatus.StreamStart:
+                    return <CircularProgress/>
+                case MessageStatus.StreamSending:
+                    return <Box>
+                        <Markdown source={content}/>
+                        <LinearProgress/>
+                    </Box>
+                case MessageStatus.StreamCancel:
+                    return <Box display={"flex"} justifyContent={"center"} alignItems={"center"}>
+                        <ErrorOutline/><Typography ml={1} variant={"body2"}>{content}</Typography>
+                    </Box>
+                case MessageStatus.StreamFinish:
+                    return <Markdown source={content}/>
+                default:
+                    return <Markdown source={content}/>
+            }
+        case MessageType.Markdown:
+            return <Markdown source={content}/>
         case MessageType.Text:
-            msgContent = <Typography variant={"body1"} color={'#444'}>{content}</Typography>
-            break;
+            return <Typography variant={"body1"} color={'#444'}>{content}</Typography>
         case MessageType.Audio:
-            msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                <IconButton color={'info'} title={'语音消息'}>
-                    <Audiotrack />
-                </IconButton>
+            return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                <IconButton color={'info'} title={'语音消息'}><Audiotrack/></IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>语音消息</Typography>
             </Box>
-            break;
         case MessageType.Location:
-            msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                <IconButton color={'info'} title={'语音消息'}>
-                    <Map />
-                </IconButton>
+            return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                <IconButton color={'info'} title={'语音消息'}><Map/></IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>位置</Typography>
             </Box>
-            break;
         case MessageType.File:
-            msgContent = <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                <IconButton color={'info'} title={'语音消息'}>
-                    <FileDownload />
-                </IconButton>
+            return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                <IconButton color={'info'} title={'文件消息'}><FileDownload/></IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>文件</Typography>
             </Box>
-            break;
         default:
-            msgContent = <Typography variant={"body1"} color={'#444'}>{props.msg.Content}</Typography>
-            break;
+            return <Typography variant={"body1"} color={'#444'}>{props.msg.Content}</Typography>
     }
-
-    return msgContent;
 }
