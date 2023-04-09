@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Snackbar } from "@mui/material";
+import {useEffect, useState} from "react";
+import {enqueueSnackbar, SnackbarProvider} from 'notistack';
 
 let snack = (s: string) => {
     console.log("show snack:", s);
@@ -16,14 +16,17 @@ export function SnackBar() {
 
     useEffect(() => {
         snack = (s: string) => {
-            setSnackMsg(s)
-            setShowSnack(true)
+            // setSnackMsg(s)
+            // setShowSnack(true)
+            enqueueSnackbar(s, {variant: "info"})
+        }
+        return () => {
+            snack = (s: string) => {
+                console.log("show snack:", s);
+            }
         }
     }, [])
 
-    return <>
-        <Snackbar open={showSnack} autoHideDuration={3000} onClose={() => {
-            setShowSnack(false)
-        }} message={snackMsg} />
-    </>
+    return <SnackbarProvider maxSnack={3}><span/></SnackbarProvider>
+
 }

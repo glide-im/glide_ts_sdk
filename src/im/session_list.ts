@@ -1,9 +1,9 @@
-import { delay, map, mergeMap, Observable, of, toArray } from "rxjs";
-import { onNext } from "src/rx/next";
-import { Api } from "../api/api";
-import { Account } from "./account";
-import { CliCustomMessage, CommonMessage, Message } from "./message";
-import { getSID, Session } from "./session";
+import {delay, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {onNext} from "src/rx/next";
+import {Api} from "../api/api";
+import {Account} from "./account";
+import {CliCustomMessage, CommonMessage, Message} from "./message";
+import {getSID, Session} from "./session";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
@@ -12,13 +12,17 @@ export interface SessionListUpdateListener {
 export class SessionList {
 
     private account: Account;
-    public currentSession: string = "0";
+    private currentSession: string = "0";
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
     private sessionMap: Map<string, Session> = new Map<string, Session>()
 
     constructor(account: Account) {
         this.account = account
+    }
+
+    public static getInstance(): SessionList {
+        return Account.getInstance().getSessionList();
     }
 
     public init(): Observable<string> {
@@ -28,6 +32,14 @@ export class SessionList {
                 mergeMap(() => of("session init complete, " + this.sessionMap.size + " sessions")),
                 // map(() => "session init complete"),
             )
+    }
+
+    public setSelectedSession(sid: string) {
+        this.currentSession = sid
+    }
+
+    public getSelectedSession(): string {
+        return this.currentSession
     }
 
     public createSession(id: string): Observable<Session> {

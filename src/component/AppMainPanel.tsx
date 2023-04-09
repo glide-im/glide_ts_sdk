@@ -21,6 +21,7 @@ import {ManageAccountsOutlined, MessageOutlined} from "@mui/icons-material";
 import {ChatRoomContainer, ChatRoomContainerMobile} from "./chat/ChatRoom";
 import {Profile} from "./Profile";
 import {UserInfoHeader} from "./session/UserInfoHeader";
+import {SessionList} from "../im/session_list";
 
 
 export const AppMainPanel = withRouter((props: RouteComponentProps) => {
@@ -59,7 +60,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
                         <Route path={`${match.url}/square`} children={<Square/>}/>
                         <Route path={`${match.url}/session`} exact={true}>
                             <Redirect
-                                to={`${match.url}/session/${Account.getInstance().getSessionList().currentSession}`}/>
+                                to={`${match.url}/session/${SessionList.getInstance().getSelectedSession()}`}/>
                         </Route>
                         <Route path={`${match.url}/`} exact={true}>
                             <Redirect to={`${match.url}/session/`}/>

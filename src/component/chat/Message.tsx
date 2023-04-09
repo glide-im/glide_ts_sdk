@@ -35,7 +35,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
     }
 
     useEffect(() => {
-        if (!msg.IsMe) {
+        if (!msg.FromMe) {
             return;
         }
         return msg.addUpdateListener(() => {
@@ -56,9 +56,9 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         </Grid>
     }
 
-    let direction: "row-reverse" | "row" = msg.IsMe ? "row-reverse" : "row"
+    let direction: "row-reverse" | "row" = msg.FromMe ? "row-reverse" : "row"
 
-    if (!msg.IsMe) {
+    if (!msg.FromMe) {
         name = <Box style={{padding: '0px 8px'}}>
             <Typography variant={'caption'} color={'textSecondary'} component={"p"}>
                 {sender.name}
@@ -68,7 +68,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     let status = <></>
 
-    if (msg.IsMe && sending === SendingStatus.Sending) {
+    if (msg.FromMe && sending === SendingStatus.Sending) {
         status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
             <CircularProgress size={12}/>
         </Box>

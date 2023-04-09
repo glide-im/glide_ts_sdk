@@ -27,7 +27,7 @@ export class ChatMessage {
     public SendAt: number;
 
     public Status: number;
-    public IsMe: boolean;
+    public FromMe: boolean;
     public IsGroup: boolean;
     public Type: number;
     public Target: string;
@@ -42,7 +42,7 @@ export class ChatMessage {
     public addUpdateListener(l: MessageUpdateListener): () => void {
         this.updateListener.push(l)
         return () => {
-            this.updateListener.unshift(l)
+            this.updateListener = this.updateListener.filter((v) => v !== l)
         }
     }
 
@@ -53,9 +53,9 @@ export class ChatMessage {
         ret.Content = m.Content;
         ret.Mid = m.Mid;
         ret.SendAt = m.SendAt;
-        ret.IsMe = ret.From === Account.getInstance().getUID();
+        ret.FromMe = ret.From === Account.getInstance().getUID();
         ret.Status = m.Status
-        ret.Target = ret.IsMe ? ret.To : ret.From
+        ret.Target = ret.FromMe ? ret.To : ret.From
         ret.OrderKey = m.SendAt
         return ret;
     }
@@ -67,11 +67,11 @@ export class ChatMessage {
         ret.Content = m.content;
         ret.Mid = m.mid;
         ret.SendAt = m.sendAt;
-        ret.IsMe = m.from === Account.getInstance().getUID();
+        ret.FromMe = m.from === Account.getInstance().getUID();
         ret.Status = m.status
         ret.Type = m.type
         ret.CliId = m.cliMid
-        ret.Target = ret.IsMe ? m.to : m.from
+        ret.Target = ret.FromMe ? m.to : m.from
         ret.OrderKey = m.sendAt
         ret.Seq = m.seq
         return ret;
@@ -96,15 +96,22 @@ export class ChatMessage {
         return Cache.loadUserInfo1(this.From)
     }
 
+    public getSenderName(): string {
+        const userInfo = Cache.getUserInfo(this.From) ?? {
+            name: "-"
+        }
+        return userInfo.name;
+    }
+
     public getDisplayContent(): string {
         const userInfo = Cache.getUserInfo(this.Content) ?? {
             name: this.Content
         }
         switch (this.Type) {
             case 100:
-                return this.IsMe ? "你已加入频道" : `${userInfo.name} 加入频道`;
+                return this.FromMe ? "你已加入频道" : `${userInfo.name} 加入频道`;
             case 101:
-                return this.IsMe ? "你已离开频道" : `${userInfo.name} 离开频道`;
+                return this.FromMe ? "你已离开频道" : `${userInfo.name} 离开频道`;
             case MessageType.Image:
                 return '[图片]'
             case MessageType.Audio:

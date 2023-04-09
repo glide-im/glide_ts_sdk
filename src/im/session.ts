@@ -1,15 +1,15 @@
-import { delay, first, map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
-import { onNext } from "src/rx/next";
-import { timeStampSecToDate } from "src/utils/TimeUtils";
-import { Api } from "../api/api";
-import { SessionBean } from "../api/model";
-import { Account } from "./account";
-import { ChatMessage, SendingStatus } from "./chat_message";
-import { IMUserInfo } from "./def";
-import { Cache } from "./cache";
-import { Actions, CliCustomMessage, Message, MessageType } from "./message";
-import { Ws } from "./ws";
-import { makeStyles } from "@mui/material";
+import {delay, first, map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
+import {onNext} from "src/rx/next";
+import {time2HourMinute} from "src/utils/TimeUtils";
+import {Api} from "../api/api";
+import {SessionBean} from "../api/model";
+import {Account} from "./account";
+import {ChatMessage, SendingStatus} from "./chat_message";
+import {IMUserInfo} from "./def";
+import {Cache} from "./cache";
+import {Actions, Message, MessageType} from "./message";
+import {Ws} from "./ws";
+import {SessionList} from "./session_list";
 
 enum SessionType {
     Single = 1,
@@ -37,8 +37,12 @@ export class Session {
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<string, ChatMessage>();
 
-    private messageListener: ((message: ChatMessage) => void) | null = null;
+    private messageListener = new Array<(message: ChatMessage) => void>();
     private sessionUpdateListener: SessionUpdateListener | null = null;
+
+    public isSelected(): boolean {
+        return this.ID === SessionList.getInstance().getSelectedSession();
+    }
 
     public static create(to: string, type: number): Session {
         const ret = new Session();
@@ -141,11 +145,10 @@ export class Session {
     }
 
 
-
     public onMessage(action: string, message: Message) {
         const c = ChatMessage.create(message)
         const mid = c.getId();
-        console.log("Session", "onMessage", mid, this.getSID(), message.type, message.content);
+        console.log("Session", "onMessage", mid, this.ID, message.type, message.content);
         // TODO 优化
         if (action == Actions.MessageCli && this.messageMap.has(mid)) {
             this.messageMap.get(mid).update2(message)
@@ -168,8 +171,11 @@ export class Session {
         this.sessionUpdateListener = listener;
     }
 
-    public setMessageListener(listener: (message: ChatMessage) => void) {
-        this.messageListener = listener;
+    public addMessageListener(listener: (message: ChatMessage) => void): () => void {
+        this.messageListener.push(listener);
+        return () => {
+            this.messageListener = this.messageListener.filter(l => l !== listener);
+        }
     }
 
     public getMessages(): ChatMessage[] {
@@ -193,9 +199,6 @@ export class Session {
     }
 
     private addMessageByOrder(message: ChatMessage) {
-        if (message.From !== Account.getInstance().getUID() && Account.getInstance().getSessionList().currentSession !== this.ID) {
-            this.UnreadCount++;
-        }
         if (this.messageMap.has(message.getId())) {
             this.messageMap.get(message.getId()).update(message);
         } else {
@@ -206,18 +209,22 @@ export class Session {
             } else {
                 this.messageList.splice(index, 0, message);
             }
-            this.messageListener?.(message)
         }
 
         if (this.messageList.length > 0 && this.messageList[this.messageList.length - 1].getId() === message.getId()) {
-            console.log("Session", "update session last message", this.getSID(), message.getDisplayContent());
+            console.log("Session", "update session last message", this.ID, message.getDisplayContent());
+            if (!message.FromMe && !this.isSelected()) {
+                this.UnreadCount++;
+            }
+
             this.LastMessage = message.getDisplayContent();
             if (this.Type === 2) {
                 this.LastMessageSender = message.From
             } else {
-                this.LastMessageSender = message.From === Account.getInstance().getUID() ? "我" : this.Title;
+                this.LastMessageSender = message.FromMe ? "我" : this.Title;
             }
-            this.UpdateAt = timeStampSecToDate(message.SendAt);
+            this.UpdateAt = time2HourMinute(message.SendAt);
+            this.messageListener.forEach(l => l(message));
         }
         if (!this.sessionUpdateListener) {
             console.log("Session", "sessionUpdateListener is null")

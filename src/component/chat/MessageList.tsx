@@ -32,12 +32,9 @@ export function SessionMessageList(props: { id: string }) {
     }, [session])
 
     useEffect(() => {
-        session?.setMessageListener((msg) => {
+        return session?.addMessageListener((msg) => {
             setMessages([...session.getMessages()])
         })
-        return () => {
-            session?.setMessageListener(null)
-        }
     }, [session])
 
     const loadHistory = () => {
