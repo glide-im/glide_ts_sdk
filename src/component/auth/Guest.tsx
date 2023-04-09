@@ -3,7 +3,6 @@ import { Avatar, Box, Button, Grid, Hidden, IconButton, Paper, TextField } from 
 import { useRef, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Account } from "../../im/account";
-import { Version } from "../version";
 import { SettingDialog } from "./SettingsDialog";
 
 
@@ -72,7 +71,6 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                                 </Grid>
                             </Grid>
                         </Grid>
-                        <Version />
                     </Paper>
                 </Grid>
             </Hidden>
