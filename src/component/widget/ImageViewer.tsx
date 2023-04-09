@@ -1,5 +1,5 @@
+import {Dialog, DialogContent} from "@mui/material";
 
-import { Dialog, DialogContent } from '@material-ui/core';
 
 interface ImageViewerProps {
   open: boolean;

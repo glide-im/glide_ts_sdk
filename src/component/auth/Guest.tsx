@@ -50,7 +50,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                     <Paper variant={"outlined"}>
                         <Grid container sx={{p: 2}} p={2}>
                             <Grid item xs={12}>
-                                <Grid item justifyContent={"center"} xs={12} container>
+                                <Grid item justifyContent={"center"} xs={12} display={"flex"}>
                                     <Avatar src={'./logo.png'} sx={{width: 50, height: 50}}/>
                                 </Grid>
 
@@ -62,11 +62,11 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                                 </Grid>
                             </Grid>
                             <Grid container mt={4} mb={2}>
-                                <Grid xs={8}>
+                                <Grid xs={8} item>
                                     <Button onClick={() => props.history.push('/auth/signup')}
                                             disabled={true}>注册账号</Button>
                                 </Grid>
-                                <Grid xs={4} justifyContent={"right"} display={"flex"}>
+                                <Grid xs={4} justifyContent={"right"} display={"flex"} item>
                                     <Button variant="contained" color="primary" onClick={onSubmit}>游客登录</Button>
                                 </Grid>
                             </Grid>
@@ -77,7 +77,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
             <Hidden mdUp>
                 <Grid container spacing={2} p={2} bgcolor={'white'}>
                     <Grid item xs={12}>
-                        <Grid item justifyContent={"center"} xs={12} container>
+                        <Grid item justifyContent={"center"} xs={12} display={"flex"}>
                             <Avatar src={'./logo.png'} sx={{width: 50, height: 50}}/>
                         </Grid>
 
@@ -89,10 +89,10 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                         </Grid>
                     </Grid>
                     <Grid item xs={12}>
-                        <Grid xs={12}>
+                        <Grid xs={12} item>
                             <Button fullWidth variant="contained" onClick={onSubmit} size={"large"}>游客登录</Button>
                         </Grid>
-                        <Grid xs={4} mt={2}>
+                        <Grid xs={4} mt={2} item>
                             <Button onClick={() => props.history.push('/auth/signup')}
                                     disabled={true}>注册账号</Button>
                         </Grid>

@@ -29,7 +29,6 @@ import {
     Send,
     SendRounded
 } from "@mui/icons-material";
-import {makeStyles} from "@material-ui/core/styles";
 import {grey} from "@mui/material/colors";
 
 
@@ -224,19 +223,6 @@ function SendImageDialog(props: { open: boolean, callback: (url: string) => void
     </Box>
 }
 
-
-const useStyles = makeStyles((theme) => ({
-    root: {
-        flexGrow: 1,
-        padding: theme.spacing(2),
-    },
-    paper: {
-        padding: theme.spacing(2),
-        textAlign: 'center',
-        color: theme.palette.text.secondary,
-    },
-}));
-
 const emojis = [
     '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉', '😊',
     '😋', '😎', '😍', '😘', '😗', '😙', '😚', '🙂', '🤗', '🤔',
@@ -244,7 +230,7 @@ const emojis = [
 ];
 
 function EmojiList(props: { onclick: (emoji: string) => void }) {
-    const classes = useStyles();
+
 
     return (
         <Box>

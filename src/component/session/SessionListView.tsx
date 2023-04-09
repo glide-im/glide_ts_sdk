@@ -4,19 +4,22 @@ import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {Account} from "src/im/account";
 import {Session} from "src/im/session";
 import {SessionListItem} from "./SessionListItem";
+import {SessionList} from "../../im/session_list";
 
 
 export const SessionListView = withRouter((props: RouteComponentProps) => {
 
     const {sid} = useParams<{ sid: string }>();
-
     const sessionList = Account.getInstance().getSessionList();
 
-    const [currentSession, setCurrentSession] = useState(sid)
     const [sessions, setSessions] = useState(sessionList.getSessionsTemped());
 
     const [loadSate, setLoadSate] = useState(true)
     const [loadError, setLoadError] = useState("")
+
+    useEffect(() => {
+        SessionList.getInstance().setSelectedSession(sid)
+    }, [sessionList])
 
     useEffect(() => {
         sessionList.setChatListUpdateListener(r => {
@@ -43,8 +46,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
 
     const onSelect = (s: Session) => {
         s.clearUnread()
-        setCurrentSession(s.ID)
-        sessionList.currentSession = s.ID
+        sessionList.setSelectedSession(s.ID)
         props.history.push(`/im/session/${s.ID}`)
     }
 
@@ -75,11 +77,10 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
     } else if (sessions.length === 0) {
         content = <Progress showProgress={false} msg={"Empty..."}/>
     } else {
-        const items = sessions?.map((value: Session) =>
-            <SessionListItem key={value.ID} chat={value} selected={value.ID === currentSession} onSelect={onSelect}/>
-        )
         content = <List style={{overflow: "auto", height: "100%"}} disablePadding className="BeautyScrollBar">
-            {items}
+            {sessions?.map((value: Session) =>
+                <SessionListItem key={value.ID} chat={value} onSelect={onSelect}/>
+            )}
         </List>
     }
 
