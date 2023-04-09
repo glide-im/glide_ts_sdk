@@ -85,9 +85,6 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
                             disabled={true}>
                     <KeyboardVoiceOutlined/>
                 </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Steam)}>
-                    <LocationOnOutlined/>
-                </IconButton>
             </Box>
 
             <Box pr={1} pl={1}>

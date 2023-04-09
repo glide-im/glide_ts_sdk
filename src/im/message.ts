@@ -23,9 +23,20 @@ export enum MessageType {
     UserOnline = 100,
     UserOffline = 101,
 
-    Steam = 1000,
-    SteamFinish = 1001,
-    SteamCancel = 1002,
+    StreamMarkdown = 1011,
+    StreamText = 1001,
+}
+
+export enum MessageStatus {
+    Sending = 0,
+    Success = 1,
+    Failed = 2,
+    Recall = 3,
+
+    StreamStart = 1,
+    StreamSending = 2,
+    StreamFinish = 3,
+    StreamCancel = 4,
 }
 
 export const WebSocketUrl = process.env.REACT_APP_WS_URL;

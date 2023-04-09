@@ -23,7 +23,7 @@ export const Profile = withRouter((props: RouteComponentProps) => {
             <Box mt={2}>
                 <IconButton size={'large'} onClick={() => {
                 }}>
-                    <Avatar src={u.avatar}/>
+                    <Avatar src={u.avatar}  sx={{width: 50, height: 50}}/>
                 </IconButton>
             </Box>
         </Grid>

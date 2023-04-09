@@ -146,6 +146,7 @@ export class Session {
         const c = ChatMessage.create(message)
         const mid = c.getId();
         console.log("Session", "onMessage", mid, this.getSID(), message.type, message.content);
+        // TODO 优化
         if (action == Actions.MessageCli && this.messageMap.has(mid)) {
             this.messageMap.get(mid).update2(message)
             return;

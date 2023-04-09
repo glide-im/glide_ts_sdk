@@ -1,20 +1,18 @@
 import {Box, CircularProgress, List, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
-import {RouteComponentProps, withRouter} from "react-router-dom";
+import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {Account} from "src/im/account";
 import {Session} from "src/im/session";
 import {SessionListItem} from "./SessionListItem";
 
-interface SessionListProps extends RouteComponentProps {
-    selected: string,
-    onSelect?: (to: string) => void
-}
 
-export const SessionListView = withRouter((props: SessionListProps) => {
+export const SessionListView = withRouter((props: RouteComponentProps) => {
+
+    const {sid} = useParams<{ sid: string }>();
 
     const sessionList = Account.getInstance().getSessionList();
 
-    const [currentSession, setCurrentSession] = useState(props.selected)
+    const [currentSession, setCurrentSession] = useState(sid)
     const [sessions, setSessions] = useState(sessionList.getSessionsTemped());
 
     const [loadSate, setLoadSate] = useState(true)
@@ -48,7 +46,6 @@ export const SessionListView = withRouter((props: SessionListProps) => {
         setCurrentSession(s.ID)
         sessionList.currentSession = s.ID
         props.history.push(`/im/session/${s.ID}`)
-        props.onSelect?.(s.ID)
     }
 
     const onRefresh = () => {

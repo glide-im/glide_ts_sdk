@@ -2,7 +2,9 @@ import {
     AppBar,
     BottomNavigation,
     BottomNavigationAction,
-    Box, Button,
+    Box,
+    Divider,
+    Grid,
     Hidden,
     IconButton,
     Toolbar,
@@ -12,16 +14,16 @@ import {grey} from "@mui/material/colors";
 import React from "react";
 import {Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter} from "react-router-dom";
 import {Account} from "../im/account";
-import {Chat} from "./session/Chat";
 import {ContactsList} from "./friends/ContactsList";
 import {Square} from "./square/Square";
 import {SessionListView} from "./session/SessionListView";
 import {ManageAccountsOutlined, MessageOutlined} from "@mui/icons-material";
-import {ChatRoomContainerMobile} from "./chat/ChatRoom";
-import { Profile } from "./Profile";
+import {ChatRoomContainer, ChatRoomContainerMobile} from "./chat/ChatRoom";
+import {Profile} from "./Profile";
+import {UserInfoHeader} from "./session/UserInfoHeader";
 
 
-export const MainPanel = withRouter((props: RouteComponentProps) => {
+export const AppMainPanel = withRouter((props: RouteComponentProps) => {
 
     if (!Account.getInstance().isAuthenticated()) {
         props.history.push("/auth");
@@ -35,7 +37,24 @@ export const MainPanel = withRouter((props: RouteComponentProps) => {
             <Hidden mdDown>
                 <Box height={'100vh'} width={'100%'}>
                     <Switch>
-                        <Route path={`${match.url}/session/:sid`} children={<Chat/>}/>
+                        <Route path={`${match.url}/session/:sid`}>
+                            <Grid alignItems={"center"} container style={{height: "100%"}}>
+                                <Grid item xs={3} style={{height: "100%"}}>
+                                    <Box>
+                                        <UserInfoHeader/>
+                                    </Box>
+                                    <Divider/>
+                                    <Box overflow={"hidden"} className="BeautyScrollBar">
+                                        <SessionListView/>
+                                    </Box>
+                                </Grid>
+
+                                <Grid item xs={9} style={{height: "100%"}}>
+                                    <Divider orientation={"vertical"} style={{float: "left"}}/>
+                                    <ChatRoomContainer/>
+                                </Grid>
+                            </Grid>
+                        </Route>
                         <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
                         <Route path={`${match.url}/square`} children={<Square/>}/>
                         <Route path={`${match.url}/session`} exact={true}>
@@ -62,7 +81,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
     const isMainPage = window.location.hash.match(/\/im\/(session\/?|profile\/?)$/g) != null;
 
     return (
-        <Box  bgcolor={grey[100]} width={'100%'} height={'100vh'}>
+        <Box bgcolor={grey[100]} width={'100%'} height={'100vh'}>
             <Switch>
                 <Route path={`${match.url}/session`} exact={true}>
                     <Box height={"calc(100vh - 56px)"}>
@@ -76,7 +95,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
                             </Toolbar>
                         </AppBar>
                         <Box overflow={"hidden"} className="BeautyScrollBar">
-                            <SessionListView selected={""} onSelect={null}/>
+                            <SessionListView/>
                         </Box>
                     </Box>
                 </Route>
@@ -92,7 +111,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
                     <Redirect to={`${match.url}/session/`}/>
                 </Route>
             </Switch>
-            {isMainPage ? <BottomNavigation value={selected} showLabels >
+            {isMainPage ? <BottomNavigation value={selected} showLabels>
                 <BottomNavigationAction label="聊天" icon={<MessageOutlined/>} onClick={() => {
                     props.history.replace(`/im/session`)
                 }
