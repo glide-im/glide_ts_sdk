@@ -14,9 +14,9 @@ import {
 import { grey } from "@mui/material/colors";
 import React, { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import { Account } from "src/im/account";
 import { Contacts } from "../../im/contacts";
 import { AddContactDialog } from "./AddContactDialog";
+import { Account } from "../../im/account";
 
 export function ContactsList() {
 

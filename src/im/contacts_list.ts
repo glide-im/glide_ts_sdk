@@ -1,9 +1,9 @@
 import {filter, map, mergeMap, Observable, of, toArray} from "rxjs";
-import {onNext} from "src/rx/next";
 import {Api} from "../api/api";
 import {ContactsBean} from "../api/model";
 import {Contacts} from "./contacts";
 import {Cache} from "./cache";
+import { onNext } from "../rx/next";
 
 export class ContactsList {
 

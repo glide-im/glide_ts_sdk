@@ -1,12 +1,13 @@
-import {Box, List, ListItem, Typography} from "@mui/material";
-import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react";
-import {Account} from "src/im/account";
-import {ChatMessage} from "src/im/chat_message";
-import {ChatMessageItem} from "./Message";
+import { Box, List, ListItem, Typography } from "@mui/material";
+import React, { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { ChatMessageItem } from "./Message";
+import { Account } from "../../im/account";
+import { ChatMessage } from "../../im/chat_message";
+import { SessionList } from "../../im/session_list";
 
 export function SessionMessageList(props: { id: string }) {
 
-    const session = Account.getInstance().getSessionList().get(props.id);
+    const session = SessionList.getInstance().get(props.id);
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
@@ -32,9 +33,14 @@ export function SessionMessageList(props: { id: string }) {
     }, [session])
 
     useEffect(() => {
-        return session?.addMessageListener((msg) => {
+        if (session === null) {
+            return;
+        }
+        const l = session.addMessageListener((msg) => {
+            console.log('MessageList on new message', session)
             setMessages([...session.getMessages()])
         })
+        return () => l()
     }, [session])
 
     const loadHistory = () => {
@@ -58,7 +64,7 @@ export function SessionMessageList(props: { id: string }) {
     if (session == null) {
         return <Box mt={"50%"}>
             <Typography variant="h6" textAlign={"center"}>
-                No Session
+                选择一个回话开始聊天
             </Typography>
         </Box>
     }
@@ -72,7 +78,7 @@ export function SessionMessageList(props: { id: string }) {
     //     </Box>
     // }
 
-    return <MessageListView messages={messages} isGroup={session.isGroup()}/>
+    return <MessageListView messages={messages} isGroup={session.isGroup()} />
 }
 
 function scrollBottom(ele: HTMLUListElement | null) {
@@ -113,7 +119,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.SendAt}`} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
+        return <ListItem key={`${value.SendAt}`} sx={{ padding: "0" }}><ChatMessageItem msg={value} /></ListItem>
     })
 
     return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>

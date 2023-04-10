@@ -1,9 +1,11 @@
-import {MessageBean} from "src/api/model";
-import {Account} from "./account";
-import {Message, MessageStatus, MessageType} from "./message";
-import {Cache} from "./cache";
-import {Observable} from "rxjs";
-import {IMUserInfo} from "./def";
+import { Account } from "./account";
+import { Message, MessageStatus, MessageType } from "./message";
+import { Cache } from "./cache";
+import { Observable } from "rxjs";
+import { IMUserInfo } from "./def";
+import { MessageBean } from "../api/model";
+import { log } from "console";
+import { MergeType } from "@mui/icons-material";
 
 export enum SendingStatus {
     Unknown,
@@ -36,7 +38,7 @@ export class ChatMessage {
 
     public Sending: SendingStatus = SendingStatus.Unknown;
 
-    private streamMessages = new Array<Message>();
+    private streamMessages = new Array<ChatMessage>();
     private updateListener: Array<MessageUpdateListener> = [];
 
     public addUpdateListener(l: MessageUpdateListener): () => void {
@@ -84,7 +86,7 @@ export class ChatMessage {
 
     public getId(): string {
         // TODO fixme
-        return this.SendAt.toString()
+        return this.CliId;
     }
 
     public getUserInfo(): Observable<IMUserInfo> {
@@ -104,14 +106,13 @@ export class ChatMessage {
     }
 
     public getDisplayContent(): string {
-        const userInfo = Cache.getUserInfo(this.Content) ?? {
-            name: this.Content
-        }
         switch (this.Type) {
             case 100:
-                return this.FromMe ? "你已加入频道" : `${userInfo.name} 加入频道`;
+                const userInfo = Cache.getUserInfo(this.Content)?.name ?? this.Content
+                return this.FromMe ? "你已加入频道" : `${userInfo} 加入频道`;
             case 101:
-                return this.FromMe ? "你已离开频道" : `${userInfo.name} 离开频道`;
+                const userInfo1 = Cache.getUserInfo(this.Content) ?? this.Content
+                return this.FromMe ? "你已离开频道" : `${userInfo1} 离开频道`;
             case MessageType.Image:
                 return '[图片]'
             case MessageType.Audio:
@@ -121,17 +122,17 @@ export class ChatMessage {
             case MessageType.File:
                 return '[文件]'
             default:
-                return this.Content;
+                return this.Content === undefined ? '-' : this.Content;
         }
     }
 
-    public update2(m: Message) {
-        if (m.type !== MessageType.StreamMarkdown && m.type !== MessageType.StreamText) {
+    public update2(m: ChatMessage) {
+        if (m.Type !== MessageType.StreamMarkdown && m.Type !== MessageType.StreamText) {
             console.log("update a non stream message")
             return;
         }
-        this.Status = m.status
-        switch (m.status) {
+        this.Status = m.Status
+        switch (m.Status) {
             case MessageStatus.StreamStart:
                 break;
             case MessageStatus.StreamSending:
@@ -140,14 +141,14 @@ export class ChatMessage {
                 }
                 this.streamMessages.push(m)
                 this.streamMessages = this.streamMessages.sort((a, b) => {
-                    return a.seq - b.seq
+                    return a.Seq - b.Seq
                 })
-                this.Content = this.streamMessages.map((m) => m.content).join("")
+                this.Content = this.streamMessages.map((m) => m.Content).join("")
                 break;
             case MessageStatus.StreamFinish:
                 break;
             case MessageStatus.StreamCancel:
-                this.Content = m.content
+                this.Content = m.Content
                 setTimeout(() => {
                     this.streamMessages = []
                 }, 2000)
@@ -160,6 +161,11 @@ export class ChatMessage {
     }
 
     public update(m: ChatMessage): void {
+        if(m.Type === MessageType.StreamMarkdown || m.Type == MessageType.StreamText){
+            this.update2(m)
+            return;
+        }
+
         this.From = m.From;
         this.To = m.To;
         this.Content = m.Content;

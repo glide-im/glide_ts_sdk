@@ -1,10 +1,11 @@
 import { Avatar, Box, Card, CircularProgress, Divider, Grid, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Api } from "src/api/api";
-import { OnlineUserInfoBean, ServerInfoBean } from "src/api/model";
-import { Account } from "src/im/account";
-import { IMUserInfo } from "src/im/def";
-import { Cache } from "src/im/cache";
+import { ServerInfoBean, OnlineUserInfoBean } from "../../api/model";
+import { Account } from "../../im/account";
+import { IMUserInfo } from "../../im/def";
+import { Api } from "../../api/api";
+import { Cache } from "../../im/cache";
+
 
 export function Square() {
 

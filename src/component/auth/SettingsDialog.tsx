@@ -8,9 +8,9 @@ import {
     TextField
 } from "@mui/material";
 import {useRef} from "react";
-import {Api} from "src/api/api";
-import {isEnableCookie, setCookie, setEnableCookie} from "src/utils/Cookies";
 import {Account} from "../../im/account";
+import { isEnableCookie, setCookie, setEnableCookie } from "../../utils/Cookies";
+import { Api } from "../../api/api";
 
 export function SettingDialog(props: { show: boolean, onClose: () => void }) {
 

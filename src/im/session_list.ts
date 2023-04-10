@@ -1,9 +1,9 @@
 import {delay, map, mergeMap, Observable, of, toArray} from "rxjs";
-import {onNext} from "src/rx/next";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {CliCustomMessage, CommonMessage, Message} from "./message";
 import {getSID, Session} from "./session";
+import { onNext } from "../rx/next";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
