@@ -51,7 +51,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                         <Grid container sx={{p: 2}} p={2}>
                             <Grid item xs={12}>
                                 <Grid item justifyContent={"center"} xs={12} display={"flex"}>
-                                    <Avatar src={'./logo.png'} sx={{width: 50, height: 50}}/>
+                                    <Avatar src={'/logo.png'} sx={{width: 50, height: 50}}/>
                                 </Grid>
 
                                 <Grid item justifyContent={"center"} xs={12} mt={4}>
@@ -78,7 +78,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                 <Grid container spacing={2} p={2} bgcolor={'white'}>
                     <Grid item xs={12}>
                         <Grid item justifyContent={"center"} xs={12} display={"flex"}>
-                            <Avatar src={'./logo.png'} sx={{width: 50, height: 50}}/>
+                            <Avatar src={'/logo.png'} sx={{width: 50, height: 50}}/>
                         </Grid>
 
                         <Grid item justifyContent={"center"} xs={12} mt={4}>

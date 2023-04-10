@@ -16,7 +16,6 @@ import {
     Paper,
     Popover,
     Select,
-    TextField
 } from "@mui/material";
 import {
     AttachFileRounded,
@@ -50,6 +49,11 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
         input.current.value = ''
     }
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && e.shiftKey) {
+            e.preventDefault();
+            return;
+        }
+
         if (e.key === "Enter") {
             handleSendClick()
         }
@@ -89,8 +93,8 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
             <Box pr={1} pl={1}>
                 <Grid container spacing={2}>
                     <Grid item xs={11}>
-                        <TextField fullWidth variant={'standard'} inputRef={input} autoComplete={"off"}
-                                   onKeyPress={handleKeyDown}/>
+                        <InputBase fullWidth  inputRef={input} autoComplete={"off"}
+                                   onKeyDown={handleKeyDown}/>
                     </Grid>
                     <Grid item xs={1}>
                         <IconButton onClick={handleSendClick} color={"primary"} style={{float: "right"}}>
@@ -130,10 +134,23 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
         onSend(input.current.value)
         input.current.value = ''
     }
+
+    const handleEnter = (event: KeyboardEvent) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault()
+            handleSendClick()
+        }
+    }
+
     const onAttachFileClick = () => {
 
     }
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && e.shiftKey) {
+            e.preventDefault();
+            return;
+        }
+
         if (e.key === "Enter") {
             handleSendClick()
         }
@@ -141,7 +158,6 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
     return <Grid container>
         <Grid item xs={11}>
             <Paper
-                component="form"
                 sx={{p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%', borderRadius:'100px'}}
             >
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
@@ -160,11 +176,12 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
                     <EmojiEmotionsRounded/>
                 </IconButton>
                 <InputBase inputRef={input}
+                           className={'border-0'}
                            autoComplete={"off"}
                            size={"medium"}
                            sx={{ml: 1, flex: 1, fontFamily: 'MS-YaHei',}} fullWidth
                            placeholder="说点什么"
-                           onKeyPress={handleKeyDown}
+                           onKeyDown={handleKeyDown}
                            inputProps={{'aria-label': 'search google maps'}}/>
                 <IconButton aria-describedby={'id1'} sx={{p: '10px'}}  onClick={onAttachFileClick}>
                     <AttachFileRounded/>
@@ -191,9 +208,6 @@ function SendImageDialog(props: { open: boolean, callback: (url: string) => void
         }} aria-labelledby="form-dialog-title">
             <DialogTitle id="form-dialog-title">发送图片</DialogTitle>
             <DialogContent>
-                {/*<TextField inputRef={input} autoFocus margin="dense" id="text" label="图片 URL"*/}
-                {/*           type="text"*/}
-                {/*           fullWidth defaultValue={'https://www.baidu.com/img/flexible/logo/pc/result.png'}/>*/}
                 <Box></Box>
                 <FormControl fullWidth>
                     <InputLabel id="demo-simple-select-label">选择图片</InputLabel>

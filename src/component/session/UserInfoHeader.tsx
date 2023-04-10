@@ -55,33 +55,27 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
     }
 
     return <Box>
-        <Grid container justifyContent={"center"}>
-            <Box mt={2}>
-                <IconButton onClick={onAvatarClick} size={'large'}>
-                    <Avatar src={u.avatar} sx={{width: 80, height: 80, bgcolor: grey[400]}}/>
-                </IconButton>
-            </Box>
-        </Grid>
-        <Box width={"100%"} color={"#666"}>
-            <Typography variant={"h5"} fontWeight={"bold"} color={"black"} textAlign={"center"}>{u.name}</Typography>
-            <Typography variant={"body1"} textAlign={"center"}>UID: {u.uid}</Typography>
-        </Box>
-        <Box width={'100%'} mt={1}>
-            <Box m={1} display={"flex"} justifyContent={"flex-end"} gap={1}>
-                <Button size={'small'} onClick={() => window.open("https://github.com/glide-im/glide_ts_sdk")}>
-                    GitHub
-                </Button>
+        <div className={'flex justify-between items-center py-5 pr-10 pl-4'}>
+            <div className={'flex items-center'}>
+                <Avatar src={u.avatar} sx={{width: 40, height: 40, bgcolor: grey[400]}}/>
+                <div className={'text-left flex flex-col ml-5'}>
+                    <span className={'text-base'}>{u.name}</span>
+                    <span className={'text-sm'}>UID: {u.uid}</span>
+                </div>
+            </div>
+
+            <div>
                 <Button size={'small'} onClick={onExitClick}>
                     退出登录
                 </Button>
-                <CreateSessionButton/>
                 {online ? <></> :
                     <Button onClick={reconnect} size={'small'} color={'warning'}>
                         重新连接
                     </Button>
                 }
-            </Box>
-        </Box>
+                <CreateSessionButton/>
+            </div>
+        </div>
     </Box>
 })
 
