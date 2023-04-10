@@ -1,10 +1,10 @@
 import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
-import {UserInfoBean} from "src/api/model";
-import {onNext} from "src/rx/next";
-import {getCookie, setCookie} from "src/utils/Cookies";
 import {Api} from "../api/api";
 import {ChannelInfo, IMUserInfo} from "./def";
 import {onErrorResumeNext} from "rxjs/operators";
+import { UserInfoBean } from "../api/model";
+import { onNext } from "../rx/next";
+import { getCookie, setCookie } from "../utils/Cookies";
 
 class cache {
 

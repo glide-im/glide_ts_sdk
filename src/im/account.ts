@@ -1,5 +1,4 @@
 import {catchError, concat, map, mergeMap, Observable, timeout} from "rxjs";
-import {onComplete} from "src/rx/next";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
@@ -10,6 +9,7 @@ import {Actions, CommonMessage} from "./message";
 import {SessionList} from "./session_list";
 import {Ws} from "./ws";
 import {getCookie} from "../utils/Cookies";
+import { onComplete } from "../rx/next";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols

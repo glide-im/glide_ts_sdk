@@ -20,6 +20,7 @@ export enum MessageType {
     System = 10,
     Markdown = 11,
 
+    
     UserOnline = 100,
     UserOffline = 101,
 

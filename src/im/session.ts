@@ -1,15 +1,15 @@
-import {delay, first, map, mergeMap, Observable, of, throwError, toArray} from "rxjs";
-import {onNext} from "src/rx/next";
-import {time2HourMinute} from "src/utils/TimeUtils";
-import {Api} from "../api/api";
-import {SessionBean} from "../api/model";
-import {Account} from "./account";
-import {ChatMessage, SendingStatus} from "./chat_message";
-import {IMUserInfo} from "./def";
-import {Cache} from "./cache";
-import {Actions, Message, MessageType} from "./message";
-import {Ws} from "./ws";
-import {SessionList} from "./session_list";
+import { delay, first, map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
+import { Api } from "../api/api";
+import { SessionBean } from "../api/model";
+import { Account } from "./account";
+import { ChatMessage, SendingStatus } from "./chat_message";
+import { IMUserInfo } from "./def";
+import { Cache } from "./cache";
+import { Actions, Message, MessageType } from "./message";
+import { Ws } from "./ws";
+import { SessionList } from "./session_list";
+import { onNext } from "../rx/next";
+import { time2HourMinute } from "../utils/TimeUtils";
 
 enum SessionType {
     Single = 1,
@@ -50,8 +50,18 @@ export class Session {
         ret.Type = type;
         ret.ID = ret.getSID();
         ret.Title = ret.ID;
+        ret.LastMessage = "-"
+        ret.LastMessageSender = "-"
         if (type === 1) {
             ret.Title = Cache.getUserInfo(to)?.name ?? ret.ID;
+        }
+        if (ret.To == "the_world_channel") {
+            of("Hi, 我来了").pipe(
+                delay(2000),
+                mergeMap(msg => ret.sendTextMessage(msg)),
+            ).subscribe(msg => {
+
+            })
         }
         return ret;
     }
@@ -79,14 +89,6 @@ export class Session {
         if (this.isGroup()) {
             this.Avatar = Cache.getChannelInfo(this.To)?.avatar ?? ""
             this.Title = Cache.getChannelInfo(this.To)?.name ?? ''
-            if (this.To == "the_world_channel") {
-                of("Hi, 我来了").pipe(
-                    delay(2000),
-                    mergeMap(msg => this.sendTextMessage(msg)),
-                ).subscribe(msg => {
-
-                })
-            }
             return of(this);
         } else {
             return Cache.loadUserInfo1(this.To)
@@ -147,13 +149,8 @@ export class Session {
 
     public onMessage(action: string, message: Message) {
         const c = ChatMessage.create(message)
-        const mid = c.getId();
-        console.log("Session", "onMessage", mid, this.ID, message.type, message.content);
+        console.log(">>> Session onMessage", this.ID, message.mid, message.type, message.status, message.content);
         // TODO 优化
-        if (action == Actions.MessageCli && this.messageMap.has(mid)) {
-            this.messageMap.get(mid).update2(message)
-            return;
-        }
         Cache.cacheUserInfo(message.from).then(() => {
             this.addMessageByOrder(c);
         })
@@ -199,7 +196,10 @@ export class Session {
     }
 
     private addMessageByOrder(message: ChatMessage) {
-        if (this.messageMap.has(message.getId())) {
+
+        const isNewMessage = !this.messageMap.has(message.getId());
+
+        if (!isNewMessage) {
             this.messageMap.get(message.getId()).update(message);
         } else {
             let index = this.messageList.findIndex(msg => msg.OrderKey > message.OrderKey);
@@ -211,18 +211,18 @@ export class Session {
             }
         }
 
-        if (this.messageList.length > 0 && this.messageList[this.messageList.length - 1].getId() === message.getId()) {
+        // 收到老消息
+        const isNotHistoryMessage = this.messageList[this.messageList.length - 1].getId() === message.getId()
+
+        if (this.messageList.length > 0 && isNewMessage) {
             console.log("Session", "update session last message", this.ID, message.getDisplayContent());
             if (!message.FromMe && !this.isSelected()) {
                 this.UnreadCount++;
             }
 
             this.LastMessage = message.getDisplayContent();
-            if (this.Type === 2) {
-                this.LastMessageSender = message.From
-            } else {
-                this.LastMessageSender = message.FromMe ? "我" : this.Title;
-            }
+            this.LastMessageSender = message.getSenderName();
+
             this.UpdateAt = time2HourMinute(message.SendAt);
             this.messageListener.forEach(l => l(message));
         }

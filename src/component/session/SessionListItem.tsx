@@ -1,8 +1,8 @@
 import {Avatar, Badge, ListItemButton, ListItemIcon, ListItemText, ListSubheader} from "@mui/material";
 import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
-import {Session} from "src/im/session";
 import {showSnack} from "../widget/SnackBar";
+import { Session } from "../../im/session";
 
 export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
 
@@ -12,7 +12,7 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
 
     useEffect(() =>
         props.chat.addMessageListener((msg) => {
-            if (!props.chat.isSelected()) {
+            if (!msg.FromMe && !props.chat.isSelected()) {
                 if (props.chat.isGroup()) {
                     showSnack(`[${props.chat.Title}] ${msg.getSenderName()}: ${props.chat.LastMessage}`)
                 } else {
@@ -26,7 +26,7 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
         console.log("SessionListItem", "init", props.chat)
         props.chat.setSessionUpdateListener(() => {
             console.log("SessionListItem", "chat updated", props.chat)
-            setMsg(props.chat.LastMessage)
+            setMsg(`${props.chat.LastMessageSender}: ${props.chat.LastMessage}`)
             setUnread(props.chat.UnreadCount)
         })
     }, [props.chat])
@@ -35,18 +35,16 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
         props.onSelect(props.chat)
     }
 
-    let lastMsg = `${props.chat.LastMessageSender}: ${props.chat.LastMessage}`
-
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
                         selected={props.chat.isSelected()}>
             <ListItemIcon>
-                <Badge variant={'standard'} badgeContent={props.chat.UnreadCount} overlap="rectangular"
+                <Badge variant={'standard'} badgeContent={unread} overlap="rectangular"
                        color={"secondary"}>
                     <Avatar variant={'circular'} sx={{bgcolor: green[500]}} src={props.chat.Avatar}/>
                 </Badge>
             </ListItemIcon>
-            <ListItemText primary={props.chat.Title} secondary={lastMsg}
+            <ListItemText primary={props.chat.Title} secondary={msg}
                           primaryTypographyProps={{style: {color: 'black'}}}
                           secondaryTypographyProps={{
                               style: {
