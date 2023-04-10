@@ -146,6 +146,7 @@ function MessageContent(props: { msg: ChatMessage }) {
             </>
         case MessageType.StreamMarkdown:
         case MessageType.StreamText:
+            console.log('contentcontent', content)
             switch (status) {
                 case MessageStatus.StreamStart:
                     return <CircularProgress />
