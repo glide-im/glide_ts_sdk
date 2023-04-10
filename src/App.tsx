@@ -1,6 +1,6 @@
 import {Box, Grid} from "@mui/material";
 import React, {useEffect, useState} from 'react';
-import {HashRouter, Redirect, Route, Switch} from "react-router-dom";
+import {BrowserRouter as Router, Redirect, Route, Switch} from "react-router-dom";
 import {Api} from "./api/api";
 import './App.css';
 import {Register} from "./component/auth/Register";
@@ -71,15 +71,14 @@ function App() {
             <Box sx={{width: '100%', position: 'relative'}}>
                 <Box sx={{
                     position: 'absolute',
-                    backgroundImage: "url('./app_bg.jpg')",
+                    backgroundImage: "url('/app_bg.jpg')",
                     zIndex: -1,
                     width: '100%',
                     height: '100vh',
                     filter: 'saturate(0.6)',
                 }}/>
-                <HashRouter>
+                <Router>
                     <Grid container style={{height: "100vh"}} alignItems={"center"}>
-
                         {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>
@@ -93,9 +92,7 @@ function App() {
                                     <Redirect to={'/auth/signin'}/>
                                 </Route>
                                 <Route path={"/im"}>
-                                    <Box bgcolor={'white'} width={'100%'}>
-                                        <AppMainPanel/>
-                                    </Box>
+                                    <AppMainPanel/>
                                 </Route>
                                 <Route path={"/"} strict={true}>
                                     {state.isAuthenticated ? <Redirect to={'/im'}/> : <Redirect to={'/auth'}/>}
@@ -103,7 +100,7 @@ function App() {
                             </Switch>
                         }
                     </Grid>
-                </HashRouter>
+                </Router>
             </Box>
         </div>
     );

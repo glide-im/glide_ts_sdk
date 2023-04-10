@@ -34,20 +34,22 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
     const match = useRouteMatch();
 
     return (
-        <>
+        <div className={'container bg-white md:h-[95vh] h-[100vh] mx-auto rounded-md'}>
             <Hidden mdDown>
-                <Box height={'100vh'} width={'100%'}>
+                <Box width={'100%'}>
                     <Switch>
                         <Route path={`${match.url}/session/:sid`}>
                             <Grid alignItems={"center"} container style={{height: "100%"}}>
-                                <Grid item xs={3} style={{height: "100%"}}>
-                                    <Box>
-                                        <UserInfoHeader/>
-                                    </Box>
-                                    <Divider/>
-                                    <Box overflow={"hidden"} className="BeautyScrollBar">
-                                        <SessionListView/>
-                                    </Box>
+                                <Grid item xs={3} className={'flex flex-col w-full'}>
+                                    <div className={'h-[95vh] w-full'}>
+                                        <Box className={'flex-auto'}>
+                                            <UserInfoHeader/>
+                                        </Box>
+                                        <Divider/>
+                                        <Box overflow={"hidden"} className="BeautyScrollBar flex-1">
+                                            <SessionListView/>
+                                        </Box>
+                                    </div>
                                 </Grid>
 
                                 <Grid item xs={9} style={{height: "100%"}}>
@@ -71,7 +73,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
             <Hidden mdUp>
                 <MobileMain/>
             </Hidden>
-        </>
+        </div>
     )
 });
 
@@ -82,7 +84,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
     const isMainPage = window.location.hash.match(/\/im\/(session\/?|profile\/?)$/g) != null;
 
     return (
-        <Box bgcolor={grey[100]} width={'100%'} height={'100vh'}>
+        <Box bgcolor={grey[100]} width={'100%'}>
             <Switch>
                 <Route path={`${match.url}/session`} exact={true}>
                     <Box height={"calc(100vh - 56px)"}>

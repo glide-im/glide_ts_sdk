@@ -5,7 +5,12 @@ import { Account } from "../../im/account";
 import { ChatMessage } from "../../im/chat_message";
 import { SessionList } from "../../im/session_list";
 
-export function SessionMessageList(props: { id: string }) {
+interface MessageListProps {
+    id: string
+    updateScroll: Function
+}
+
+export function SessionMessageList(props: MessageListProps) {
 
     const session = SessionList.getInstance().get(props.id);
 
@@ -39,6 +44,7 @@ export function SessionMessageList(props: { id: string }) {
         const l = session.addMessageListener((msg) => {
             console.log('MessageList on new message', session)
             setMessages([...session.getMessages()])
+            props.updateScroll();
         })
         return () => l()
     }, [session])
@@ -122,7 +128,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
         return <ListItem key={`${value.SendAt}`} sx={{ padding: "0" }}><ChatMessageItem msg={value} /></ListItem>
     })
 
-    return <Box height={"100%"} display={"flex"} alignContent={"flex-end"}>
+    return <Box className={'w-full'} display={"flex"} alignContent={"flex-end"}>
         <List disablePadding ref={messageListEle} style={messageListStyle} className={"BeautyScrollBar"}>
             {list}
         </List>

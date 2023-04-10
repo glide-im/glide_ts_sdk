@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
-import {enqueueSnackbar, SnackbarProvider} from 'notistack';
+import {closeSnackbar, enqueueSnackbar, SnackbarProvider} from 'notistack';
+import {Button} from "@mui/material";
 
 let snack = (s: string) => {
     console.log("show snack:", s);
@@ -16,9 +17,14 @@ export function SnackBar() {
 
     useEffect(() => {
         snack = (s: string) => {
-            // setSnackMsg(s)
-            // setShowSnack(true)
-            enqueueSnackbar(s, {variant: "info"})
+            const action = snackbarId => (
+                <Button variant="contained" onClick={() => {
+                    closeSnackbar(snackbarId)
+                }}>
+                    Close
+                </Button>
+            );
+            enqueueSnackbar(s, {variant: "info", autoHideDuration: 3000, action: action})
         }
         return () => {
             snack = (s: string) => {
