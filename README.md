@@ -4,4 +4,4 @@
 
 <img src="chat.png" alt="chat" width="600px">
 
-<img src="home.png" alt="home" width="600px">
+<img src="phone.png" alt="home" width="600px">

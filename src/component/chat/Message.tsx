@@ -1,7 +1,7 @@
 import { Audiotrack, ErrorOutline, FileDownload, Map } from "@mui/icons-material";
 import { Avatar, Box, CircularProgress, Grid, IconButton, LinearProgress, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { CSSProperties, useEffect, useState } from "react";
+import React, { CSSProperties, useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Account } from "../../im/account";
 import { Cache } from "../../im/cache";
@@ -10,6 +10,7 @@ import { IMUserInfo } from "../../im/def";
 import { MessageStatus, MessageType } from "../../im/message";
 import { ImageViewer } from "../widget/ImageViewer";
 import { Markdown } from "../widget/Markdown";
+import {ChatContext} from "./context/ChatContext";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -119,9 +120,8 @@ const UserAvatar = withRouter((props: Props) => {
 
 
 function MessageContent(props: { msg: ChatMessage }) {
-
+    const chatContext = React.useContext(ChatContext)
     const [open, setOpen] = useState(false);
-
     const [content, setContent] = useState(props.msg.getDisplayContent())
     const [status, setStatus] = useState(props.msg.Status)
 
@@ -129,6 +129,9 @@ function MessageContent(props: { msg: ChatMessage }) {
         const s = props.msg.addUpdateListener(() => {
             setContent(props.msg.getDisplayContent())
             setStatus(props.msg.Status)
+            setTimeout(() => {
+                chatContext.scrollToBottom()
+            }, 500)
         })
         return () => s()
     }, [])

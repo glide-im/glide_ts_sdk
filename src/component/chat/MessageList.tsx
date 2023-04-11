@@ -4,10 +4,10 @@ import { ChatMessageItem } from "./Message";
 import { Account } from "../../im/account";
 import { ChatMessage } from "../../im/chat_message";
 import { SessionList } from "../../im/session_list";
+import {ChatContext} from "./context/ChatContext";
 
 interface MessageListProps {
     id: string
-    updateScroll: Function
 }
 
 export function SessionMessageList(props: MessageListProps) {
@@ -44,7 +44,6 @@ export function SessionMessageList(props: MessageListProps) {
         const l = session.addMessageListener((msg) => {
             console.log('MessageList on new message', session)
             setMessages([...session.getMessages()])
-            props.updateScroll();
         })
         return () => l()
     }, [session])
@@ -99,13 +98,13 @@ function scrollBottom(ele: HTMLUListElement | null) {
 }
 
 const messageListStyle: CSSProperties = {
-    overflow: "auto", width: "100%",
+    overflow: "revert", width: "100%",
 }
 
 type MessageListItemData = string | ChatMessage
 
 function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
-
+    const chatContext = React.useContext(ChatContext)
     const messages: MessageListItemData[] = useMemo(() => {
         return ["", ...props.messages]
     }, [props.messages])
@@ -113,8 +112,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
     const messageListEle = useRef<HTMLUListElement>()
 
     useEffect(() => {
-        // const p = messageListEle.current.scrollTop + messageListEle.current.clientTop
-        scrollBottom(messageListEle.current)
+        chatContext.scrollToBottom()
     }, [messages])
 
     const list = messages.map(value => {
@@ -129,7 +127,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
     })
 
     return <Box className={'w-full'} display={"flex"} alignContent={"flex-end"}>
-        <List disablePadding ref={messageListEle} style={messageListStyle} className={"BeautyScrollBar"}>
+        <List disablePadding ref={messageListEle} style={messageListStyle} >
             {list}
         </List>
     </Box>

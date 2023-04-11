@@ -73,7 +73,7 @@ export function Square() {
         </Grid>
         <Grid item xs={8} height={"100%"}>
             <Divider orientation={"vertical"} style={{ float: "left" }} />
-            <Box style={{ overflow: "auto" }} className={"BeautyScrollBar"} height={"100%"}>
+            <Box style={{ overflow: "auto" }}  height={"100%"}>
                 {content}
             </Box>
         </Grid>
