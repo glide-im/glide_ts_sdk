@@ -19,7 +19,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
 
     useEffect(() => {
         SessionList.getInstance().setSelectedSession(sid)
-    }, [sessionList])
+    })
 
     useEffect(() => {
         sessionList.setChatListUpdateListener(r => {
@@ -48,24 +48,6 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
         s.clearUnread()
         sessionList.setSelectedSession(s.ID)
         props.history.push(`/im/session/${s.ID}`)
-    }
-
-    const onRefresh = () => {
-        setLoadSate(true)
-        sessionList.getSessions()
-            .subscribe({
-                next: (res: Session[]) => {
-                    setSessions(res)
-                },
-                error: (err) => {
-                    console.log(err)
-                    setLoadSate(false)
-                    setLoadError(err.toString())
-                },
-                complete: () => {
-                    setLoadSate(false)
-                },
-            })
     }
 
     let content: JSX.Element

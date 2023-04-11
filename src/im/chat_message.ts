@@ -4,8 +4,6 @@ import { Cache } from "./cache";
 import { Observable } from "rxjs";
 import { IMUserInfo } from "./def";
 import { MessageBean } from "../api/model";
-import { log } from "console";
-import { MergeType } from "@mui/icons-material";
 
 export enum SendingStatus {
     Unknown,
@@ -161,7 +159,7 @@ export class ChatMessage {
     }
 
     public update(m: ChatMessage): void {
-        if(m.Type === MessageType.StreamMarkdown || m.Type == MessageType.StreamText){
+        if(m.Type === MessageType.StreamMarkdown || m.Type === MessageType.StreamText){
             this.update2(m)
             return;
         }

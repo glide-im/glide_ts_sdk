@@ -1,11 +1,3 @@
-const maskFromWeb = 1 << 30;
-const maskMessageType = (1 << 31) | maskFromWeb;
-
-// 客户端自定义消息的类型
-export enum ClientMessageType {
-    Inputing = 1,
-}
-
 // 聊天消息类型, 可以自定义, 但是需要客户端之间约定好
 export enum MessageType {
     Text = 1,

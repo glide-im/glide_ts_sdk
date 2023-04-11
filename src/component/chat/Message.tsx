@@ -134,7 +134,7 @@ function MessageContent(props: { msg: ChatMessage }) {
             }, 500)
         })
         return () => s()
-    }, [])
+    }, [chatContext, props.msg])
 
 
     switch (props.msg.Type) {

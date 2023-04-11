@@ -80,8 +80,8 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
 const MobileMain = withRouter((props: RouteComponentProps) => {
 
     const match = useRouteMatch();
-    const selected = window.location.hash.match(/\/im\/(session\/?)$/g) != null ? 0 : 1;
-    const isMainPage = window.location.hash.match(/\/im\/(session\/?|profile\/?)$/g) != null;
+    const selected = window.location.href.match(/\/im\/(session\/?)$/g) != null ? 0 : 1;
+    const isMainPage = window.location.href.match(/\/im\/(session\/?|profile\/?)$/g) != null;
 
     return (
         <Box bgcolor={grey[100]} width={'100%'}>

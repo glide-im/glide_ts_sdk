@@ -1,6 +1,5 @@
 import React, {useRef, useState} from "react";
 import {MessageType} from "../../im/message";
-import {ChatContext} from "./context/ChatContext";
 import {
     Box,
     Button,
@@ -25,7 +24,6 @@ import {
     FolderOutlined,
     ImageOutlined,
     KeyboardVoiceOutlined,
-    LocationOnOutlined,
     Send,
     SendRounded
 } from "@mui/icons-material";
@@ -112,8 +110,6 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
 export function MessageInputV2(props: { onSend: (msg: string, type: number) => void }) {
 
     const input = useRef<HTMLInputElement>(null)
-    const [showImageDialog, setShowImageDialog] = useState(false)
-
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
     const [open, setOpen] = React.useState(false);
@@ -134,13 +130,6 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
     const handleSendClick = () => {
         onSend(input.current.value)
         input.current.value = ''
-    }
-
-    const handleEnter = (event: KeyboardEvent) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault()
-            handleSendClick()
-        }
     }
 
     const onAttachFileClick = () => {

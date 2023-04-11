@@ -2,19 +2,7 @@ import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import React, {useEffect, useRef, useState} from "react";
 import {State, Ws} from "../../im/ws";
-import {
-    Avatar,
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Grid,
-    IconButton,
-    TextField,
-    Typography
-} from "@mui/material";
+import {Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import {grey} from "@mui/material/colors";
 
 
@@ -47,9 +35,7 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
         Account.getInstance().logout()
         props.history.replace("/auth")
     }
-    const onAvatarClick = () => {
 
-    }
     const reconnect = () => {
         Account.getInstance().auth().subscribe()
     }

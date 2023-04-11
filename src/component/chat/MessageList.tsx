@@ -1,9 +1,8 @@
-import { Box, List, ListItem, Typography } from "@mui/material";
-import React, { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
-import { ChatMessageItem } from "./Message";
-import { Account } from "../../im/account";
-import { ChatMessage } from "../../im/chat_message";
-import { SessionList } from "../../im/session_list";
+import {Box, List, ListItem, Typography} from "@mui/material";
+import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react";
+import {ChatMessageItem} from "./Message";
+import {ChatMessage} from "../../im/chat_message";
+import {SessionList} from "../../im/session_list";
 import {ChatContext} from "./context/ChatContext";
 
 interface MessageListProps {
@@ -48,20 +47,6 @@ export function SessionMessageList(props: MessageListProps) {
         return () => l()
     }, [session])
 
-    const loadHistory = () => {
-        session?.getMessageHistory(0)
-            .subscribe({
-                next: (r) => {
-                    setMessages(r)
-                },
-                error: (e) => {
-                    console.log("getMessageHistry", e)
-                },
-                complete: () => {
-                }
-            })
-    }
-
     if (props.id === "1") {
         // loadHistory()
     }
@@ -86,17 +71,6 @@ export function SessionMessageList(props: MessageListProps) {
     return <MessageListView messages={messages} isGroup={session.isGroup()} />
 }
 
-function scrollBottom(ele: HTMLUListElement | null) {
-    if (ele === null) {
-        return
-    }
-    const from = ele.scrollHeight
-    const to = ele.scrollTop
-    if (from - to > 400) {
-        ele.scrollTop = from + 100
-    }
-}
-
 const messageListStyle: CSSProperties = {
     overflow: "revert", width: "100%",
 }
@@ -113,7 +87,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
 
     useEffect(() => {
         chatContext.scrollToBottom()
-    }, [messages])
+    }, [chatContext])
 
     const list = messages.map(value => {
         if (typeof value === "string") {

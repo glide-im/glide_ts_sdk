@@ -1,4 +1,4 @@
-import {AppBar, Box, Container, Divider, IconButton, Toolbar, Typography} from "@mui/material";
+import {AppBar, Box, Divider, IconButton, Toolbar, Typography} from "@mui/material";
 import React, {useRef} from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
@@ -20,10 +20,7 @@ export function ChatRoomContainer() {
     const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
 
     const {sid} = useParams<{ sid: string }>();
-
     const session = SessionList().get(sid);
-
-    const isGroup = (session?.Type === 2)
 
     if (session == null) {
         return <Box mt={"30%"}>
@@ -78,11 +75,6 @@ export function ChatRoomContainerMobile() {
     const {sid} = useParams<{ sid: string }>();
     const session = Account.getInstance().getSessionList().get(sid);
 
-    const scrollToBottom = async () => {
-        if (scrollRef.current)
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-
     if (session === null) {
         window.location.href = "/im/session"
         return <Loading/>
@@ -92,6 +84,10 @@ export function ChatRoomContainerMobile() {
         if (session != null) {
             session.send(msg, type).subscribe({error: (err) => showSnack(err.toString())})
         }
+    }
+    const scrollToBottom = async () => {
+        if (scrollRef.current)
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
 
     return (<Box height={"100vh"}>
@@ -118,7 +114,16 @@ export function ChatRoomContainerMobile() {
             {/*<Box height={"10%"}>*/}
             {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
             {/*</Box>*/}
-            <SessionMessageList id={sid}/>
+
+            <div className={'flex flex-col h-full'}>
+                <ChatContext.Provider value={{
+                    scrollToBottom,
+                }}>
+                    <Box height={"calc(95vh - 60px)"} ref={scrollRef} className={'BeautyScrollBar overflow-y-auto flex w-full'}>
+                        <SessionMessageList id={sid}/>
+                    </Box>
+                </ChatContext.Provider>
+            </div>
         </Box>
         <Box height={'80px'} bgcolor={"white"}>
             <MessageInput onSend={sendMessage}/>

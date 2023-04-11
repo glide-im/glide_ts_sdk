@@ -1,15 +1,14 @@
-import { delay, first, map, mergeMap, Observable, of, throwError, toArray } from "rxjs";
-import { Api } from "../api/api";
-import { SessionBean } from "../api/model";
-import { Account } from "./account";
-import { ChatMessage, SendingStatus } from "./chat_message";
-import { IMUserInfo } from "./def";
-import { Cache } from "./cache";
-import { Actions, Message, MessageType } from "./message";
-import { Ws } from "./ws";
-import { SessionList } from "./session_list";
-import { onNext } from "../rx/next";
-import { time2HourMinute } from "../utils/TimeUtils";
+import {delay, first, map, mergeMap, Observable, of} from "rxjs";
+import {SessionBean} from "../api/model";
+import {Account} from "./account";
+import {ChatMessage, SendingStatus} from "./chat_message";
+import {IMUserInfo} from "./def";
+import {Cache} from "./cache";
+import {Message, MessageType} from "./message";
+import {Ws} from "./ws";
+import {SessionList} from "./session_list";
+import {onNext} from "../rx/next";
+import {time2HourMinute} from "../utils/TimeUtils";
 
 enum SessionType {
     Single = 1,
@@ -55,7 +54,7 @@ export class Session {
         if (type === 1) {
             ret.Title = Cache.getUserInfo(to)?.name ?? ret.ID;
         }
-        if (ret.To == "the_world_channel") {
+        if (ret.To === "the_world_channel") {
             of("Hi, 我来了").pipe(
                 delay(2000),
                 mergeMap(msg => ret.sendTextMessage(msg)),
@@ -127,23 +126,22 @@ export class Session {
         return of(res);
         // }
 
-
-        switch (this.Type) {
-            case SessionType.Single:
-                return Api.getMessageHistry(this.To, beforeMid)
-                    .pipe(
-                        mergeMap(resp => of(...resp)),
-                        map(msg => ChatMessage.create2(msg, this.Type)),
-                        onNext(msg => {
-                            this.addMessageByOrder(msg)
-                        }),
-                        toArray(),
-                    )
-            case SessionType.Group:
-                return of();
-            default:
-                return throwError(() => new Error("unknown session type"));
-        }
+        // switch (this.Type) {
+        //     case SessionType.Single:
+        //         return Api.getMessageHistry(this.To, beforeMid)
+        //             .pipe(
+        //                 mergeMap(resp => of(...resp)),
+        //                 map(msg => ChatMessage.create2(msg, this.Type)),
+        //                 onNext(msg => {
+        //                     this.addMessageByOrder(msg)
+        //                 }),
+        //                 toArray(),
+        //             )
+        //     case SessionType.Group:
+        //         return of();
+        //     default:
+        //         return throwError(() => new Error("unknown session type"));
+        // }
     }
 
 
@@ -212,7 +210,7 @@ export class Session {
         }
 
         // 收到老消息
-        const isNotHistoryMessage = this.messageList[this.messageList.length - 1].getId() === message.getId()
+        // const isNotHistoryMessage = this.messageList[this.messageList.length - 1].getId() === message.getId()
 
         if (this.messageList.length > 0 && isNewMessage) {
             console.log("Session", "update session last message", this.ID, message.getDisplayContent());
