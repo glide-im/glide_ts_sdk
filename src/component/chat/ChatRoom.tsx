@@ -7,6 +7,7 @@ import {MessageInput, MessageInputV2} from "./MessageInput";
 import {ArrowBack} from "@mui/icons-material";
 import {Loading} from "../widget/Loading";
 import {useParams} from "react-router-dom";
+import {ChatContext} from "./context/ChatContext";
 
 
 function SessionList() {
@@ -16,7 +17,6 @@ function SessionList() {
 
 
 export function ChatRoomContainer() {
-
     const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
 
     const {sid} = useParams<{ sid: string }>();
@@ -55,13 +55,17 @@ export function ChatRoomContainer() {
             backgroundRepeat: 'repeat',
         }} className={'w-full flex-auto flex-1'}>
             <div className={'flex flex-col h-full'}>
-                <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef} className={'overflow-auto flex w-full'}>
-                    <SessionMessageList id={sid} updateScroll={() => scrollToBottom()}/>
-                </Box>
+                <ChatContext.Provider value={{
+                    scrollToBottom,
+                }}>
+                    <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef} className={'BeautyScrollBar overflow-y-auto flex w-full'}>
+                        <SessionMessageList id={sid}/>
+                    </Box>
 
-                <Box className={'h-16 px-5'}>
-                    <MessageInputV2 onSend={sendMessage}/>
-                </Box>
+                    <Box className={'h-16 px-5'}>
+                        <MessageInputV2 onSend={sendMessage}/>
+                    </Box>
+                </ChatContext.Provider>
             </div>
 
         </Box>
@@ -114,7 +118,7 @@ export function ChatRoomContainerMobile() {
             {/*<Box height={"10%"}>*/}
             {/*    {isGroup && (<Box><GroupMemberList id={session.To}/><Divider/></Box>)}*/}
             {/*</Box>*/}
-            <SessionMessageList id={sid} updateScroll={() => scrollToBottom()}/>
+            <SessionMessageList id={sid}/>
         </Box>
         <Box height={'80px'} bgcolor={"white"}>
             <MessageInput onSend={sendMessage}/>
