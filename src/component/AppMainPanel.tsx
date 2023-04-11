@@ -46,7 +46,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
                                             <UserInfoHeader/>
                                         </Box>
                                         <Divider/>
-                                        <Box className="flex-1">
+                                        <Box overflow={"hidden"} className="BeautyScrollBar flex-1">
                                             <SessionListView/>
                                         </Box>
                                     </div>
@@ -97,7 +97,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
                                 </Typography>
                             </Toolbar>
                         </AppBar>
-                        <Box>
+                        <Box overflow={"hidden"} className="BeautyScrollBar">
                             <SessionListView/>
                         </Box>
                     </Box>
