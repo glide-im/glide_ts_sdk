@@ -1,5 +1,5 @@
 import {AppBar, Box, Divider, IconButton, Toolbar, Typography} from "@mui/material";
-import React, {useRef} from "react";
+import React, {useEffect, useRef} from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
 import {showSnack} from "../widget/SnackBar";
@@ -8,24 +8,33 @@ import {ArrowBack} from "@mui/icons-material";
 import {Loading} from "../widget/Loading";
 import {useParams} from "react-router-dom";
 import {ChatContext} from "./context/ChatContext";
-
-
-function SessionList() {
-    return Account.getInstance().getSessionList();
-}
-
-
+import {Event, SessionList} from "../../im/session_list";
+import {filter, map} from "rxjs";
 
 export function ChatRoomContainer() {
     const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
 
     const {sid} = useParams<{ sid: string }>();
-    const session = SessionList().get(sid);
+    const [session, setSession] = React.useState(null);
+
+    useEffect(() => {
+        setSession(SessionList.getInstance().get(sid))
+    }, [sid])
+
+    useEffect(() => {
+        if (session === null) {
+            const sp = SessionList.getInstance().event().pipe(
+                filter((e) => e.event === Event.create && e.session?.ID === sid),
+                map((e) => e.session)
+            ).subscribe((e) => setSession(e))
+            return () => sp.unsubscribe()
+        }
+    }, [session, sid])
 
     if (session == null) {
         return <Box mt={"30%"}>
             <Typography variant="h6" textAlign={"center"}>
-                没有会话
+                选择一个会话开始聊天
             </Typography>
         </Box>
     }
@@ -55,7 +64,8 @@ export function ChatRoomContainer() {
                 <ChatContext.Provider value={{
                     scrollToBottom,
                 }}>
-                    <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef} className={'BeautyScrollBar overflow-y-auto flex w-full'}>
+                    <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef}
+                         className={'BeautyScrollBar overflow-y-auto flex w-full'}>
                         <SessionMessageList id={sid}/>
                     </Box>
 
@@ -107,7 +117,7 @@ export function ChatRoomContainerMobile() {
 
         <Box
             ref={scrollRef}
-            height={"calc(100vh - 138px)"}  style={{
+            height={"calc(100vh - 138px)"} style={{
             backgroundImage: `url(/chat_bg.jpg)`,
             backgroundRepeat: 'repeat',
         }} width={'100%'}>
@@ -119,7 +129,8 @@ export function ChatRoomContainerMobile() {
                 <ChatContext.Provider value={{
                     scrollToBottom,
                 }}>
-                    <Box height={"calc(95vh - 60px)"} ref={scrollRef} className={'BeautyScrollBar overflow-y-auto flex w-full'}>
+                    <Box height={"calc(95vh - 60px)"} ref={scrollRef}
+                         className={'BeautyScrollBar overflow-y-auto flex w-full'}>
                         <SessionMessageList id={sid}/>
                     </Box>
                 </ChatContext.Provider>

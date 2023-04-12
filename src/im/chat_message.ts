@@ -1,9 +1,9 @@
-import { Account } from "./account";
-import { Message, MessageStatus, MessageType } from "./message";
-import { Cache } from "./cache";
-import { Observable } from "rxjs";
-import { IMUserInfo } from "./def";
-import { MessageBean } from "../api/model";
+import {Account} from "./account";
+import {Message, MessageStatus, MessageType} from "./message";
+import {Cache} from "./cache";
+import {Observable} from "rxjs";
+import {IMUserInfo} from "./def";
+import {MessageBean} from "../api/model";
 
 export enum SendingStatus {
     Unknown,
@@ -57,6 +57,7 @@ export class ChatMessage {
         ret.Status = m.Status
         ret.Target = ret.FromMe ? ret.To : ret.From
         ret.OrderKey = m.SendAt
+
         return ret;
     }
 
@@ -74,6 +75,11 @@ export class ChatMessage {
         ret.Target = ret.FromMe ? m.to : m.from
         ret.OrderKey = m.sendAt
         ret.Seq = m.seq
+
+        if (ret.CliId === undefined || ret.CliId === "") {
+            // TODO optimize
+            ret.CliId = ret.Mid.toString()
+        }
         return ret;
     }
 
@@ -97,6 +103,9 @@ export class ChatMessage {
     }
 
     public getSenderName(): string {
+        if (this.FromMe) {
+            return "我"
+        }
         const userInfo = Cache.getUserInfo(this.From) ?? {
             name: "-"
         }
@@ -106,11 +115,14 @@ export class ChatMessage {
     public getDisplayContent(): string {
         switch (this.Type) {
             case 100:
-                const userInfo = Cache.getUserInfo(this.Content)?.name ?? this.Content
-                return this.FromMe ? "你已加入频道" : `${userInfo} 加入频道`;
             case 101:
-                const userInfo1 = Cache.getUserInfo(this.Content) ?? this.Content
-                return this.FromMe ? "你已离开频道" : `${userInfo1} 离开频道`;
+                const userInfo = Cache.getUserInfo(this.Content)
+                const name = userInfo === null ? this.Content : userInfo.name
+                const isMe = this.Content === Account.getInstance().getUID()
+                if (this.Type === 100) {
+                    return isMe ? "你已加入频道" : `${name} 加入频道`;
+                }
+                return isMe ? "你已离开频道" : `${name} 离开频道`;
             case MessageType.Image:
                 return '[图片]'
             case MessageType.Audio:
@@ -159,7 +171,7 @@ export class ChatMessage {
     }
 
     public update(m: ChatMessage): void {
-        if(m.Type === MessageType.StreamMarkdown || m.Type === MessageType.StreamText){
+        if (m.Type === MessageType.StreamMarkdown || m.Type === MessageType.StreamText) {
             this.update2(m)
             return;
         }

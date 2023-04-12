@@ -1,12 +1,24 @@
-import {delay, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {delay, map, mergeMap, Observable, of, Subscriber, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {CliCustomMessage, CommonMessage, Message} from "./message";
 import {getSID, Session} from "./session";
-import { onNext } from "../rx/next";
+import {onNext} from "../rx/next";
 
 export interface SessionListUpdateListener {
     (session: Session[]): void
+}
+
+export enum Event {
+    create = 0,
+    update = 1,
+    deleted = 2,
+    init = 3,
+}
+
+export interface SessionEvent {
+    event: Event
+    session?: Session
 }
 
 export class SessionList {
@@ -15,10 +27,15 @@ export class SessionList {
     private currentSession: string = "0";
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
+    private readonly sessionEventObservable: Observable<SessionEvent>
+    private sessionEventSub: Subscriber<SessionEvent>
     private sessionMap: Map<string, Session> = new Map<string, Session>()
 
     constructor(account: Account) {
         this.account = account
+        this.sessionEventObservable = new Observable<SessionEvent>((subscriber) => {
+            this.sessionEventSub = subscriber
+        })
     }
 
     public static getInstance(): SessionList {
@@ -53,6 +70,10 @@ export class SessionList {
 
     public setChatListUpdateListener(l: SessionListUpdateListener | null) {
         this.chatListUpdateListener = l
+    }
+
+    public event(): Observable<SessionEvent> {
+        return this.sessionEventObservable
     }
 
     public update(): Observable<Session[]> {
@@ -109,6 +130,7 @@ export class SessionList {
         this.sessionMap.set(s.ID, s)
         console.log('SessionList', "session added: ", s, this.sessionMap.values())
         this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
+        this.sessionEventSub.next({event: Event.create, session: s})
     }
 
     public get(sid: string): Session | null {

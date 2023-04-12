@@ -2,9 +2,9 @@ import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {ChannelInfo, IMUserInfo} from "./def";
 import {onErrorResumeNext} from "rxjs/operators";
-import { UserInfoBean } from "../api/model";
-import { onNext } from "../rx/next";
-import { getCookie, setCookie } from "../utils/Cookies";
+import {UserInfoBean} from "../api/model";
+import {onNext} from "../rx/next";
+import {getCookie, setCookie} from "../utils/Cookies";
 
 class cache {
 
@@ -12,7 +12,7 @@ class cache {
 
     constructor() {
         this.tempUserInfo.set('system', {
-            avatar: "system.png",
+            avatar: "https://im.dengzii.com/system.png",
             name: "系统",
             uid: "system",
         })
@@ -58,7 +58,7 @@ class cache {
 
     public getChannelInfo(id: string): ChannelInfo | null {
         if (id === 'the_world_channel') {
-            return {avatar: "world_channel.png", id: id, name: "世界频道"}
+            return {avatar: "https://im.dengzii.com/world_channel.png", id: id, name: "世界频道",}
         }
         return {avatar: "", id: id, name: id}
     }
@@ -125,7 +125,7 @@ class cache {
         )
     }
 
-    public clean(){
+    public clean() {
         // this.tempUserInfo.clear();
         // TODO fix
         localStorage.clear();
