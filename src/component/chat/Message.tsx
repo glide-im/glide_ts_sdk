@@ -1,15 +1,15 @@
-import { Audiotrack, ErrorOutline, FileDownload, Map } from "@mui/icons-material";
-import { Avatar, Box, CircularProgress, Grid, IconButton, LinearProgress, Typography } from "@mui/material";
-import { grey } from "@mui/material/colors";
-import React, { CSSProperties, useEffect, useState } from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { Account } from "../../im/account";
-import { Cache } from "../../im/cache";
-import { ChatMessage, SendingStatus } from "../../im/chat_message";
-import { IMUserInfo } from "../../im/def";
-import { MessageStatus, MessageType } from "../../im/message";
-import { ImageViewer } from "../widget/ImageViewer";
-import { Markdown } from "../widget/Markdown";
+import {Audiotrack, ErrorOutline, FileDownload, Map} from "@mui/icons-material";
+import {Avatar, Box, CircularProgress, Grid, IconButton, LinearProgress, Typography} from "@mui/material";
+import {grey} from "@mui/material/colors";
+import React, {CSSProperties, useEffect, useState} from "react";
+import {RouteComponentProps, withRouter} from "react-router-dom";
+import {Account} from "../../im/account";
+import {Cache} from "../../im/cache";
+import {ChatMessage, SendingStatus} from "../../im/chat_message";
+import {IMUserInfo} from "../../im/def";
+import {MessageStatus, MessageType} from "../../im/message";
+import {ImageViewer} from "../widget/ImageViewer";
+import {Markdown} from "../widget/Markdown";
 import {ChatContext} from "./context/ChatContext";
 
 const messageBoxStyle = function (): CSSProperties {
@@ -48,7 +48,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         return <Grid container padding={"4px 8px"}>
             <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                 <Typography variant={"body2"} textAlign={"center"} px={1}
-                    sx={{ background: grey[100], borderRadius: "50px" }}>
+                            sx={{background: grey[100], borderRadius: "50px"}}>
                     {msg.getDisplayContent()}
                 </Typography>
             </Box>
@@ -61,7 +61,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     if (msg.FromMe && sending === SendingStatus.Sending) {
         status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
-            <CircularProgress size={12} />
+            <CircularProgress size={12}/>
         </Box>
     }
 
@@ -69,23 +69,27 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
         {/* Avatar */}
         <Grid item xs={2} md={1}>
-            <UserAvatar ui={sender} />
+            <UserAvatar ui={sender}/>
         </Grid>
 
         {/* Content */}
         <Grid item xs={9} md={10} color={'palette.primary.main'}>
 
             {/* NickName */}
-            {msg.FromMe ? <></> : <Box style={{ padding: '0px 8px' }}>
-                <Typography variant={'caption'} color={'textSecondary'}>
+            {msg.FromMe ? <></> : <Box>
+                <Typography className={'font-sans'} variant={'body1'} color={'textPrimary'} component={"span"}>
                     {sender.name}
+                </Typography>
+                <Typography className={'font-sans'} variant={"caption"} ml={1} component={"span"} color={grey[500]}>
+                    {msg.getDisplayTime()}
                 </Typography>
             </Box>}
 
             {/* Message */}
-            <Box display={"flex"} flexDirection={direction}>
+            <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 0 : 1}>
+
                 <Box bgcolor={"white"} style={messageBoxStyle()}>
-                    <MessageContent msg={msg} />
+                    <MessageContent msg={msg}/>
                 </Box>
                 {status}
             </Box>
@@ -114,7 +118,7 @@ const UserAvatar = withRouter((props: Props) => {
     return <>
         <Avatar onClick={handleClick} sx={{
             margin: "auto", cursor: isSelf ? 'default' : 'pointer', bgcolor: grey[400]
-        }} src={props.ui.avatar} />
+        }} src={props.ui.avatar}/>
     </>
 })
 
@@ -142,48 +146,47 @@ function MessageContent(props: { msg: ChatMessage }) {
             return <>
                 <ImageViewer imageUrl={props.msg.Content} onClose={() => {
                     setOpen(false)
-                }} open={open} />
+                }} open={open}/>
                 <img src={props.msg.Content} alt={props.msg.Content} width={'100%'} onClick={() => {
                     setOpen(true)
-                }} />
+                }}/>
             </>
         case MessageType.StreamMarkdown:
         case MessageType.StreamText:
-            console.log('contentcontent', content)
             switch (status) {
                 case MessageStatus.StreamStart:
-                    return <CircularProgress />
+                    return <CircularProgress/>
                 case MessageStatus.StreamSending:
-                    return <Box>
-                        <Markdown source={content} />
-                        <LinearProgress />
+                    return <Box width={'100%'}>
+                        <Markdown source={content}/>
+                        <LinearProgress/>
                     </Box>
                 case MessageStatus.StreamCancel:
                     return <Box display={"flex"} justifyContent={"center"} alignItems={"center"}>
-                        <ErrorOutline /><Typography ml={1} variant={"body2"}>{content}</Typography>
+                        <ErrorOutline/><Typography ml={1} variant={"body2"}>{content}</Typography>
                     </Box>
                 case MessageStatus.StreamFinish:
-                    return <Markdown source={content} />
+                    return <Box width={'100%'}><Markdown source={content}/></Box>
                 default:
-                    return <Markdown source={content} />
+                    return <Markdown source={content}/>
             }
         case MessageType.Markdown:
-            return <Markdown source={content} />
+            return <Markdown source={content}/>
         case MessageType.Text:
-            return <Typography variant={"body1"} color={'#444'}>{content}</Typography>
+            return <Typography variant={"body1"} className={'font-light'}>{content}</Typography>
         case MessageType.Audio:
             return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                <IconButton color={'info'} title={'语音消息'}><Audiotrack /></IconButton>
+                <IconButton color={'info'} title={'语音消息'}><Audiotrack/></IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>语音消息</Typography>
             </Box>
         case MessageType.Location:
             return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                <IconButton color={'info'} title={'语音消息'}><Map /></IconButton>
+                <IconButton color={'info'} title={'语音消息'}><Map/></IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>位置</Typography>
             </Box>
         case MessageType.File:
             return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                <IconButton color={'info'} title={'文件消息'}><FileDownload /></IconButton>
+                <IconButton color={'info'} title={'文件消息'}><FileDownload/></IconButton>
                 <Typography variant={"body2"} color={'#5dccce'}>文件</Typography>
             </Box>
         default:

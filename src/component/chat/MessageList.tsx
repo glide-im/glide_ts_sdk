@@ -1,53 +1,35 @@
 import {Box, List, ListItem, Typography} from "@mui/material";
-import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react";
+import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {ChatMessageItem} from "./Message";
 import {ChatMessage} from "../../im/chat_message";
 import {SessionList} from "../../im/session_list";
 import {ChatContext} from "./context/ChatContext";
+import {useParams} from "react-router-dom";
+import {Session} from "../../im/session";
 
-interface MessageListProps {
-    id: string
-}
+export function SessionMessageList() {
 
-export function SessionMessageList(props: MessageListProps) {
-
-    const session = SessionList.getInstance().get(props.id);
-
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const {sid} = useParams<{ sid: string }>();
+    const [session, setSession] = React.useState<Session | null>(null);
+    const [messages, setMessages] = useState<ChatMessage[]>(session?.getMessages() ?? []);
 
     useEffect(() => {
+        setSession(SessionList.getInstance().get(sid))
+    }, [sid])
 
-        session?.getMessageHistory(0)
-            .subscribe({
-                next: (r) => {
-                    setMessages(r)
-                },
-                error: (e) => {
-                    console.log("getMessageHistory", e)
-                },
-                complete: () => {
-                }
-            })
 
+    useEffect(() => {
         if (session === null) {
             return
         }
-        const msgs = session.getMessages()
-        setMessages(msgs)
-    }, [session])
-
-    useEffect(() => {
-        if (session === null) {
-            return;
-        }
-        const l = session.addMessageListener((msg) => {
-            console.log('MessageList on new message', session)
+        setMessages(session.getMessages())
+        const sp = session.messageObservable().subscribe((msg) => {
             setMessages([...session.getMessages()])
         })
-        return () => l()
+        return () => sp.unsubscribe()
     }, [session])
 
-    if (props.id === "1") {
+    if (sid === "1") {
         // loadHistory()
     }
 
@@ -68,20 +50,24 @@ export function SessionMessageList(props: MessageListProps) {
     //     </Box>
     // }
 
-    return <MessageListView messages={messages} isGroup={session.isGroup()} />
+    return <MessageListView messages={messages} isGroup={session.isGroup()}/>
 }
 
 const messageListStyle: CSSProperties = {
     overflow: "revert", width: "100%",
 }
 
-type MessageListItemData = string | ChatMessage
+// type MessageListItemData = string | ChatMessage
 
 function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
     const chatContext = React.useContext(ChatContext)
-    const messages: MessageListItemData[] = useMemo(() => {
-        return ["", ...props.messages]
-    }, [props.messages])
+    // TODO use useMemo
+    // const messages: MessageListItemData[] = useMemo(() => {
+    //     return ["", ...props.messages]
+    // }, [props.messages])
+
+    const messages = props.messages
+    console.log(">>>>>render message list",messages)
 
     const messageListEle = useRef<HTMLUListElement>()
 
@@ -97,11 +83,11 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
                 </Box>
             </ListItem>
         }
-        return <ListItem key={`${value.SendAt}`} sx={{ padding: "0" }}><ChatMessageItem msg={value} /></ListItem>
+        return <ListItem key={value.getId()} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
     })
 
     return <Box className={'w-full'} display={"flex"} alignContent={"flex-end"}>
-        <List disablePadding ref={messageListEle} style={messageListStyle} >
+        <List disablePadding ref={messageListEle} style={messageListStyle}>
             {list}
         </List>
     </Box>

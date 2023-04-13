@@ -24,15 +24,15 @@ export function ChatRoomContainer() {
     useEffect(() => {
         if (session === null) {
             const sp = SessionList.getInstance().event().pipe(
-                filter((e) => e.event === Event.create && e.session?.ID === sid),
+                filter((e) => e.event === Event.create && e.session.isSelected()),
                 map((e) => e.session)
             ).subscribe((e) => setSession(e))
             return () => sp.unsubscribe()
         }
-    }, [session, sid])
+    }, [session])
 
-    if (session == null) {
-        return <Box mt={"30%"}>
+    if (session === null) {
+        return <Box mt={"0%"}>
             <Typography variant="h6" textAlign={"center"}>
                 选择一个会话开始聊天
             </Typography>
@@ -49,34 +49,33 @@ export function ChatRoomContainer() {
         }
     }
 
-    return (<Box className={'h-[95vh] flex flex-col '}>
-        <Box className={'h-14 pl-6'} color={'black'}>
-            <Typography variant={"h6"} style={{lineHeight: "60px"}}>
-                {session.Title}
-            </Typography>
-        </Box>
-        <Divider/>
-        <Box style={{
+    return (
+        <Box className={'h-[95vh] flex flex-col rounded-br-md rounded-tr-md'} style={{
             backgroundImage: `url(/chat_bg.jpg)`,
             backgroundRepeat: 'repeat',
-        }} className={'w-full flex-auto flex-1'}>
-            <div className={'flex flex-col h-full'}>
-                <ChatContext.Provider value={{
-                    scrollToBottom,
-                }}>
-                    <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef}
-                         className={'BeautyScrollBar overflow-y-auto flex w-full'}>
-                        <SessionMessageList id={sid}/>
-                    </Box>
+        }}>
+            <Box className={'h-14 pl-6 rounded-tr-md'} color={'black'} bgcolor={"white"}>
+                <Typography variant={"h6"} style={{lineHeight: "60px"}}>
+                    {session.Title}
+                </Typography>
+            </Box>
+            <Divider/>
+            <Box className={'w-full flex-auto'}>
+                <div className={'flex flex-col h-full'}>
+                    <ChatContext.Provider value={{scrollToBottom}}>
+                        <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef}
+                             className={'BeautyScrollBar overflow-y-auto flex w-full'}>
+                            <SessionMessageList/>
+                        </Box>
 
-                    <Box className={'h-16 px-5'}>
-                        <MessageInputV2 onSend={sendMessage}/>
-                    </Box>
-                </ChatContext.Provider>
-            </div>
+                        <Box className={'h-16 px-5'}>
+                            <MessageInputV2 onSend={sendMessage}/>
+                        </Box>
+                    </ChatContext.Provider>
+                </div>
 
-        </Box>
-    </Box>)
+            </Box>
+        </Box>)
 }
 
 export function ChatRoomContainerMobile() {
@@ -131,7 +130,7 @@ export function ChatRoomContainerMobile() {
                 }}>
                     <Box height={"calc(95vh - 60px)"} ref={scrollRef}
                          className={'BeautyScrollBar overflow-y-auto flex w-full'}>
-                        <SessionMessageList id={sid}/>
+                        <SessionMessageList/>
                     </Box>
                 </ChatContext.Provider>
             </div>

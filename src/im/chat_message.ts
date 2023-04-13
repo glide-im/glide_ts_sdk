@@ -84,8 +84,14 @@ export class ChatMessage {
     }
 
     public getDisplayTime(): string {
-        const date = new Date(this.SendAt);
-        return date.getHours() + ":" + date.getMinutes();
+        const date = new Date(this.SendAt*1000);
+
+        // format date like 19:01
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+        const hourStr = hour < 10 ? "0" + hour : hour.toString();
+        const minuteStr = minute < 10 ? "0" + minute : minute.toString();
+        return hourStr + ":" + minuteStr;
     }
 
     public getId(): string {

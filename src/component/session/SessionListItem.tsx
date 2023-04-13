@@ -2,7 +2,7 @@ import {Avatar, Badge, ListItemButton, ListItemIcon, ListItemText, ListSubheader
 import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
-import { Session } from "../../im/session";
+import {Session} from "../../im/session";
 
 export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
 
@@ -10,8 +10,8 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
     const [unread, setUnread] = useState(props.chat.UnreadCount)
 
 
-    useEffect(() =>
-        props.chat.addMessageListener((msg) => {
+    useEffect(() => {
+        const sp = props.chat.messageObservable().subscribe((msg) => {
             if (!msg.FromMe && !props.chat.isSelected()) {
                 if (props.chat.isGroup()) {
                     showSnack(`[${props.chat.Title}] ${msg.getSenderName()}: ${props.chat.LastMessage}`)
@@ -20,7 +20,8 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
                 }
             }
         })
-    )
+        return () => sp.unsubscribe()
+    }, [props.chat])
 
     useEffect(() => {
         console.log("SessionListItem", "init", props.chat)

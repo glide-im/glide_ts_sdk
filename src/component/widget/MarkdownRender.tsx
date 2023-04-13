@@ -9,6 +9,8 @@ export function MarkdownRenderer(props) {
         <Box width={'100%'} color={"black"}>
             <ReactMarkdown
                 {...props}
+
+
             />
         </Box>
     );

@@ -1,4 +1,4 @@
-import {delay, first, map, mergeMap, Observable, of} from "rxjs";
+import {delay, first, map, mergeMap, Observable, of, Subscriber} from "rxjs";
 import {SessionBean} from "../api/model";
 import {Account} from "./account";
 import {ChatMessage, SendingStatus} from "./chat_message";
@@ -36,8 +36,16 @@ export class Session {
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<string, ChatMessage>();
 
-    private messageListener = new Array<(message: ChatMessage) => void>();
+    private _messageObservable: Observable<ChatMessage>;
+    private messageSub: Subscriber<ChatMessage>;
+
     private sessionUpdateListener: SessionUpdateListener | null = null;
+
+    private constructor() {
+        this._messageObservable = new Observable<ChatMessage>((subscriber) => {
+            this.messageSub = subscriber;
+        })
+    }
 
     public isSelected(): boolean {
         return this.ID === SessionList.getInstance().getSelectedSession();
@@ -166,11 +174,8 @@ export class Session {
         this.sessionUpdateListener = listener;
     }
 
-    public addMessageListener(listener: (message: ChatMessage) => void): () => void {
-        this.messageListener.push(listener);
-        return () => {
-            this.messageListener = this.messageListener.filter(l => l !== listener);
-        }
+    public messageObservable(): Observable<ChatMessage> {
+        return this._messageObservable;
     }
 
     public getMessages(): ChatMessage[] {
@@ -222,7 +227,7 @@ export class Session {
             this.LastMessageSender = message.getSenderName();
 
             this.UpdateAt = time2HourMinute(message.SendAt);
-            this.messageListener.forEach(l => l(message));
+            this.messageSub.next(message)
         }
         if (!this.sessionUpdateListener) {
             console.log("Session", "sessionUpdateListener is null")

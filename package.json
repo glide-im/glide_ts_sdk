@@ -10,7 +10,6 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
-    "@types/axios": "0.14.0",
     "@types/jest": "^26.0.24",
     "@types/react": "^17.0.14",
     "@types/react-dom": "^17.0.9",
@@ -21,8 +20,8 @@
     "react-markdown": "^8.0.6",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^5.0.1",
-    "rxjs": "^7.5.5",
-    "web-vitals": "^1.1.2"
+    "react-syntax-highlighter": "^15.5.0",
+    "rxjs": "^7.5.5"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -34,8 +33,7 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {

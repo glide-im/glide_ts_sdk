@@ -30,29 +30,27 @@
     }
 }
 
-code {
+.app-code {
     overflow-x: auto;
     font-family: Consolas, Monaco, "Source Code Pro", "Courier New", monospace, serif;
     background-color: gainsboro;
-    padding: 4px;
+    padding: 8px;
     border-radius: 4px;
-    white-space: nowrap;
-
+    display: block;
 }
 
-pre {
+.app-pre {
+    margin: 8px 0;
     border-radius: 4px;
-    background-color: color('#f5f5f5');
-    padding: 8px;
-    width: 100%;
     overflow-x: auto;
 }
 
-blockquote {
+.app-blockquote {
     border-left: 4px solid #dfe2e5;
     padding: 8px 1em;
     color: #6a737d;
     background-color: #f6f8fa;
+    margin: 8px 0;
 }
 
 .App-header {
