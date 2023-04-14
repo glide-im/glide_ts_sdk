@@ -11,7 +11,7 @@ import {
     Typography
 } from "@mui/material";
 import {grey} from "@mui/material/colors";
-import React from "react";
+import React, {useEffect} from "react";
 import {Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter} from "react-router-dom";
 import {Account} from "../im/account";
 import {ContactsList} from "./friends/ContactsList";
@@ -22,6 +22,9 @@ import {ChatRoomContainer, ChatRoomContainerMobile} from "./chat/ChatRoom";
 import {Profile} from "./Profile";
 import {UserInfoHeader} from "./session/UserInfoHeader";
 import {SessionList} from "../im/session_list";
+import {WebRTC} from "../webrtc/webrtc";
+import VideoChat from "./webrtc/VideoChatDialog";
+import {Incoming} from "../webrtc/dialing";
 
 
 export const AppMainPanel = withRouter((props: RouteComponentProps) => {
@@ -31,10 +34,19 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
         return <></>
     }
 
+    const [incoming, setIncoming] = React.useState<Incoming | null>(null);
+
+    useEffect(() => {
+        WebRTC.onIncoming((peerInfo, incoming) => {
+            setIncoming(incoming);
+        })
+    }, []);
+
     const match = useRouteMatch();
 
     return (
         <div className={'container bg-white md:h-[95vh] h-[100vh] mx-auto rounded-md'}>
+            {incoming === null ? <></> : <VideoChat/>}
             <Hidden mdDown>
                 <Box width={'100%'}>
                     <Switch>

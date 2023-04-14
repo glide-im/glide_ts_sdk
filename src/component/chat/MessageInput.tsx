@@ -28,6 +28,7 @@ import {
     SendRounded
 } from "@mui/icons-material";
 import {grey} from "@mui/material/colors";
+import VideoChat from "../webrtc/VideoChatDialog";
 
 
 export function MessageInput(props: { onSend: (msg: string, type: number) => void }) {
@@ -91,11 +92,12 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
 
             <Box pr={1} pl={1}>
                 <Grid container spacing={2}>
-                    <Grid item xs={11}>
+                    <Grid item xs={10}>
                         <InputBase fullWidth  inputRef={input} autoComplete={"off"}
                                    onKeyDown={handleKeyDown}/>
                     </Grid>
-                    <Grid item xs={1}>
+                    <Grid item xs={2}>
+                        {/*<VideoChat incoming={null}/>*/}
                         <IconButton onClick={handleSendClick} color={"primary"} style={{float: "right"}}>
                             <Send/>
                         </IconButton>
@@ -173,6 +175,7 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
                            placeholder="说点什么"
                            onKeyDown={handleKeyDown}
                            inputProps={{'aria-label': 'search google maps'}}/>
+                <VideoChat/>
                 <IconButton aria-describedby={'id1'} sx={{p: '10px'}}  onClick={onAttachFileClick}>
                     <AttachFileRounded/>
                 </IconButton>

@@ -1,4 +1,4 @@
-import {delay, map, mergeMap, Observable, of, Subscriber, toArray} from "rxjs";
+import {delay, filter, map, mergeMap, Observable, of, Subject, takeWhile, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {CliCustomMessage, CommonMessage, Message} from "./message";
@@ -28,13 +28,13 @@ export class SessionList {
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
     private readonly sessionEventObservable: Observable<SessionEvent>
-    private sessionEventSub: Subscriber<SessionEvent>
+    private sessionEventSubject = new Subject<SessionEvent>()
     private sessionMap: Map<string, Session> = new Map<string, Session>()
 
     constructor(account: Account) {
         this.account = account
         this.sessionEventObservable = new Observable<SessionEvent>((subscriber) => {
-            this.sessionEventSub = subscriber
+            this.sessionEventSubject.subscribe(subscriber)
         })
     }
 
@@ -46,6 +46,10 @@ export class SessionList {
 
         return this.getSessions()
             .pipe(
+                mergeMap(() => of(this.sessionEventSubject).pipe(
+                    filter(s => s !== null),
+                    takeWhile(s => s !== null),
+                )),
                 mergeMap(() => of("session init complete, " + this.sessionMap.size + " sessions")),
                 // map(() => "session init complete"),
             )
@@ -130,7 +134,7 @@ export class SessionList {
         this.sessionMap.set(s.ID, s)
         console.log('SessionList', "session added: ", s, this.sessionMap.values())
         this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
-        this.sessionEventSub.next({event: Event.create, session: s})
+        this.sessionEventSubject.next({event: Event.create, session: s})
     }
 
     public get(sid: string): Session | null {

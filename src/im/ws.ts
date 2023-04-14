@@ -58,6 +58,10 @@ class WebSocketClient {
         console.log(`[WebSocket] ${where}:`, ...msg);
     }
 
+    public getClient(): WebSocket | null {
+        return this.websocket;
+    }
+
     public isConnected(): boolean {
         return this.websocket !== null && this.websocket.readyState === this.websocket.OPEN;
     }

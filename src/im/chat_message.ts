@@ -1,7 +1,7 @@
 import {Account} from "./account";
 import {Message, MessageStatus, MessageType} from "./message";
 import {Cache} from "./cache";
-import {Observable} from "rxjs";
+import {Observable, Subject} from "rxjs";
 import {IMUserInfo} from "./def";
 import {MessageBean} from "../api/model";
 
@@ -39,26 +39,13 @@ export class ChatMessage {
     private streamMessages = new Array<ChatMessage>();
     private updateListener: Array<MessageUpdateListener> = [];
 
+    private streamMessageSubject = new Subject<ChatMessage>();
+
     public addUpdateListener(l: MessageUpdateListener): () => void {
         this.updateListener.push(l)
         return () => {
             this.updateListener = this.updateListener.filter((v) => v !== l)
         }
-    }
-
-    public static create2(m: MessageBean, type: number): ChatMessage {
-        const ret = new ChatMessage();
-        ret.From = m.From.toString();
-        ret.To = m.To.toString();
-        ret.Content = m.Content;
-        ret.Mid = m.Mid;
-        ret.SendAt = m.SendAt;
-        ret.FromMe = ret.From === Account.getInstance().getUID();
-        ret.Status = m.Status
-        ret.Target = ret.FromMe ? ret.To : ret.From
-        ret.OrderKey = m.SendAt
-
-        return ret;
     }
 
     public static create(m: Message): ChatMessage {
@@ -78,13 +65,16 @@ export class ChatMessage {
 
         if (ret.CliId === undefined || ret.CliId === "") {
             // TODO optimize
+            if (ret.Mid === undefined) {
+                return ret
+            }
             ret.CliId = ret.Mid.toString()
         }
         return ret;
     }
 
     public getDisplayTime(): string {
-        const date = new Date(this.SendAt*1000);
+        const date = new Date(this.SendAt * 1000);
 
         // format date like 19:01
         const hour = date.getHours();
@@ -156,12 +146,17 @@ export class ChatMessage {
                     this.Content = ""
                 }
                 this.streamMessages.push(m)
+                // TODO optimize, use rxjs to sort and join the stream messages
+                //this.streamMessageSubject.next(m)
                 this.streamMessages = this.streamMessages.sort((a, b) => {
                     return a.Seq - b.Seq
                 })
                 this.Content = this.streamMessages.map((m) => m.Content).join("")
                 break;
             case MessageStatus.StreamFinish:
+                setTimeout(() => {
+                    this.streamMessages = []
+                }, 2000)
                 break;
             case MessageStatus.StreamCancel:
                 this.Content = m.Content
@@ -195,6 +190,14 @@ export class ChatMessage {
 
         this.updateListener.forEach((l) => {
             l(this)
+        })
+    }
+
+    private initForStreamMessage() {
+        this.streamMessageSubject.pipe(
+
+        ).subscribe((m) => {
+            this.Content = m.Content
         })
     }
 }

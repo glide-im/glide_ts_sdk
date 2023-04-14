@@ -154,7 +154,14 @@ export class Session {
 
 
     public onMessage(action: string, message: Message) {
+        if (message.type > MessageType.WebRtcHi) {
+            return;
+        }
+
         const c = ChatMessage.create(message)
+
+        // todo filter none-display message
+
         console.log(">>> Session onMessage", this.ID, message.mid, message.type, message.status, message.content);
         // TODO 优化
         Cache.cacheUserInfo(message.from).then(() => {

@@ -12,12 +12,24 @@ export enum MessageType {
     System = 10,
     Markdown = 11,
 
-    
     UserOnline = 100,
     UserOffline = 101,
 
     StreamMarkdown = 1011,
     StreamText = 1001,
+
+    WebRtcHi = 2000,
+    WebRtcHello = 2001,
+    WebRtcDialing = 2002,
+    WebRtcAccept = 2003,
+    WebRtcReject = 2004,
+    WebRtcHangup = 2005,
+    WebRtcCancel = 2006,
+    WebRtcOffer = 2007,
+    WebRtcAnswer = 2008,
+    WebRtcIce = 2009,
+    WebRtcClose = 2010,
+    WebRtcCandidate = 2011,
 }
 
 export enum MessageStatus {

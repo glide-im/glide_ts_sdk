@@ -8,7 +8,8 @@ let snack = (s: string) => {
 }
 
 export function showSnack(msg: string) {
-    snack(msg);
+    const m = msg.length > 20 ? msg.substring(0, 20) + "..." : msg;
+    snack(m);
 }
 
 export function SnackBar() {
@@ -31,6 +32,7 @@ export function SnackBar() {
         }
     }, [])
 
-    return <SnackbarProvider maxSnack={3}><span/></SnackbarProvider>
+    return <SnackbarProvider maxSnack={3}
+                             anchorOrigin={{vertical: "top", horizontal: "center"}} ><span/></SnackbarProvider>
 
 }

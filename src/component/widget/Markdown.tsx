@@ -14,7 +14,7 @@ export const Markdown: React.FC<MarkdownProps> = ({source}) => {
     return <ReactMarkdown components={{
         img: ({node, ...props}) => <img {...props} style={{maxWidth: "100%"}} alt={'-'}/>,
         // a: ({node, ...props}) => <a {...props} target={"_blank"}/>,
-        p: ({node, ...props}) => <Typography {...props} variant={"body1"} className={'line-clamp-1'}/>,
+        p: ({node, ...props}) => <Typography {...props} variant={"body1"} className={'leading-relaxed'}/>,
         // h1: ({node, ...props}) => <Typography {...props} variant={"h6"}/>,
         // h2: ({node, ...props}) => <Typography {...props} variant={"h6"}/>,
         // h3: ({node, ...props}) => <Typography {...props} variant={"h6"}/>,
