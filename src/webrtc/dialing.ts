@@ -3,6 +3,7 @@ import {Peer} from "./peer";
 import {SignalingMessage, SignalingType, WsSignaling} from "./signaling";
 import {rtcConfig} from "./webrtc";
 import {Subject} from "rxjs";
+import {settings} from "cluster";
 
 export interface PeerInfo {
     id: string
@@ -15,22 +16,23 @@ export interface Dialing {
     cancel(): Promise<void>;
 
     onFail: (error: string) => void;
-    onAccept: (accept: Dialog) => void;
+    onAccept: (accept: RtcDialog) => void;
     onReject: () => void;
 }
 
 export interface Incoming {
     peer: Peer;
 
-    accept(): Promise<Dialog>;
+    accept(): Promise<RtcDialog>;
 
     reject(): Promise<void>;
 
-    // TODO multi listener support
-    onCancel: () => void;
+    cancelEvent: Subject<string>
+
+    disposeEvent: Subject<string>
 }
 
-export interface Dialog {
+export interface RtcDialog {
     peer: Peer;
 
     openMedia(): Promise<MediaStream>;
@@ -47,7 +49,7 @@ export interface Media {
     remoteStream: MediaStream | null;
 }
 
-export class WsDialog implements Dialog {
+export class WsDialog implements RtcDialog {
 
     onHangup: () => void = () => {
     };
@@ -121,12 +123,12 @@ export class WsDialing implements Dialing {
     private removeMessageListener: () => void = () => {
     }
 
-    private accepted: boolean = false;
+    private disposed: boolean = false;
 
     private failCallback: (error: string) => void = () => {
     }
 
-    onAccept: ((accept: Dialog) => void) = () => {
+    onAccept: ((accept: RtcDialog) => void) = () => {
     };
     onReject: (() => void) = () => {
     };
@@ -154,6 +156,7 @@ export class WsDialing implements Dialing {
     }
 
     public cancel(): Promise<void> {
+        this.disposed = true
         this.peer.close();
         this.callTimer && clearInterval(this.callTimer!!);
         this.removeMessageListener()
@@ -180,6 +183,12 @@ export class WsDialing implements Dialing {
             this.dialOnce();
         }, 1000);
 
+        setTimeout(() => {
+            if (!this.disposed) {
+                this.cancel().then().catch()
+                this.onFail("timeout")
+            }
+        }, 10000);
         return this;
     }
 
@@ -187,7 +196,7 @@ export class WsDialing implements Dialing {
         mLog("WsDialing", "receive accept");
         const peerInfo = m.content as PeerInfo
         if (peerInfo.id === this.peerId) {
-            this.accepted = true;
+            this.disposed = true;
             this.callTimer && clearInterval(this.callTimer!!);
             this.removeMessageListener()
             const dialog = new WsDialog(this.peer, true, this.signaling)
@@ -198,6 +207,7 @@ export class WsDialing implements Dialing {
     private receiveReject(m: SignalingMessage) {
         mLog("WsDialing", "receive reject");
         const peerInfo = m.content as PeerInfo
+        this.disposed = true
         if (peerInfo.id === this.peerId) {
             this.callTimer && clearInterval(this.callTimer!!);
             this.removeMessageListener()
@@ -206,7 +216,7 @@ export class WsDialing implements Dialing {
     }
 
     private dialOnce() {
-        if (this.accepted) {
+        if (this.disposed) {
             this.callTimer && clearInterval(this.callTimer!!);
             this.removeMessageListener()
             return;
@@ -240,10 +250,8 @@ export class WsIncoming implements Incoming {
     peerInfo: PeerInfo;
 
     peer: Peer;
-    onCancel: () => void = () => {
-    };
-
-    public event: Subject<any> = new Subject<any>();
+    cancelEvent: Subject<string>= new Subject<string>();
+    disposeEvent: Subject<string>= new Subject<string>();
 
     constructor(peer: PeerInfo, signaling: WsSignaling) {
         this.peerInfo = peer;
@@ -263,8 +271,8 @@ export class WsIncoming implements Incoming {
                 if (peerInfo.id === this.peerInfo.id) {
                     this.removeMessageListener()
                     this.timeout && clearInterval(this.timeout!!);
-                    this.onCancel()
-                    this.event.next("cancel")
+                    this.cancelEvent.next("cancel")
+                    this.disposeEvent.next("cancel")
                     this.signaling.deleteIncoming(this.peerInfo.id)
                 }
             }
@@ -275,14 +283,14 @@ export class WsIncoming implements Incoming {
         this.timeout && clearInterval(this.timeout!!);
 
         this.timeout = setTimeout(() => {
-            this.onCancel();
-            this.event.next("cancel")
+            this.cancelEvent.next("cancel")
+            this.disposeEvent.next("cancel")
             this.signaling.deleteIncoming(this.peerInfo.id)
             this.removeMessageListener()
         }, 2000);
     }
 
-    async accept(): Promise<Dialog> {
+    async accept(): Promise<RtcDialog> {
 
         await this.peer.attachLocalStream()
 
@@ -293,7 +301,7 @@ export class WsIncoming implements Incoming {
         this.removeMessageListener();
         this.timeout && clearInterval(this.timeout!!);
 
-        this.event.next("cancel")
+        this.disposeEvent.next("cancel")
 
         return new WsDialog(this.peer, false, this.signaling);
     }
@@ -303,6 +311,8 @@ export class WsIncoming implements Incoming {
         this.timeout && clearInterval(this.timeout!!);
         this.signaling.deleteIncoming(this.peerInfo.id)
 
-        return this.signaling.sendSignaling(this.peerInfo.id, SignalingType.Reject, {id: this.signaling.myId})
+        return this.signaling.sendSignaling(this.peerInfo.id, SignalingType.Reject, {id: this.signaling.myId}).finally(() => {
+            this.disposeEvent.next("cancel")
+        })
     }
 }

@@ -69,7 +69,7 @@ export function ChatRoomContainer() {
                         </Box>
 
                         <Box className={'h-16 px-5'}>
-                            <MessageInputV2 onSend={sendMessage}/>
+                            <MessageInputV2 session={sid} onSend={sendMessage}/>
                         </Box>
                     </ChatContext.Provider>
                 </div>

@@ -34,19 +34,11 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
         return <></>
     }
 
-    const [incoming, setIncoming] = React.useState<Incoming | null>(null);
-
-    useEffect(() => {
-        WebRTC.onIncoming((peerInfo, incoming) => {
-            setIncoming(incoming);
-        })
-    }, []);
-
     const match = useRouteMatch();
 
     return (
         <div className={'container bg-white md:h-[95vh] h-[100vh] mx-auto rounded-md'}>
-            {incoming === null ? <></> : <VideoChat/>}
+            <VideoChat session={''} showIcon={false}/>
             <Hidden mdDown>
                 <Box width={'100%'}>
                     <Switch>

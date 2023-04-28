@@ -93,7 +93,7 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
             <Box pr={1} pl={1}>
                 <Grid container spacing={2}>
                     <Grid item xs={10}>
-                        <InputBase fullWidth  inputRef={input} autoComplete={"off"}
+                        <InputBase fullWidth inputRef={input} autoComplete={"off"}
                                    onKeyDown={handleKeyDown}/>
                     </Grid>
                     <Grid item xs={2}>
@@ -109,7 +109,7 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
 
 }
 
-export function MessageInputV2(props: { onSend: (msg: string, type: number) => void }) {
+export function MessageInputV2(props: { session: string, onSend: (msg: string, type: number) => void }) {
 
     const input = useRef<HTMLInputElement>(null)
 
@@ -150,7 +150,7 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
     return <Grid container>
         <Grid item xs={11}>
             <Paper
-                sx={{p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%', borderRadius:'100px'}}
+                sx={{p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%', borderRadius: '100px'}}
             >
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
                     vertical: 'bottom',
@@ -175,8 +175,8 @@ export function MessageInputV2(props: { onSend: (msg: string, type: number) => v
                            placeholder="说点什么"
                            onKeyDown={handleKeyDown}
                            inputProps={{'aria-label': 'search google maps'}}/>
-                <VideoChat/>
-                <IconButton aria-describedby={'id1'} sx={{p: '10px'}}  onClick={onAttachFileClick}>
+                <VideoChat session={props.session} showIcon={true}/>
+                <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onAttachFileClick}>
                     <AttachFileRounded/>
                 </IconButton>
             </Paper>

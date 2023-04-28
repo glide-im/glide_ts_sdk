@@ -63,6 +63,10 @@ export class SessionList {
         return this.currentSession
     }
 
+    public getCurrentSession(): Session | null {
+        return this.get(this.currentSession)
+    }
+
     public createSession(id: string): Observable<Session> {
         if (this.getByUid(id) !== null) {
             return of(this.getByUid(id))

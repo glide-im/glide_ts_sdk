@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useEffect} from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -6,11 +7,12 @@ import Paper, {PaperProps} from '@mui/material/Paper';
 import Draggable from 'react-draggable';
 import {IconButton} from "@mui/material";
 import {VideoCallRounded} from "@mui/icons-material";
-import AppWebRTC from "./WebRTC";
-import {Incoming} from "../../webrtc/dialing";
 import {WebRTC} from "../../webrtc/webrtc";
+import {SessionList} from "../../im/session_list";
+import {WebRtcView} from "./WebRTC";
+import {Subscription} from "rxjs";
 
-function PaperComponent(props: PaperProps) {
+export function PaperComponent(props: PaperProps) {
     return (
         <Draggable
             handle="#draggable-dialog-title"
@@ -21,9 +23,29 @@ function PaperComponent(props: PaperProps) {
     );
 }
 
-export default function VideoChat() {
+export default function VideoChat(props: { session: string, showIcon: boolean }) {
 
-    const [open, setOpen] = React.useState(WebRTC.incoming !== null);
+    const [open, setOpen] = React.useState(false);
+
+    useEffect(() => {
+        let sp: Subscription | null = null
+        if (!props.showIcon) {
+            WebRTC.onIncoming((peerInfo, incoming) => {
+                sp = incoming.cancelEvent.subscribe(() => {
+                    setOpen(false)
+                    sp.unsubscribe()
+                })
+                setOpen(true)
+            })
+        }
+        return () => sp?.unsubscribe()
+    }, [props.showIcon]);
+
+
+    const session = SessionList.getInstance().get(props.session);
+    if (session?.isGroup() !== false) {
+        return <></>
+    }
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -33,14 +55,9 @@ export default function VideoChat() {
         setOpen(false);
     };
 
-    if (true){
-        // TODO:
-        return <></>
-    }
-
     return (
         <div>
-            {WebRTC.incoming == null ? <IconButton onClick={handleClickOpen}>
+            {props.showIcon ? <IconButton onClick={handleClickOpen}>
                 <VideoCallRounded/>
             </IconButton> : <></>}
             <Dialog
@@ -53,7 +70,7 @@ export default function VideoChat() {
                     视频通话
                 </DialogTitle>
                 <DialogContent>
-                    <AppWebRTC/>
+                    <WebRtcView targetId={session.To} onClose={handleClose}/>
                 </DialogContent>
             </Dialog>
         </div>

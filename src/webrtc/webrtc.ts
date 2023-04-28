@@ -39,11 +39,14 @@ export class WebRTC {
 
     public static onIncoming(cb: (peerInfo: PeerInfo, incoming: Incoming) => void) {
         WebRTC.getSignaling().onIncoming = (peerInfo: PeerInfo, incoming: Incoming) => {
-            WebRTC.incoming = incoming;
-            cb(peerInfo, incoming);
-            (incoming as WsIncoming).event.subscribe(() => {
+            incoming.disposeEvent.subscribe(() => {
                 WebRTC.incoming = null
             })
+            WebRTC.incoming = incoming;
+            cb(peerInfo, incoming);
+            // (incoming as WsIncoming).event.subscribe(() => {
+            //     WebRTC.incoming = null
+            // })
         };
     }
 }

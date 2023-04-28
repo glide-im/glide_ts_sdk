@@ -1,26 +1,58 @@
 import React, {useEffect, useRef} from 'react';
 import {rtcConfig, setRtcConfig, WebRTC, WebRtcSessionState} from "../../webrtc/webrtc";
 import {setLogCb} from "../../webrtc/log";
-import {Dialing, Dialog, Incoming} from "../../webrtc/dialing";
+import {Dialing, RtcDialog, Incoming} from "../../webrtc/dialing";
 import {SessionList} from "../../im/session_list";
-import {Box, Button, IconButton, Typography} from "@mui/material";
-import {CheckRounded, CloseRounded, PhoneRounded} from "@mui/icons-material";
+import {Box, Button, Dialog, IconButton, Typography} from "@mui/material";
+import {CheckRounded, CloseRounded, PhoneRounded, SettingsRounded} from "@mui/icons-material";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import {PaperComponent} from "./VideoChatDialog";
+import {showSnack} from "../widget/SnackBar";
 
-
-function Configure(props: { callback: () => void }) {
+function ConfigureDialog() {
 
     const textRef = useRef<HTMLTextAreaElement | null>(null);
+    const [show, setShow] = React.useState(false);
 
     const onApply = () => {
-        const config = JSON.parse(textRef.current!.value) as RTCConfiguration;
-        setRtcConfig(config)
-        props.callback();
+        if (show) {
+            const config = JSON.parse(textRef.current!.value) as RTCConfiguration;
+            setRtcConfig(config)
+        }
+        setShow(!show)
     }
 
-    return <Box width={"100%"}>
-        <textarea ref={textRef} defaultValue={JSON.stringify(rtcConfig)} style={{width: "100%", height: "300px"}}/>
-        <Button onClick={onApply} size={"large"}>应用</Button>
-    </Box>
+    const handleClose = () => {
+        setShow(false)
+    }
+
+    return <>
+        <Dialog
+            open={show}
+            onClose={handleClose}
+            aria-labelledby="draggable-dialog-title"
+        >
+            <DialogTitle style={{cursor: 'move'}} id="draggable-dialog-title">
+                ICE Server 配置
+            </DialogTitle>
+            <DialogContent>
+                <Box>
+                    <textarea ref={textRef} defaultValue={JSON.stringify(rtcConfig)}
+                              style={{width: "500px", height: "300px"}}/>
+                </Box>
+                <Box>
+                    <Button onClick={onApply}>
+                        应用
+                    </Button>
+                </Box>
+            </DialogContent>
+        </Dialog>
+
+        <IconButton onClick={onApply} size={"large"}>
+            <SettingsRounded/>
+        </IconButton>
+    </>
 }
 
 function Logger() {
@@ -35,21 +67,23 @@ function Logger() {
     return < textarea style={{width: "400px", height: "200px", wordBreak: "keep-all"}} defaultValue={log.join("\n")}/>
 }
 
-function WebRtcView(props: { targetId: string, incoming: Incoming | null }) {
+export function WebRtcView(props: { targetId: string, onClose: () => void }) {
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const videoTargetRef = useRef<HTMLVideoElement | null>(null);
 
-    const [incoming, setIncoming] = React.useState<Incoming | null>(props.incoming);
+    const [incoming, setIncoming] = React.useState<Incoming | null>(WebRTC.incoming);
     const [dialing, setDialing] = React.useState<Dialing | null>(null);
-    const [call, setCall] = React.useState<Dialog | null>(null);
+    const [call, setCall] = React.useState<RtcDialog | null>(null);
 
-    const [rtcState, setRtcState] = React.useState<WebRtcSessionState>(props.incoming === null ? "idle" : "incoming");
+    const [rtcState, setRtcState] = React.useState<WebRtcSessionState>(WebRTC.incoming === null ? "idle" : "incoming");
 
     useEffect(() => {
         videoRef.current!.onloadedmetadata = () => {
             videoRef.current!.play().then(() => {
                 console.log("play")
+            }).catch((e) => {
+                console.log(e)
             });
         }
     }, [videoRef])
@@ -65,25 +99,28 @@ function WebRtcView(props: { targetId: string, incoming: Incoming | null }) {
     }, [videoTargetRef])
 
     useEffect(() => {
-        if (props.incoming === null) {
+        if (WebRTC.incoming === null) {
             return;
         }
-        props.incoming.peer.onRemoteTrack = (track: RTCTrackEvent) => {
+        WebRTC.incoming.peer.onRemoteTrack = (track: RTCTrackEvent) => {
             videoTargetRef.current!.srcObject = track.streams[0];
         }
-        props.incoming.onCancel = () => {
+        let sp = WebRTC.incoming.cancelEvent.subscribe(() => {
             setIncoming(null);
             setRtcState("idle");
-        }
-    }, [props.incoming])
+            props.onClose();
+        })
+        return () => sp.unsubscribe()
+    }, [props])
 
-    const handleDialog = (dialog: Dialog) => {
+    const handleDialog = (dialog: RtcDialog) => {
         dialog.onHangup = () => {
             videoRef.current?.pause()
             videoTargetRef.current?.pause()
             videoRef.current!.srcObject = null;
             videoTargetRef.current!.srcObject = null;
             setRtcState("idle");
+            props.onClose();
         }
         setCall(dialog);
         setRtcState("connected");
@@ -97,9 +134,9 @@ function WebRtcView(props: { targetId: string, incoming: Incoming | null }) {
             }).catch(e => {
                 alert("error" + e);
             }).finally(() => {
-                    setRtcState("idle");
-                }
-            )
+                setRtcState("idle");
+                props.onClose();
+            })
             return;
         }
 
@@ -116,17 +153,22 @@ function WebRtcView(props: { targetId: string, incoming: Incoming | null }) {
                         setDialing(dialing);
                         setRtcState("dialing");
                         dialing.onFail = (msg) => {
-                            alert(msg);
+                            setDialing(null);
+                            setRtcState("idle");
+                            showSnack(msg)
+                            props.onClose();
                         }
                         dialing.onReject = () => {
                             setRtcState("idle");
+                            props.onClose();
                         }
-                        dialing.onAccept = (c: Dialog) => {
+                        dialing.onAccept = (c: RtcDialog) => {
                             handleDialog(c);
                         }
-                    }).catch((err) => {
-                    alert(err);
-                });
+                    })
+                    .catch((err) => {
+                        alert(err);
+                    });
                 break;
             case "dialing":
                 dialing?.cancel().then(() => {
@@ -134,6 +176,7 @@ function WebRtcView(props: { targetId: string, incoming: Incoming | null }) {
                     videoRef.current!.srcObject = null;
                     setDialing(null);
                     setRtcState("idle");
+                    props.onClose();
                 });
                 break;
             case "incoming":
@@ -141,12 +184,13 @@ function WebRtcView(props: { targetId: string, incoming: Incoming | null }) {
                     handleDialog(call);
                 }).catch(e => {
                     setRtcState("idle");
-                    alert("error" + e);
+                    showSnack(e)
                 })
                 break;
             case "connected":
                 call?.hangup().then(() => {
                     setRtcState("idle");
+                    props.onClose();
                 });
                 break;
         }
@@ -183,6 +227,7 @@ function ActionButton(props: { state: WebRtcSessionState, onClick: (isReject: Bo
     }
 
     return <Box>
+        <ConfigureDialog/>
         <IconButton onClick={() => props.onClick(false)} size={"large"}>
             {icon}
         </IconButton>
@@ -192,19 +237,3 @@ function ActionButton(props: { state: WebRtcSessionState, onClick: (isReject: Bo
     </Box>
 }
 
-export default function AppWebRTC() {
-
-    const sid = SessionList.getInstance().getSelectedSession()
-    const session = SessionList.getInstance().get(sid)
-
-    const [config, setConfig] = React.useState(false);
-
-    if (session.isGroup()) {
-        return <>不支持的会话类型</>
-    }
-
-    return <div>
-        <WebRtcView targetId={session.To} incoming={WebRTC.incoming}/>
-        <Configure callback={() => setConfig(true)}/>
-    </div>
-}
