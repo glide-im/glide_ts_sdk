@@ -95,7 +95,7 @@ export class Session {
         console.log('Session', 'init...')
         if (this.isGroup()) {
             this.Avatar = Cache.getChannelInfo(this.To)?.avatar ?? ""
-            this.Title = Cache.getChannelInfo(this.To)?.name ?? ''
+            this.Title = Cache.getChannelInfo(this.To)?.name ?? '-'
             return of(this);
         } else {
             return Cache.loadUserInfo1(this.To)

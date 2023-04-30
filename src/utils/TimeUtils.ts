@@ -35,7 +35,7 @@ export function time2HourMinute(timestamp: number) {
         timestamp *= 1000;
     }
     const date = new Date(timestamp);
-    return date.getHours() + ":" + date.getMinutes();
+    return (date.getHours() < 10 ? "0" : "") + date.getHours() + ":" + (date.getMinutes() < 10 ? "0" : "") + date.getMinutes();
 }
 
 export function timeStampSecToDate(timestamp: number) {

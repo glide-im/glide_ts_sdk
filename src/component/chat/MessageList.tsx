@@ -36,7 +36,7 @@ export function SessionMessageList() {
     if (session == null) {
         return <Box mt={"50%"}>
             <Typography variant="h6" textAlign={"center"}>
-                选择一个回话开始聊天
+                选择一个会话开始聊天
             </Typography>
         </Box>
     }

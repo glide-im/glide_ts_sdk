@@ -30,7 +30,7 @@ export const Register = withRouter((props: RouteComponentProps) => {
         Api.register(account, nickname, codeInput.current.value, password)
             .then((resp) => {
                 showSnack("注册成功");
-                props.history.push("/auth");
+                props.history.replace("/auth");
             })
             .catch((reason) => {
                 alert(reason)
@@ -71,7 +71,7 @@ export const Register = withRouter((props: RouteComponentProps) => {
                 <Grid container padding={"0px 16px 32px 16px"}>
                     <Grid item xs={12}>
                         <Grid container justifyContent={"right"}>
-                            <Button onClick={() => props.history.push('/auth/signin')}>返回登录</Button>
+                            <Button onClick={() => props.history.replace('/auth/signin')}>返回登录</Button>
                             <Button variant="contained" color="primary" onClick={submit}>提交</Button>
                         </Grid>
                     </Grid>

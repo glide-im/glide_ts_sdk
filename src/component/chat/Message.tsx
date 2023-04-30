@@ -11,6 +11,7 @@ import {MessageStatus, MessageType} from "../../im/message";
 import {ImageViewer} from "../widget/ImageViewer";
 import {Markdown} from "../widget/Markdown";
 import {ChatContext} from "./context/ChatContext";
+import {SessionList} from "../../im/session_list";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -111,7 +112,8 @@ const UserAvatar = withRouter((props: Props) => {
             return
         }
         Account.getInstance().getSessionList().createSession(props.ui.uid).subscribe((ses) => {
-            props.history.push(`/im/session/${ses.ID}`);
+            SessionList.getInstance().setSelectedSession(ses.ID)
+            props.history.replace(`/im/session/${ses.ID}`);
         })
     }
 

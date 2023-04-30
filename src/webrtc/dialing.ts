@@ -186,7 +186,7 @@ export class WsDialing implements Dialing {
         setTimeout(() => {
             if (!this.disposed) {
                 this.cancel().then().catch()
-                this.onFail("timeout")
+                this.onFail("无人接听")
             }
         }, 10000);
         return this;

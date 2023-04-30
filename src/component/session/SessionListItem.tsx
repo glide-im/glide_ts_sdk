@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
 import {Session} from "../../im/session";
 
-export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
+export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void}) {
 
     const [msg, setMsg] = useState(props.chat.LastMessage)
     const [unread, setUnread] = useState(props.chat.UnreadCount)

@@ -8,7 +8,7 @@ let snack = (s: string) => {
 }
 
 export function showSnack(msg: string) {
-    const m = msg.length > 20 ? msg.substring(0, 20) + "..." : msg;
+    const m = msg.length > 30 ? msg.substring(0, 30) + "..." : msg;
     snack(m);
 }
 

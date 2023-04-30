@@ -1,5 +1,5 @@
 import {GitHub, Settings} from "@mui/icons-material";
-import {Avatar, Box, Button, Grid, Hidden, IconButton, Paper, TextField} from "@mui/material";
+import {Avatar, Box, Button, Grid, Hidden, IconButton, Paper, TextField, Typography} from "@mui/material";
 import {useRef, useState} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
@@ -22,7 +22,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                 alert(e)
             },
             complete: () => {
-                props.history.push('/im')
+                props.history.replace('/im')
             }
         })
     }
@@ -60,11 +60,13 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                                                type="text"
                                                fullWidth/>
                                 </Grid>
+                                <Grid item justifyContent={"center"} xs={12}>
+                                    <Typography variant={"body2"} component={'span'} color={"gray"}>* 您的数据将不会被保存, 部分功能可能访问受限</Typography>
+                                </Grid>
                             </Grid>
                             <Grid container mt={4} mb={2}>
                                 <Grid xs={8} item>
-                                    <Button onClick={() => props.history.push('/auth/signup')}
-                                            disabled={true}>注册账号</Button>
+                                    <Button onClick={() => props.history.push('/auth')}>返回登录</Button>
                                 </Grid>
                                 <Grid xs={4} justifyContent={"right"} display={"flex"} item>
                                     <Button variant="contained" color="primary" onClick={onSubmit}>游客登录</Button>

@@ -27,15 +27,11 @@ export class SessionList {
     private currentSession: string = "0";
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
-    private readonly sessionEventObservable: Observable<SessionEvent>
     private sessionEventSubject = new Subject<SessionEvent>()
     private sessionMap: Map<string, Session> = new Map<string, Session>()
 
     constructor(account: Account) {
         this.account = account
-        this.sessionEventObservable = new Observable<SessionEvent>((subscriber) => {
-            this.sessionEventSubject.subscribe(subscriber)
-        })
     }
 
     public static getInstance(): SessionList {
@@ -81,7 +77,7 @@ export class SessionList {
     }
 
     public event(): Observable<SessionEvent> {
-        return this.sessionEventObservable
+        return this.sessionEventSubject
     }
 
     public update(): Observable<Session[]> {

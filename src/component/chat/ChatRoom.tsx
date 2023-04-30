@@ -6,7 +6,7 @@ import {showSnack} from "../widget/SnackBar";
 import {MessageInput, MessageInputV2} from "./MessageInput";
 import {ArrowBack} from "@mui/icons-material";
 import {Loading} from "../widget/Loading";
-import {useParams} from "react-router-dom";
+import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {ChatContext} from "./context/ChatContext";
 import {Event, SessionList} from "../../im/session_list";
 import {filter, map} from "rxjs";
@@ -78,14 +78,14 @@ export function ChatRoomContainer() {
         </Box>)
 }
 
-export function ChatRoomContainerMobile() {
+export const ChatRoomContainerMobile = withRouter((props: RouteComponentProps) => {
 
     const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
     const {sid} = useParams<{ sid: string }>();
     const session = Account.getInstance().getSessionList().get(sid);
 
     if (session === null) {
-        window.location.href = "/im/session"
+        props.history.replace( "/im/session")
         return <Loading/>
     }
 
@@ -104,7 +104,7 @@ export function ChatRoomContainerMobile() {
             <Toolbar>
                 <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => {
                     session.clearUnread()
-                    window.history.back()
+                    props.history.replace( "/im/session")
                 }}>
                     <ArrowBack/>
                 </IconButton>
@@ -139,4 +139,4 @@ export function ChatRoomContainerMobile() {
             <MessageInput onSend={sendMessage}/>
         </Box>
     </Box>)
-}
+})

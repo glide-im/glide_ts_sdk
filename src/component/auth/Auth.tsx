@@ -15,7 +15,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
     const [open, setOpen] = useState(false)
 
     if (token) {
-        props.history.push("/im");
+        props.history.replace("/im");
         return <></>
     }
 
@@ -33,7 +33,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                     alert(e)
                 },
                 complete: () => {
-                    props.history.push("/im");
+                    props.history.replace("/im");
                 }
             })
     }
@@ -47,14 +47,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
     }
 
     const onGuestClick = () => {
-        Account.getInstance().guest('', '').subscribe({
-            error: (e) => {
-                alert(e)
-            },
-            complete: () => {
-                props.history.push('/im')
-            }
-        })
+        props.history.replace('/auth/guest')
     }
 
     return (
@@ -89,7 +82,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                 <Grid container padding={"0px 16px 32px 16px"}>
                     <Grid xs={8} mt={2}>
                         <Button onClick={onGuestClick}>游客登录</Button>
-                        <Button onClick={() => props.history.push('/auth/signup')}>注册账号</Button>
+                        <Button onClick={() => props.history.replace('/auth/signup')}>注册账号</Button>
                     </Grid>
                     <Grid xs={4} justifyContent={"right"} display={"flex"} mt={2}>
                         <Button variant="contained" color="primary" onClick={submit}>登录</Button>

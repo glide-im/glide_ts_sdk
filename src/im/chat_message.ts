@@ -74,7 +74,7 @@ export class ChatMessage {
     }
 
     public getDisplayTime(): string {
-        const date = new Date(this.SendAt * 1000);
+        const date = new Date(this.SendAt);
 
         // format date like 19:01
         const hour = date.getHours();

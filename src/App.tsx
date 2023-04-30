@@ -11,6 +11,7 @@ import {getCookie} from "./utils/Cookies";
 import {Guest} from "./component/auth/Guest";
 import {Loading} from "./component/widget/Loading";
 import {Subscription} from "rxjs";
+import {Auth} from "./component/auth/Auth";
 
 function App() {
 
@@ -82,7 +83,9 @@ function App() {
                         {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>
-                                    {/*<Auth/>*/}
+                                    <Auth/>
+                                </Route>
+                                <Route path={"/auth/guest"} exact={true}>
                                     <Guest/>
                                 </Route>
                                 <Route path={"/auth/signup"} exact={true}>
