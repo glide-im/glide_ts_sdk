@@ -3,15 +3,16 @@ import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
 import {Session} from "../../im/session";
+import {useLocation, useParams} from "react-router-dom";
 
 export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
 
+    const {sid} = useParams<{ sid: string }>();
     const [msg, setMsg] = useState(props.chat.LastMessage)
     const [unread, setUnread] = useState(props.chat.UnreadCount)
 
-
     useEffect(() => {
-        const sp = props.chat.messageObservable().subscribe((msg) => {
+        const sp = props.chat.messageSubject.subscribe((msg) => {
             if (!msg.FromMe && !props.chat.isSelected()) {
                 if (props.chat.isGroup()) {
                     showSnack(`[${props.chat.Title}] ${msg.getSenderName()}: ${props.chat.LastMessage}`)
@@ -41,7 +42,7 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
 
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
-                        selected={props.chat.isSelected()}>
+                        selected={props.chat.ID === sid}>
             <ListItemIcon>
                 <Badge variant={'standard'} badgeContent={unread} overlap="rectangular"
                        color={"secondary"}>

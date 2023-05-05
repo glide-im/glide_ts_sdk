@@ -23,7 +23,7 @@ export function SessionMessageList() {
             return
         }
         setMessages(session.getMessages())
-        const sp = session.messageObservable().subscribe((msg) => {
+        const sp = session.messageSubject.subscribe((msg) => {
             setMessages([...session.getMessages()])
         })
         return () => sp.unsubscribe()

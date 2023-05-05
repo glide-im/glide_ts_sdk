@@ -80,11 +80,11 @@ export const Auth = withRouter((props: RouteComponentProps) => {
                                fullWidth/>
                 </Box>
                 <Grid container padding={"0px 16px 32px 16px"}>
-                    <Grid xs={8} mt={2}>
+                    <Grid xs={8} item mt={2}>
                         <Button onClick={onGuestClick}>游客登录</Button>
                         <Button onClick={() => props.history.replace('/auth/signup')}>注册账号</Button>
                     </Grid>
-                    <Grid xs={4} justifyContent={"right"} display={"flex"} mt={2}>
+                    <Grid xs={4} item justifyContent={"right"} display={"flex"} mt={2}>
                         <Button variant="contained" color="primary" onClick={submit}>登录</Button>
                     </Grid>
                 </Grid>

@@ -75,9 +75,9 @@ class cache {
                 const m: IMUserInfo = {
                     avatar: u.avatar,
                     name: u.nick_name,
-                    uid: u.uid.toString()
+                    uid: u.uid.toString(),
                 }
-                this._writeObject(`ui_${id}`, u);
+                this._writeObject(`ui_${id}`, m);
                 this.tempUserInfo.set(m.uid, m);
                 return m;
             }),

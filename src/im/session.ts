@@ -36,14 +36,11 @@ export class Session {
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<string, ChatMessage>();
 
-    private readonly _messageObservable: Observable<ChatMessage>;
-    private messageSub: Subscriber<ChatMessage>;
+    public readonly messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
     public readonly updateSubject: Subject<Event> = new Subject<Event>();
 
     private constructor() {
-        this._messageObservable = new Observable<ChatMessage>((subscriber) => {
-            this.messageSub = subscriber;
-        })
+
     }
 
     public isSelected(): boolean {
@@ -177,10 +174,6 @@ export class Session {
         return this.send(img, MessageType.Image)
     }
 
-    public messageObservable(): Observable<ChatMessage> {
-        return this._messageObservable;
-    }
-
     public getMessages(): ChatMessage[] {
         return Array.from(this.messageMap.values());
     }
@@ -230,7 +223,7 @@ export class Session {
             this.LastMessageSender = message.getSenderName();
 
             this.UpdateAt = time2HourMinute(message.SendAt);
-            this.messageSub.next(message)
+            this.messageSubject.next(message)
         }
         this.updateSubject.next(Event.update);
     }
