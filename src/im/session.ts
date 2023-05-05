@@ -1,4 +1,4 @@
-import {delay, first, map, mergeMap, Observable, of, Subscriber} from "rxjs";
+import {delay, first, map, mergeMap, Observable, of, Subject, Subscriber} from "rxjs";
 import {SessionBean} from "../api/model";
 import {Account} from "./account";
 import {ChatMessage, SendingStatus} from "./chat_message";
@@ -6,7 +6,7 @@ import {IMUserInfo} from "./def";
 import {Cache} from "./cache";
 import {Message, MessageType} from "./message";
 import {Ws} from "./ws";
-import {SessionList} from "./session_list";
+import {Event, SessionList} from "./session_list";
 import {onNext} from "../rx/next";
 import {time2HourMinute} from "../utils/TimeUtils";
 
@@ -36,10 +36,9 @@ export class Session {
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<string, ChatMessage>();
 
-    private _messageObservable: Observable<ChatMessage>;
+    private readonly _messageObservable: Observable<ChatMessage>;
     private messageSub: Subscriber<ChatMessage>;
-
-    private sessionUpdateListener: SessionUpdateListener | null = null;
+    public readonly updateSubject: Subject<Event> = new Subject<Event>();
 
     private constructor() {
         this._messageObservable = new Observable<ChatMessage>((subscriber) => {
@@ -88,14 +87,15 @@ export class Session {
 
     public clearUnread() {
         this.UnreadCount = 0;
-        this.sessionUpdateListener?.();
+        this.updateSubject.next(Event.update);
     }
 
     public init(): Observable<Session> {
         console.log('Session', 'init...')
         if (this.isGroup()) {
-            this.Avatar = Cache.getChannelInfo(this.To)?.avatar ?? ""
-            this.Title = Cache.getChannelInfo(this.To)?.name ?? '-'
+            const info = Cache.getChannelInfo(this.To)
+            this.Avatar = info?.avatar ?? ""
+            this.Title = info?.name ?? '-'
             return of(this);
         } else {
             return Cache.loadUserInfo1(this.To)
@@ -106,7 +106,7 @@ export class Session {
                         this.Title = info.name;
                         this.Avatar = info.avatar;
                         console.log('Session', 'info updated', info)
-                        this.sessionUpdateListener?.()
+                        this.updateSubject.next(Event.update);
                     }),
                     // mergeMap(() => this.getMessageHistry(0)),
                     mergeMap(() => of(this)),
@@ -177,10 +177,6 @@ export class Session {
         return this.send(img, MessageType.Image)
     }
 
-    public setSessionUpdateListener(listener: SessionUpdateListener | null) {
-        this.sessionUpdateListener = listener;
-    }
-
     public messageObservable(): Observable<ChatMessage> {
         return this._messageObservable;
     }
@@ -236,10 +232,7 @@ export class Session {
             this.UpdateAt = time2HourMinute(message.SendAt);
             this.messageSub.next(message)
         }
-        if (!this.sessionUpdateListener) {
-            console.log("Session", "sessionUpdateListener is null")
-        }
-        this.sessionUpdateListener?.();
+        this.updateSubject.next(Event.update);
     }
 
     private getSID(): string {

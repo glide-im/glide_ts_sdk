@@ -37,7 +37,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
     const match = useRouteMatch();
 
     return (
-        <div className={'container bg-white md:h-[95vh] h-[100vh] mx-auto rounded-md'}>
+        <div className={'container bg-white lg:h-[100vh] xl:h-[95vh] md:w-10/12 sm:w-full md:mx-auto sm:mx-0 rounded-md'}>
             <VideoChat session={''} showIcon={false}/>
             <Hidden mdDown>
                 <Box width={'100%'}>

@@ -48,7 +48,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
             <Hidden mdDown>
                 <Grid container justifyContent={"center"}>
                     <Paper variant={"outlined"}>
-                        <Grid container sx={{p: 2}} p={2}>
+                        <Grid container p={2}>
                             <Grid item xs={12}>
                                 <Grid item justifyContent={"center"} xs={12} display={"flex"}>
                                     <Avatar src={'/logo.png'} sx={{width: 50, height: 50}}/>

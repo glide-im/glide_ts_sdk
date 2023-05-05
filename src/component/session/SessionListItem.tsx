@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
 import {Session} from "../../im/session";
 
-export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void}) {
+export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
 
     const [msg, setMsg] = useState(props.chat.LastMessage)
     const [unread, setUnread] = useState(props.chat.UnreadCount)
@@ -25,11 +25,14 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
 
     useEffect(() => {
         console.log("SessionListItem", "init", props.chat)
-        props.chat.setSessionUpdateListener(() => {
-            console.log("SessionListItem", "chat updated", props.chat)
-            setMsg(`${props.chat.LastMessageSender}: ${props.chat.LastMessage}`)
-            setUnread(props.chat.UnreadCount)
+        const sp = props.chat.updateSubject.subscribe({
+            next: (s) => {
+                console.log("SessionListItem", "chat updated", props.chat)
+                setMsg(`${props.chat.LastMessageSender}: ${props.chat.LastMessage}`)
+                setUnread(props.chat.UnreadCount)
+            }
         })
+        return () => sp.unsubscribe()
     }, [props.chat])
 
     const onItemClick = () => {

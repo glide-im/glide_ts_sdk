@@ -34,7 +34,7 @@ class cache {
         const res = this._readObject(`ui_${id}`);
         if (res !== null) {
             this.tempUserInfo.set(id, res);
-            console.log(res)
+            console.log('[cache]', "restore cache user info", res)
             return res
         }
         return null
@@ -136,10 +136,12 @@ class cache {
         if (val === null) {
             return null;
         }
+        console.log('[cache]', "read cache", key, val)
         return JSON.parse(val);
     }
 
     private _writeObject(key: string, val: any): void {
+        console.log('[cache]', "write cache", key, val)
         localStorage.setItem(key, JSON.stringify(val));
     }
 }
