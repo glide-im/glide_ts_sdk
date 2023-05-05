@@ -148,10 +148,8 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
         }
     }
     return <Grid container>
-        <Grid item xs={11}>
-            <Paper
-                sx={{p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%', borderRadius: '100px'}}
-            >
+        <Grid item md={11} sm={10} xs={9}>
+            <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%', borderRadius: '100px'}}>
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'right',
@@ -181,9 +179,9 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
                 </IconButton>
             </Paper>
         </Grid>
-        <Grid item xs={1} justifyContent="center" alignItems="center" display={"flex"}>
-            <Box sx={{bgcolor: grey[50], borderRadius: '50%'}}>
-                <IconButton color={'primary'} size={"large"} onClick={handleSendClick}>
+        <Grid item md={1} sm={2} xs={3} justifyContent="center" alignItems="center" display={"flex"}>
+            <Box sx={{bgcolor: grey[50], borderRadius: '100px'}}>
+                <IconButton color={'primary'}  sx={{p: '10px'}} size={"large"} onClick={handleSendClick}>
                     <SendRounded/>
                 </IconButton>
             </Box>

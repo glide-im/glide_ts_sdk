@@ -50,7 +50,7 @@ export function ChatRoomContainer() {
     }
 
     return (
-        <Box className={'h-[95vh] flex flex-col rounded-br-md rounded-tr-md'} style={{
+        <Box className={'xl:h-[95vh] lg:h-[100vh] flex flex-col rounded-br-md rounded-tr-md'} style={{
             backgroundImage: `url(/chat_bg.jpg)`,
             backgroundRepeat: 'repeat',
         }}>

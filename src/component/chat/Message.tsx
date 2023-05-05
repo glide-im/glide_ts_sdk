@@ -124,6 +124,13 @@ const UserAvatar = withRouter((props: Props) => {
     </>
 })
 
+function AtUser(props: { uid: string }) {
+    const ui = Cache.getUserInfo(props.uid)
+    if (ui) {
+        return <>{ui.name}</>
+    }
+    return <>{props.uid}</>
+}
 
 function MessageContent(props: { msg: ChatMessage }) {
     const chatContext = React.useContext(ChatContext)
