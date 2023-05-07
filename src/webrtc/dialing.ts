@@ -3,7 +3,6 @@ import {Peer} from "./peer";
 import {SignalingMessage, SignalingType, WsSignaling} from "./signaling";
 import {rtcConfig} from "./webrtc";
 import {Subject} from "rxjs";
-import {settings} from "cluster";
 
 export interface PeerInfo {
     id: string

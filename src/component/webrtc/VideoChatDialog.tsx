@@ -11,6 +11,7 @@ import {WebRTC} from "../../webrtc/webrtc";
 import {SessionList} from "../../im/session_list";
 import {WebRtcView} from "./WebRTC";
 import {Subscription} from "rxjs";
+import {SessionType} from "../../im/session";
 
 export function PaperComponent(props: PaperProps) {
     return (
@@ -43,7 +44,7 @@ export default function VideoChat(props: { session: string, showIcon: boolean })
 
 
     const session = SessionList.getInstance().get(props.session);
-    if (session?.isGroup() !== false) {
+    if (session?.Type !== SessionType.Single) {
         return <></>
     }
 

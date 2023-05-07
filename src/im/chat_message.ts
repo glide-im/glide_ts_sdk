@@ -2,8 +2,7 @@ import {Account} from "./account";
 import {Message, MessageStatus, MessageType} from "./message";
 import {Cache} from "./cache";
 import {Observable, Subject} from "rxjs";
-import {IMUserInfo} from "./def";
-import {MessageBean} from "../api/model";
+import {GlideUserInfo} from "./def";
 
 export enum SendingStatus {
     Unknown,
@@ -14,6 +13,18 @@ export enum SendingStatus {
 
 export interface MessageUpdateListener {
     (message: ChatMessage): void
+}
+
+export interface IChatMessage {
+    getDisplayTime(): string
+
+    getSenderName(): string
+
+    getId(): string
+
+    getUserInfo(): Observable<GlideUserInfo>
+
+    getDisplayContent(): string
 }
 
 export class ChatMessage {
@@ -89,7 +100,7 @@ export class ChatMessage {
         return this.CliId;
     }
 
-    public getUserInfo(): Observable<IMUserInfo> {
+    public getUserInfo(): Observable<GlideUserInfo> {
         switch (this.Type) {
             case 100:
             case 101:

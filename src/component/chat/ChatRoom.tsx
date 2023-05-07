@@ -24,7 +24,7 @@ export function ChatRoomContainer() {
     useEffect(() => {
         if (session === null) {
             const sp = SessionList.getInstance().event().pipe(
-                filter((e) => e.event === Event.create && e.session.isSelected()),
+                filter((e) => e.event === Event.create && e.session.ID === sid),
                 map((e) => e.session)
             ).subscribe((e) => setSession(e))
             return () => sp.unsubscribe()

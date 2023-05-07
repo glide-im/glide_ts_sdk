@@ -1,4 +1,4 @@
-import {IMUserInfo} from "./def";
+import {GlideUserInfo} from "./def";
 import {Ws} from "./ws";
 import {Actions, Message} from "./message";
 import {Cache} from "./cache";
@@ -8,9 +8,9 @@ export class Channel {
     public Avatar: string;
     public Id: string;
     public Name: string;
-    public Members: Map<string, IMUserInfo> = new Map()
+    public Members: Map<string, GlideUserInfo> = new Map()
 
-    public onMemberAdd: (m: IMUserInfo) => void | null = null
+    public onMemberAdd: (m: GlideUserInfo) => void | null = null
     public onMemberRemove: (m: string) => void | null = null
 
     constructor(id: string) {
@@ -45,7 +45,7 @@ export class Channel {
         }
     }
 
-    public getMembers(): Array<IMUserInfo> {
+    public getMembers(): Array<GlideUserInfo> {
         return Array.from(this.Members.values())
     }
 

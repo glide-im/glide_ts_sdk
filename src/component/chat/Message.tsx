@@ -6,7 +6,7 @@ import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {Cache} from "../../im/cache";
 import {ChatMessage, SendingStatus} from "../../im/chat_message";
-import {IMUserInfo} from "../../im/def";
+import {GlideUserInfo} from "../../im/def";
 import {MessageStatus, MessageType} from "../../im/message";
 import {ImageViewer} from "../widget/ImageViewer";
 import {Markdown} from "../widget/Markdown";
@@ -26,7 +26,7 @@ const messageBoxStyle = function (): CSSProperties {
 export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    let sender: IMUserInfo | null = Cache.getUserInfo(msg.From)
+    let sender: GlideUserInfo | null = Cache.getUserInfo(msg.From)
 
     const [sending, setSending] = useState(msg.Sending)
 
@@ -100,7 +100,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
 
 interface Props extends RouteComponentProps {
-    ui: IMUserInfo;
+    ui: GlideUserInfo;
     onClick?: (id: number) => void
 }
 
@@ -124,13 +124,13 @@ const UserAvatar = withRouter((props: Props) => {
     </>
 })
 
-function AtUser(props: { uid: string }) {
-    const ui = Cache.getUserInfo(props.uid)
-    if (ui) {
-        return <>{ui.name}</>
-    }
-    return <>{props.uid}</>
-}
+// function AtUser(props: { uid: string }) {
+//     const ui = Cache.getUserInfo(props.uid)
+//     if (ui) {
+//         return <>{ui.name}</>
+//     }
+//     return <>{props.uid}</>
+// }
 
 function MessageContent(props: { msg: ChatMessage }) {
     const chatContext = React.useContext(ChatContext)

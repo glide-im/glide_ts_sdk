@@ -2,7 +2,7 @@ import { Avatar, Box, Card, CircularProgress, Divider, Grid, Typography } from "
 import { useEffect, useState } from "react";
 import { ServerInfoBean, OnlineUserInfoBean } from "../../api/model";
 import { Account } from "../../im/account";
-import { IMUserInfo } from "../../im/def";
+import { GlideUserInfo } from "../../im/def";
 import { Api } from "../../api/api";
 import { Cache } from "../../im/cache";
 
@@ -83,7 +83,7 @@ export function Square() {
 
 function UserCard(props: { u: OnlineUserInfoBean }) {
 
-    const [user, setUser] = useState<IMUserInfo | null>(null)
+    const [user, setUser] = useState<GlideUserInfo | null>(null)
 
     useEffect(() => {
         Cache.loadUserInfo(props.u.ID)

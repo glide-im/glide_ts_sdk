@@ -2,10 +2,10 @@ import {Avatar, Badge, ListItemButton, ListItemIcon, ListItemText, ListSubheader
 import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
-import {Session} from "../../im/session";
-import {useLocation, useParams} from "react-router-dom";
+import {useParams} from "react-router-dom";
+import {ISession, SessionType} from "../../im/session";
 
-export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
+export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession) => void }) {
 
     const {sid} = useParams<{ sid: string }>();
     const [msg, setMsg] = useState(props.chat.LastMessage)
@@ -13,8 +13,8 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
 
     useEffect(() => {
         const sp = props.chat.messageSubject.subscribe((msg) => {
-            if (!msg.FromMe && !props.chat.isSelected()) {
-                if (props.chat.isGroup()) {
+            if (!msg.FromMe && props.chat.ID !== sid) {
+                if (props.chat.Type === SessionType.Group) {
                     showSnack(`[${props.chat.Title}] ${msg.getSenderName()}: ${props.chat.LastMessage}`)
                 } else {
                     showSnack(`${props.chat.Title}: ${props.chat.LastMessage}`)
@@ -22,7 +22,7 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
             }
         })
         return () => sp.unsubscribe()
-    }, [props.chat])
+    }, [props.chat, sid])
 
     useEffect(() => {
         console.log("SessionListItem", "init", props.chat)

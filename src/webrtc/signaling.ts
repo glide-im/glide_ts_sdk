@@ -2,7 +2,7 @@ import {Incoming, PeerInfo, WsIncoming} from "./dialing";
 import {mLog} from "./log";
 import {Ws} from "../im/ws";
 import {Account} from "../im/account";
-import {Actions, MessageType} from "../im/message";
+import {Actions} from "../im/message";
 import {firstValueFrom} from "rxjs";
 
 export enum SignalingType {

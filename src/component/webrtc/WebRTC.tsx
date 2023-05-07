@@ -1,13 +1,10 @@
 import React, {useEffect, useRef} from 'react';
 import {rtcConfig, setRtcConfig, WebRTC, WebRtcSessionState} from "../../webrtc/webrtc";
-import {setLogCb} from "../../webrtc/log";
-import {Dialing, RtcDialog, Incoming} from "../../webrtc/dialing";
-import {SessionList} from "../../im/session_list";
+import {Dialing, Incoming, RtcDialog} from "../../webrtc/dialing";
 import {Box, Button, Dialog, IconButton, Typography} from "@mui/material";
 import {CheckRounded, CloseRounded, PhoneRounded, SettingsRounded} from "@mui/icons-material";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import {PaperComponent} from "./VideoChatDialog";
 import {showSnack} from "../widget/SnackBar";
 
 function ConfigureDialog() {
@@ -53,18 +50,6 @@ function ConfigureDialog() {
             <SettingsRounded/>
         </IconButton>
     </>
-}
-
-function Logger() {
-    const [log, setLog] = React.useState<string[]>([])
-
-    useEffect(() => {
-        setLogCb(l => {
-            setLog([l, ...log]);
-        })
-    }, [log])
-
-    return < textarea style={{width: "400px", height: "200px", wordBreak: "keep-all"}} defaultValue={log.join("\n")}/>
 }
 
 export function WebRtcView(props: { targetId: string, onClose: () => void }) {

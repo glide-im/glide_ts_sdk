@@ -2,11 +2,11 @@ import {delay, filter, map, mergeMap, Observable, of, Subject, takeWhile, toArra
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {CliCustomMessage, CommonMessage, Message} from "./message";
-import {getSID, Session} from "./session";
 import {onNext} from "../rx/next";
+import {createSession, fromSessionBean, getSID, InternalSession, ISession} from "./session";
 
 export interface SessionListUpdateListener {
-    (session: Session[]): void
+    (session: ISession[]): void
 }
 
 export enum Event {
@@ -18,7 +18,7 @@ export enum Event {
 
 export interface SessionEvent {
     event: Event
-    session?: Session
+    session?: ISession
 }
 
 export class SessionList {
@@ -28,7 +28,7 @@ export class SessionList {
 
     private chatListUpdateListener: SessionListUpdateListener | null = null;
     private sessionEventSubject = new Subject<SessionEvent>()
-    private sessionMap: Map<string, Session> = new Map<string, Session>()
+    private sessionMap: Map<string, InternalSession> = new Map<string, InternalSession>()
 
     constructor(account: Account) {
         this.account = account
@@ -59,17 +59,22 @@ export class SessionList {
         return this.currentSession
     }
 
-    public getCurrentSession(): Session | null {
+    public getCurrentSession(): ISession | null {
         return this.get(this.currentSession)
     }
 
-    public createSession(id: string): Observable<Session> {
+    public createSession(id: string): Observable<ISession> {
         if (this.getByUid(id) !== null) {
             return of(this.getByUid(id))
         }
-        return Session.create(id, 1).init().pipe(onNext((r) => {
-            this.add(r);
-        }))
+        return createSession(id, 1)
+            .init()
+            .pipe(
+                onNext((r) => {
+                    this.add(r);
+                }),
+                map((s) => s as ISession),
+            )
     }
 
     public setChatListUpdateListener(l: SessionListUpdateListener | null) {
@@ -80,11 +85,11 @@ export class SessionList {
         return this.sessionEventSubject
     }
 
-    public update(): Observable<Session[]> {
+    public update(): Observable<ISession[]> {
         return this.getSessions(true)
     }
 
-    public getSessions(reload: boolean = false): Observable<Session[]> {
+    public getSessions(reload: boolean = false): Observable<ISession[]> {
         if (this.sessionMap.size !== 0 && !reload) {
             return of(Array.from(this.sessionMap.values()));
         }
@@ -94,7 +99,7 @@ export class SessionList {
                 onNext(res => {
                     console.log("SessionList", "session list loaded: ", res)
                 }),
-                map(s => Session.fromSessionBean(s)),
+                map(s => fromSessionBean(s)),
                 mergeMap(s => s.init()),
                 onNext(s => {
                     console.log("SessionList", "session inited: ", s)
@@ -104,7 +109,7 @@ export class SessionList {
             )
     }
 
-    public getSessionsTemped(): Session[] {
+    public getSessionsTemped(): ISession[] {
         return Array.from(this.sessionMap.values())
     }
 
@@ -119,7 +124,7 @@ export class SessionList {
         if (s !== undefined) {
             s.onMessage(action, message.data as Message)
         } else {
-            const ses = Session.create(target, sessionType)
+            const ses = createSession(target, sessionType)
             this.add(ses)
             ses.init().pipe(delay(500)).subscribe(() => {
                 ses.onMessage(action, message.data as Message)
@@ -127,7 +132,7 @@ export class SessionList {
         }
     }
 
-    private add(s: Session) {
+    private add(s: InternalSession) {
         if (this.sessionMap.has(s.ID)) {
             return
         }
@@ -137,20 +142,20 @@ export class SessionList {
         this.sessionEventSubject.next({event: Event.create, session: s})
     }
 
-    public get(sid: string): Session | null {
+    public get(sid: string): ISession | null {
         if (!this.sessionMap.has(sid)) {
             return null
         }
         return this.sessionMap.get(sid);
     }
 
-    public getByUid(uid: string): Session | null {
+    public getByUid(uid: string): ISession | null {
         return this.get(getSID(1, uid))
     }
 
     public clear() {
         this.currentSession = ""
-        this.sessionMap = new Map<string, Session>()
+        this.sessionMap = new Map<string, InternalSession>()
         this.chatListUpdateListener?.([])
     }
 

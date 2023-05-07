@@ -10,6 +10,8 @@
       "dom.iterable",
       "esnext"
     ],
+//    "strictNullChecks": true,
+    "strictBindCallApply": true,
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,

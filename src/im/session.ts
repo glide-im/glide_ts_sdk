@@ -1,8 +1,8 @@
-import {delay, first, map, mergeMap, Observable, of, Subject, Subscriber} from "rxjs";
+import {delay, first, map, mergeMap, Observable, of, Subject} from "rxjs";
 import {SessionBean} from "../api/model";
 import {Account} from "./account";
 import {ChatMessage, SendingStatus} from "./chat_message";
-import {IMUserInfo} from "./def";
+import {GlideUserInfo} from "./def";
 import {Cache} from "./cache";
 import {Message, MessageType} from "./message";
 import {Ws} from "./ws";
@@ -10,16 +10,74 @@ import {Event, SessionList} from "./session_list";
 import {onNext} from "../rx/next";
 import {time2HourMinute} from "../utils/TimeUtils";
 
-enum SessionType {
+export enum SessionType {
     Single = 1,
     Group = 2
 }
 
-export interface SessionUpdateListener {
-    (): void
+export function getSID(type: number, to: string): string {
+    if (type === 2) {
+        return to;
+    }
+
+    let lg = Account.getInstance().getUID();
+    let sm = to;
+
+    if (lg < sm) {
+        let tmp = lg;
+        lg = sm;
+        sm = tmp;
+    }
+    return lg + "_" + sm;
 }
 
-export class Session {
+export interface SessionBaseInfo {
+
+    // sid
+    readonly ID: string;
+    readonly Avatar: string;
+    readonly Title: string;
+    readonly UpdateAt: string;
+    readonly LastMessageSender: string;
+    readonly LastMessage: string;
+    readonly UnreadCount: number;
+    readonly Type: SessionType;
+    readonly To: string;
+}
+
+export interface ISession extends SessionBaseInfo {
+
+    readonly messageSubject: Subject<ChatMessage>;
+    readonly updateSubject: Subject<Event>;
+
+    clearUnread(): void;
+
+    sendTextMessage(content: string): Observable<ChatMessage>;
+
+    sendImageMessage(url: string): Observable<ChatMessage>;
+
+    send(content: string, type: number): Observable<ChatMessage>;
+
+    getMessages(): ChatMessage[]
+
+    getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]>
+}
+
+export interface InternalSession extends ISession {
+    onMessage(action: string, message: Message)
+
+    init(): Observable<InternalSession>;
+}
+
+export function createSession(to: string, type: number): InternalSession {
+    return InternalSessionImpl.create(to, type);
+}
+
+export function fromSessionBean(sessionBean: SessionBean): InternalSession {
+    return InternalSessionImpl.fromSessionBean(sessionBean);
+}
+
+class InternalSessionImpl implements InternalSession {
 
     public ID: string;
     public Avatar: string;
@@ -28,27 +86,35 @@ export class Session {
     public LastMessageSender: string;
     public LastMessage: string;
     public UnreadCount: number = 0;
-    public Type: number;
+    public Type: SessionType;
     public To: string;
 
-    private userInfo: IMUserInfo | null = null;
+    private userInfo: GlideUserInfo | null = null;
 
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<string, ChatMessage>();
 
-    public readonly messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
-    public readonly updateSubject: Subject<Event> = new Subject<Event>();
+    private readonly _messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
+    private readonly _updateSubject: Subject<Event> = new Subject<Event>();
 
     private constructor() {
 
     }
 
-    public isSelected(): boolean {
+    get messageSubject(): Subject<ChatMessage> {
+        return this._messageSubject;
+    }
+
+    get updateSubject(): Subject<Event> {
+        return this._updateSubject;
+    }
+
+    private isSelected(): boolean {
         return this.ID === SessionList.getInstance().getSelectedSession();
     }
 
-    public static create(to: string, type: number): Session {
-        const ret = new Session();
+    public static create(to: string, type: number): InternalSessionImpl {
+        const ret = new InternalSessionImpl();
         ret.To = to;
         ret.Type = type;
         ret.ID = ret.getSID();
@@ -69,8 +135,8 @@ export class Session {
         return ret;
     }
 
-    public static fromSessionBean(sb: SessionBean): Session {
-        let session = new Session();
+    public static fromSessionBean(sb: SessionBean): InternalSessionImpl {
+        let session = new InternalSessionImpl();
         session.To = sb.To.toString();
         session.ID = session.getSID();
         session.Title = session.ID;
@@ -87,7 +153,7 @@ export class Session {
         this.updateSubject.next(Event.update);
     }
 
-    public init(): Observable<Session> {
+    public init(): Observable<InternalSessionImpl> {
         console.log('Session', 'init...')
         if (this.isGroup()) {
             const info = Cache.getChannelInfo(this.To)
@@ -116,13 +182,13 @@ export class Session {
         return this.Type === SessionType.Group;
     }
 
-    public getUserInfo(): IMUserInfo | null {
+    public getUserInfo(): GlideUserInfo | null {
         return this.userInfo;
     }
 
-    public getMessageHistory(beforeMid: number): Observable<ChatMessage[]> {
+    public getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]> {
 
-        if (beforeMid === 0 && this.messageList.length !== 0) {
+        if (beforeMid === null && this.messageList.length !== 0) {
             beforeMid = Number.MAX_SAFE_INTEGER;
         }
 
@@ -199,7 +265,7 @@ export class Session {
         const isNewMessage = !this.messageMap.has(message.getId());
 
         if (!isNewMessage) {
-            this.messageMap.get(message.getId()).update(message);
+            this.messageMap.get(message.getId())?.update(message);
         } else {
             let index = this.messageList.findIndex(msg => msg.OrderKey > message.OrderKey);
             this.messageMap.set(message.getId(), message);
@@ -274,26 +340,10 @@ export class Session {
     }
 }
 
-export function getSID(type: number, to: string): string {
-    if (type === 2) {
-        return to;
-    }
 
-    let lg = Account.getInstance().getUID();
-    let sm = to;
-
-    if (lg < sm) {
-        let tmp = lg;
-        lg = sm;
-        sm = tmp;
-    }
-    return lg + "_" + sm;
-}
-
-
-function uuid(len, radix) {
-    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
-    var uuid = [], i;
+function uuid(len, radix): string {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+    let uuid = [], i;
     radix = radix || chars.length;
 
     if (len) {
@@ -301,7 +351,7 @@ function uuid(len, radix) {
         for (i = 0; i < len; i++) uuid[i] = chars[0 | Math.random() * radix];
     } else {
         // rfc4122, version 4 form
-        var r;
+        let r;
 
         // rfc4122 requires these characters
         uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';

@@ -1,6 +1,6 @@
 import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {Api} from "../api/api";
-import {ChannelInfo, IMUserInfo} from "./def";
+import {GlideChannelInfo, GlideUserInfo} from "./def";
 import {onErrorResumeNext} from "rxjs/operators";
 import {UserInfoBean} from "../api/model";
 import {onNext} from "../rx/next";
@@ -8,7 +8,7 @@ import {getCookie, setCookie} from "../utils/Cookies";
 
 class cache {
 
-    private tempUserInfo = new Map<string, IMUserInfo>();
+    private tempUserInfo = new Map<string, GlideUserInfo>();
 
     constructor() {
         this.tempUserInfo.set('system', {
@@ -26,7 +26,7 @@ class cache {
         setCookie("token", token, 1);
     }
 
-    public getUserInfo(id: string): IMUserInfo | null {
+    public getUserInfo(id: string): GlideUserInfo | null {
         let i = this.tempUserInfo.get(id);
         if (i !== null && i !== undefined) {
             return i
@@ -56,23 +56,23 @@ class cache {
         return new Promise<any>(execute)
     }
 
-    public getChannelInfo(id: string): ChannelInfo | null {
+    public getChannelInfo(id: string): GlideChannelInfo | null {
         if (id === 'the_world_channel') {
             return {avatar: "https://im.dengzii.com/world_channel.png", id: id, name: "世界频道",}
         }
         return {avatar: "", id: id, name: id}
     }
 
-    public loadUserInfo1(id: string): Observable<IMUserInfo> {
+    public loadUserInfo1(id: string): Observable<GlideUserInfo> {
         const cache = this.getUserInfo(id);
         if (cache !== null) {
             return of(cache)
         }
 
         return from(Api.getUserInfo(id)).pipe(
-            map<UserInfoBean[], IMUserInfo>((us, i) => {
+            map<UserInfoBean[], GlideUserInfo>((us, i) => {
                 const u = us[0];
-                const m: IMUserInfo = {
+                const m: GlideUserInfo = {
                     avatar: u.avatar,
                     name: u.nick_name,
                     uid: u.uid.toString(),
@@ -89,7 +89,7 @@ class cache {
 
     }
 
-    public loadUserInfo(...id: string[]): Observable<IMUserInfo[]> {
+    public loadUserInfo(...id: string[]): Observable<GlideUserInfo[]> {
 
         return of(...id).pipe(
             groupBy<string, boolean>(id => {
@@ -107,7 +107,7 @@ class cache {
                             return Api.getUserInfo(...ids)
                         }),
                         mergeMap(userInfos => of(...userInfos)),
-                        map<UserInfoBean, IMUserInfo>(u => ({
+                        map<UserInfoBean, GlideUserInfo>(u => ({
                             avatar: u.avatar,
                             name: u.nick_name,
                             uid: u.uid.toString()

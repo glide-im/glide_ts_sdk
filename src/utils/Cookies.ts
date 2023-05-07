@@ -17,7 +17,7 @@ export function setCookie(name: string, value: string, expireDays: number) {
 
 export function getCookie(name: string): string | null {
     if (name !== 'enable_cookie' && !isEnableCookie()) {
-        return
+        return null
     }
     let reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
     let arr = document.cookie.match(reg);

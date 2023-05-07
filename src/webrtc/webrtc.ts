@@ -1,4 +1,4 @@
-import {Dialing, Incoming, PeerInfo, WsDialing, WsIncoming} from "./dialing";
+import {Dialing, Incoming, PeerInfo, WsDialing} from "./dialing";
 import {Signaling, WsSignaling} from "./signaling";
 
 export let iceServer: RTCIceServer[] = [

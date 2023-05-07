@@ -3,13 +3,13 @@ import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
 import {ContactsList} from "./contacts_list";
-import {IMUserInfo} from "./def";
+import {GlideUserInfo} from "./def";
 import {Cache} from "./cache";
 import {Actions, CommonMessage} from "./message";
 import {SessionList} from "./session_list";
 import {Ws} from "./ws";
 import {getCookie} from "../utils/Cookies";
-import { onComplete } from "../rx/next";
+import {onComplete} from "../rx/next";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -27,17 +27,19 @@ export class Account {
     private uid: string;
     private sessions: SessionList = new SessionList(this);
     private contacts: ContactsList = new ContactsList();
-    server: string = 'wss://intercom.ink/ws';//process.env.REACT_APP_WS_URL;
+    server: string =  process.env.REACT_APP_WS_URL;
     token: string;
+
+    static instance: Account = new Account();
 
     constructor() {
         this.token = getCookie('token')
     }
 
-    private userInfo: IMUserInfo | null = null;
+    private userInfo: GlideUserInfo | null = null;
 
     public static getInstance(): Account {
-        return instance;
+        return Account.instance;
     }
 
     public login(account: string, password: string): Observable<string> {
@@ -100,7 +102,7 @@ export class Account {
         return this.uid;
     }
 
-    public getUserInfo(): IMUserInfo | null {
+    public getUserInfo(): GlideUserInfo | null {
         return this.userInfo;
     }
 
@@ -168,5 +170,3 @@ export class Account {
         }
     }
 }
-
-const instance: Account = new Account();

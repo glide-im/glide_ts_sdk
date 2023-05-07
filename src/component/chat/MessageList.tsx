@@ -5,12 +5,12 @@ import {ChatMessage} from "../../im/chat_message";
 import {SessionList} from "../../im/session_list";
 import {ChatContext} from "./context/ChatContext";
 import {useParams} from "react-router-dom";
-import {Session} from "../../im/session";
+import {ISession, SessionType} from "../../im/session";
 
 export function SessionMessageList() {
 
     const {sid} = useParams<{ sid: string }>();
-    const [session, setSession] = React.useState<Session | null>(null);
+    const [session, setSession] = React.useState<ISession | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>(session?.getMessages() ?? []);
 
     useEffect(() => {
@@ -50,7 +50,7 @@ export function SessionMessageList() {
     //     </Box>
     // }
 
-    return <MessageListView messages={messages} isGroup={session.isGroup()}/>
+    return <MessageListView messages={messages} isGroup={session.Type === SessionType.Group}/>
 }
 
 const messageListStyle: CSSProperties = {
@@ -67,7 +67,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
     // }, [props.messages])
 
     const messages = props.messages
-    console.log(">>>>>render message list",messages)
+    console.log(">>>>>render message list", messages)
 
     const messageListEle = useRef<HTMLUListElement>()
 
