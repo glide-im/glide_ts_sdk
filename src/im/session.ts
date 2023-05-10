@@ -6,7 +6,7 @@ import {GlideUserInfo} from "./def";
 import {Cache} from "./cache";
 import {Message, MessageType} from "./message";
 import {Ws} from "./ws";
-import {Event, SessionList} from "./session_list";
+import {Event} from "./session_list";
 import {onNext} from "../rx/next";
 import {time2HourMinute} from "../utils/TimeUtils";
 
@@ -110,7 +110,7 @@ class InternalSessionImpl implements InternalSession {
     }
 
     private isSelected(): boolean {
-        return this.ID === SessionList.getInstance().getSelectedSession();
+        return this.ID === Account.session().getCurrentSession()?.ID;
     }
 
     public static create(to: string, type: number): InternalSessionImpl {

@@ -8,7 +8,7 @@ import {ArrowBack} from "@mui/icons-material";
 import {Loading} from "../widget/Loading";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {ChatContext} from "./context/ChatContext";
-import {Event, SessionList} from "../../im/session_list";
+import {Event} from "../../im/session_list";
 import {filter, map} from "rxjs";
 
 export function ChatRoomContainer() {
@@ -18,18 +18,18 @@ export function ChatRoomContainer() {
     const [session, setSession] = React.useState(null);
 
     useEffect(() => {
-        setSession(SessionList.getInstance().get(sid))
+        setSession(Account.session().get(sid))
     }, [sid])
 
     useEffect(() => {
         if (session === null) {
-            const sp = SessionList.getInstance().event().pipe(
+            const sp = Account.session().event().pipe(
                 filter((e) => e.event === Event.create && e.session.ID === sid),
                 map((e) => e.session)
             ).subscribe((e) => setSession(e))
             return () => sp.unsubscribe()
         }
-    }, [session])
+    }, [session, sid])
 
     if (session === null) {
         return <Box mt={"0%"}>

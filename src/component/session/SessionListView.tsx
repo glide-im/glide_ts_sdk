@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {ISession} from "../../im/session";
-import {Event, SessionList} from "../../im/session_list";
+import {Event} from "../../im/session_list";
 import {SessionListItem} from "./SessionListItem";
 
 
@@ -18,7 +18,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
     const [loadError, setLoadError] = useState("")
 
     useEffect(() => {
-        SessionList.getInstance().setSelectedSession(sid)
+        Account.session().setSelectedSession(sid)
     })
 
     useEffect(() => {

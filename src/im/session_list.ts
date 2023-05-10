@@ -5,10 +5,6 @@ import {CliCustomMessage, CommonMessage, Message} from "./message";
 import {onNext} from "../rx/next";
 import {createSession, fromSessionBean, getSID, InternalSession, ISession} from "./session";
 
-export interface SessionListUpdateListener {
-    (session: ISession[]): void
-}
-
 export enum Event {
     create = 0,
     update = 1,
@@ -21,12 +17,36 @@ export interface SessionEvent {
     session?: ISession
 }
 
-export class SessionList {
+export interface SessionList {
+    get(sid: string): ISession | null
+
+    getSessions(): Observable<ISession[]>
+
+    setSelectedSession(sid: string)
+
+    getCurrentSession(): ISession | null
+
+    createSession(id: string): Observable<ISession>
+
+    event(): Observable<SessionEvent>
+
+    getSessionsTemped(): ISession[]
+}
+
+export interface InternalSessionList extends SessionList {
+
+    init(): Observable<string>
+
+    clear()
+
+    onMessage(message: CommonMessage<Message | CliCustomMessage>)
+}
+
+export class InternalSessionListImpl implements InternalSessionList {
 
     private account: Account;
     private currentSession: string = "0";
 
-    private chatListUpdateListener: SessionListUpdateListener | null = null;
     private sessionEventSubject = new Subject<SessionEvent>()
     private sessionMap: Map<string, InternalSession> = new Map<string, InternalSession>()
 
@@ -55,10 +75,6 @@ export class SessionList {
         this.currentSession = sid
     }
 
-    public getSelectedSession(): string {
-        return this.currentSession
-    }
-
     public getCurrentSession(): ISession | null {
         return this.get(this.currentSession)
     }
@@ -77,16 +93,8 @@ export class SessionList {
             )
     }
 
-    public setChatListUpdateListener(l: SessionListUpdateListener | null) {
-        this.chatListUpdateListener = l
-    }
-
     public event(): Observable<SessionEvent> {
         return this.sessionEventSubject
-    }
-
-    public update(): Observable<ISession[]> {
-        return this.getSessions(true)
     }
 
     public getSessions(reload: boolean = false): Observable<ISession[]> {
@@ -138,7 +146,6 @@ export class SessionList {
         }
         this.sessionMap.set(s.ID, s)
         console.log('SessionList', "session added: ", s, this.sessionMap.values())
-        this.chatListUpdateListener?.(Array.from(this.sessionMap.values()))
         this.sessionEventSubject.next({event: Event.create, session: s})
     }
 
@@ -149,14 +156,13 @@ export class SessionList {
         return this.sessionMap.get(sid);
     }
 
-    public getByUid(uid: string): ISession | null {
+    private getByUid(uid: string): ISession | null {
         return this.get(getSID(1, uid))
     }
 
     public clear() {
         this.currentSession = ""
         this.sessionMap = new Map<string, InternalSession>()
-        this.chatListUpdateListener?.([])
     }
 
     public contain(chatId: string): boolean {

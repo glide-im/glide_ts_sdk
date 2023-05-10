@@ -1,15 +1,16 @@
 import {useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {SessionList} from "../../im/session_list";
+import {Account} from "../../im/account";
 
 function useSession() {
 
     const {sid} = useParams<{ sid: string }>();
-    const [session, setSession] = useState(SessionList.getInstance().get(sid))
+    const [session, setSession] = useState(Account.session().get(sid))
 
     useEffect(() => {
-        SessionList.getInstance().setSelectedSession(sid)
-        setSession(SessionList.getInstance().get(sid))
+        Account.session().setSelectedSession(sid)
+        setSession(Account.session().get(sid))
     }, [sid])
 
     return session

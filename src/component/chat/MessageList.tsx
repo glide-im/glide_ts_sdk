@@ -2,10 +2,10 @@ import {Box, List, ListItem, Typography} from "@mui/material";
 import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {ChatMessageItem} from "./Message";
 import {ChatMessage} from "../../im/chat_message";
-import {SessionList} from "../../im/session_list";
 import {ChatContext} from "./context/ChatContext";
 import {useParams} from "react-router-dom";
 import {ISession, SessionType} from "../../im/session";
+import {Account} from "../../im/account";
 
 export function SessionMessageList() {
 
@@ -14,7 +14,7 @@ export function SessionMessageList() {
     const [messages, setMessages] = useState<ChatMessage[]>(session?.getMessages() ?? []);
 
     useEffect(() => {
-        setSession(SessionList.getInstance().get(sid))
+        setSession(Account.session().get(sid))
     }, [sid])
 
 

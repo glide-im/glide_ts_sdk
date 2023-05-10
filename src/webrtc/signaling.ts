@@ -22,6 +22,7 @@ export enum SignalingType {
     RtcCandidate = 2011,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Message {
     action: string;
     data: any | null;
@@ -40,6 +41,7 @@ export interface DspMessage {
     sdp: any;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Hello {
     server_version: string | null;
     temp_id: string | null;

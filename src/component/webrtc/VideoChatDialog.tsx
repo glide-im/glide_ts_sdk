@@ -8,10 +8,10 @@ import Draggable from 'react-draggable';
 import {IconButton} from "@mui/material";
 import {VideoCallRounded} from "@mui/icons-material";
 import {WebRTC} from "../../webrtc/webrtc";
-import {SessionList} from "../../im/session_list";
 import {WebRtcView} from "./WebRTC";
 import {Subscription} from "rxjs";
 import {SessionType} from "../../im/session";
+import {Account} from "../../im/account";
 
 export function PaperComponent(props: PaperProps) {
     return (
@@ -43,7 +43,7 @@ export default function VideoChat(props: { session: string, showIcon: boolean })
     }, [props.showIcon]);
 
 
-    const session = SessionList.getInstance().get(props.session);
+    const session = Account.session().get(props.session);
     if (session?.Type !== SessionType.Single) {
         return <></>
     }

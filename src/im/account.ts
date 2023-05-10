@@ -6,7 +6,7 @@ import {ContactsList} from "./contacts_list";
 import {GlideUserInfo} from "./def";
 import {Cache} from "./cache";
 import {Actions, CommonMessage} from "./message";
-import {SessionList} from "./session_list";
+import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
 import {Ws} from "./ws";
 import {getCookie} from "../utils/Cookies";
 import {onComplete} from "../rx/next";
@@ -25,9 +25,9 @@ export type MessageListener = (level: MessageLevel, msg: string) => void
 export class Account {
 
     private uid: string;
-    private sessions: SessionList = new SessionList(this);
+    private sessions: InternalSessionList = new InternalSessionListImpl(this);
     private contacts: ContactsList = new ContactsList();
-    server: string =  process.env.REACT_APP_WS_URL;
+    server: string = process.env.REACT_APP_WS_URL;
     token: string;
 
     static instance: Account = new Account();
@@ -37,6 +37,10 @@ export class Account {
     }
 
     private userInfo: GlideUserInfo | null = null;
+
+    public static session(): SessionList {
+        return Account.instance.getSessionList();
+    }
 
     public static getInstance(): Account {
         return Account.instance;
@@ -72,7 +76,7 @@ export class Account {
     }
 
     public logout() {
-        this.sessions = new SessionList(this)
+        this.sessions = new InternalSessionListImpl(this)
         this.contacts = new ContactsList()
         this.clearAuth()
         Ws.close()
