@@ -221,7 +221,7 @@ class InternalSessionImpl implements InternalSession {
             return;
         }
 
-        const c = ChatMessage.create(message)
+        const c = ChatMessage.create(this.ID, message)
 
         // todo filter none-display message
 
@@ -324,14 +324,14 @@ class InternalSessionImpl implements InternalSession {
             type: type,
             status: 0,
         };
-        const r = ChatMessage.create(m);
+        const r = ChatMessage.create(this.ID, m);
         r.Sending = SendingStatus.Sending;
 
         this.addMessageByOrder(r);
 
         return Ws.sendMessage(this.Type, m).pipe(
             map(resp => {
-                const r = ChatMessage.create(resp);
+                const r = ChatMessage.create(this.ID, resp);
                 r.Sending = SendingStatus.Sent;
                 this.addMessageByOrder(r);
                 return r;

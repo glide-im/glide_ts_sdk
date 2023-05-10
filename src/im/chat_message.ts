@@ -16,18 +16,19 @@ export interface MessageUpdateListener {
 }
 
 export interface MessageBaseInfo {
-    CliId: string;
-    From: string;
-    To: string;
-    Content: string;
-    Mid: number;
-    Seq: number;
-    SendAt: number;
-    Status: number;
-    ReceiveAt: number;
-    IsGroup: boolean;
-    Type: number;
-    Target: string;
+    readonly SID: string;
+    readonly CliId: string;
+    readonly From: string;
+    readonly To: string;
+    readonly Content: string;
+    readonly Mid: number;
+    readonly Seq: number;
+    readonly SendAt: number;
+    readonly Status: number;
+    readonly ReceiveAt: number;
+    readonly IsGroup: boolean;
+    readonly Type: number;
+    readonly Target: string;
 }
 
 export interface IChatMessage {
@@ -42,9 +43,35 @@ export interface IChatMessage {
     getDisplayContent(): string
 }
 
+export interface ChatMessageCache {
+
+    add(message: MessageBaseInfo): Observable<void>
+
+    addAll(messages: MessageBaseInfo[]): Observable<void>
+
+    update(message: MessageBaseInfo): Observable<void>
+
+    updateStatus(cliId: number, status: MessageStatus): Observable<void>
+
+    delete(cliId: string): Observable<void>
+
+    deleteBySid(sid: string): Observable<void>
+
+    getByCliId(cliId: string): Observable<MessageBaseInfo | null>
+
+    getByMid(mid: number): Observable<MessageBaseInfo | null>
+
+    getSessionMessagesByTime(sid: string, beforeTime: number): Observable<MessageBaseInfo[]>
+
+    getSessionMessageBySeq(sid: string, beforeSeq: number): Observable<MessageBaseInfo | null>
+
+    getLatestSessionMessage(sid: string): Observable<MessageBaseInfo | null>
+}
+
 export class ChatMessage implements MessageBaseInfo {
     ReceiveAt: number;
 
+    public SID: string;
     public CliId: string;
     public From: string;
     public To: string;
@@ -76,7 +103,7 @@ export class ChatMessage implements MessageBaseInfo {
         }
     }
 
-    public static create(m: Message): ChatMessage {
+    public static create(sid: string, m: Message): ChatMessage {
         const ret = new ChatMessage();
         ret.From = m.from;
         ret.To = m.to;

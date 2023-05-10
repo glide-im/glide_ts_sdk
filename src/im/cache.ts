@@ -5,6 +5,99 @@ import {onErrorResumeNext} from "rxjs/operators";
 import {UserInfoBean} from "../api/model";
 import {onNext} from "../rx/next";
 import {getCookie, setCookie} from "../utils/Cookies";
+import {SessionListCache} from "./session_list";
+import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
+import {SessionBaseInfo} from "./session";
+import {MessageStatus} from "./message";
+import {ChatMessageDbCache, GlideDb, SessionDbCache} from "./db";
+
+class GlideCache implements SessionListCache, ChatMessageCache {
+
+    private _db: GlideDb = new GlideDb();
+
+    private _sessionDbCache: SessionListCache
+    private _messageDbCache: ChatMessageCache
+
+    constructor(uid: string) {
+        this._db.init(uid).subscribe()
+
+        this._sessionDbCache = new SessionDbCache(this._db.db)
+        this._messageDbCache = new ChatMessageDbCache(this._db.db)
+    }
+
+    add(message: MessageBaseInfo): Observable<void> {
+        return undefined;
+    }
+
+    addAll(messages: MessageBaseInfo[]): Observable<void> {
+        return undefined;
+    }
+
+    clear(): Observable<void> {
+        return undefined;
+    }
+
+    contain(sid: string): Observable<boolean> {
+        return undefined;
+    }
+
+    delete(cliId: string): Observable<void> {
+        return undefined;
+    }
+
+    deleteBySid(sid: string): Observable<void> {
+        return undefined;
+    }
+
+    get(sid: string): Observable<SessionBaseInfo | null> {
+        return undefined;
+    }
+
+    getAll(): Observable<SessionBaseInfo[]> {
+        return undefined;
+    }
+
+    getByCliId(cliId: string): Observable<MessageBaseInfo | null> {
+        return undefined;
+    }
+
+    getByMid(mid: number): Observable<MessageBaseInfo | null> {
+        return undefined;
+    }
+
+    getLatestSessionMessage(sid: string): Observable<MessageBaseInfo | null> {
+        return undefined;
+    }
+
+    getSessionMessageBySeq(sid: string, beforeSeq: number): Observable<MessageBaseInfo | null> {
+        return undefined;
+    }
+
+    getSessionMessagesByTime(sid: string, beforeTime: number): Observable<MessageBaseInfo[]> {
+        return undefined;
+    }
+
+    remove(sid: string): Observable<void> {
+        return undefined;
+    }
+
+    set(sid: string, info: SessionBaseInfo): Observable<void> {
+        return undefined;
+    }
+
+    size(): Observable<number> {
+        return undefined;
+    }
+
+    update(message: MessageBaseInfo): Observable<void> {
+        return undefined;
+    }
+
+    updateStatus(cliId: number, status: MessageStatus): Observable<void> {
+        return undefined;
+    }
+
+}
 
 class cache {
 
