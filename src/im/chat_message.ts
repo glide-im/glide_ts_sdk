@@ -15,6 +15,21 @@ export interface MessageUpdateListener {
     (message: ChatMessage): void
 }
 
+export interface MessageBaseInfo {
+    CliId: string;
+    From: string;
+    To: string;
+    Content: string;
+    Mid: number;
+    Seq: number;
+    SendAt: number;
+    Status: number;
+    ReceiveAt: number;
+    IsGroup: boolean;
+    Type: number;
+    Target: string;
+}
+
 export interface IChatMessage {
     getDisplayTime(): string
 
@@ -27,7 +42,8 @@ export interface IChatMessage {
     getDisplayContent(): string
 }
 
-export class ChatMessage {
+export class ChatMessage implements MessageBaseInfo {
+    ReceiveAt: number;
 
     public CliId: string;
     public From: string;
@@ -42,6 +58,7 @@ export class ChatMessage {
     public IsGroup: boolean;
     public Type: number;
     public Target: string;
+
 
     public OrderKey: number;
 

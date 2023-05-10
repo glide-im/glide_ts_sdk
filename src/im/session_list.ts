@@ -3,7 +3,7 @@ import {Api} from "../api/api";
 import {Account} from "./account";
 import {CliCustomMessage, CommonMessage, Message} from "./message";
 import {onNext} from "../rx/next";
-import {createSession, fromSessionBean, getSID, InternalSession, ISession} from "./session";
+import {createSession, fromSessionBean, getSID, InternalSession, ISession, SessionBaseInfo} from "./session";
 
 export enum Event {
     create = 0,
@@ -33,6 +33,7 @@ export interface SessionList {
     getSessionsTemped(): ISession[]
 }
 
+// @Internal 仅供 glide 内部使用
 export interface InternalSessionList extends SessionList {
 
     init(): Observable<string>
@@ -40,6 +41,22 @@ export interface InternalSessionList extends SessionList {
     clear()
 
     onMessage(message: CommonMessage<Message | CliCustomMessage>)
+}
+
+export interface SessionListCache {
+    get(sid: string): Observable<SessionBaseInfo | null>
+
+    set(sid: string, info: SessionBaseInfo): Observable<void>
+
+    clear(): Observable<void>
+
+    getAll(): Observable<SessionBaseInfo[]>
+
+    remove(sid: string): Observable<void>
+
+    contain(sid: string): Observable<boolean>
+
+    size(): Observable<number>
 }
 
 export class InternalSessionListImpl implements InternalSessionList {
