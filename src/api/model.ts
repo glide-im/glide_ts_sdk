@@ -25,6 +25,7 @@ export interface SessionBean {
     LastMid: number
     UpdateAt: number
     CreateAt: number
+    Type: number
 }
 
 export interface MessageBean {

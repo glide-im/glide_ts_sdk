@@ -66,6 +66,10 @@ export interface ISession extends SessionBaseInfo {
 export interface InternalSession extends ISession {
     onMessage(action: string, message: Message)
 
+    update(session: SessionBaseInfo)
+
+    update(session: SessionBean)
+
     init(): Observable<InternalSession>;
 }
 
@@ -75,6 +79,10 @@ export function createSession(to: string, type: number): InternalSession {
 
 export function fromSessionBean(sessionBean: SessionBean): InternalSession {
     return InternalSessionImpl.fromSessionBean(sessionBean);
+}
+
+export function fromBaseInfo(baseInfo: SessionBaseInfo): InternalSession {
+    return InternalSessionImpl.fromBaseInfo(baseInfo);
 }
 
 class InternalSessionImpl implements InternalSession {
@@ -145,6 +153,19 @@ class InternalSessionImpl implements InternalSession {
         session.LastMessage = '-';
         session.UnreadCount = 0;
         session.Type = SessionType.Single;
+        return session;
+    }
+
+    public static fromBaseInfo(baseInfo: SessionBaseInfo): InternalSessionImpl {
+        let session = new InternalSessionImpl();
+        session.To = baseInfo.To;
+        session.ID = baseInfo.ID;
+        session.Title = baseInfo.Title;
+        session.UpdateAt = baseInfo.UpdateAt;
+        session.LastMessageSender = baseInfo.LastMessageSender;
+        session.LastMessage = baseInfo.LastMessage;
+        session.UnreadCount = baseInfo.UnreadCount;
+        session.Type = baseInfo.Type;
         return session;
     }
 
@@ -337,6 +358,11 @@ class InternalSessionImpl implements InternalSession {
                 return r;
             })
         );
+    }
+
+    update(session: SessionBaseInfo);
+    update(session: SessionBean);
+    update(session: SessionBaseInfo | SessionBean) {
     }
 }
 

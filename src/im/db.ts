@@ -1,7 +1,7 @@
 import {SessionListCache} from "./session_list";
 import {SessionBaseInfo} from "./session";
 import {DBSchema, IDBPDatabase, openDB} from "idb";
-import {concat, map, Observable, of} from "rxjs";
+import {concat, delay, map, mergeMap, Observable, of, takeWhile} from "rxjs";
 import {fromPromise} from "rxjs/internal/observable/innerFrom";
 import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
 import {onNext} from "../rx/next";
@@ -35,30 +35,44 @@ export class GlideDb {
     db: IDBPDatabase<GlideDBSchema>
 
     init(uid: string): Observable<GlideDb> {
-        return fromPromise(
-            openDB<GlideDBSchema>(`db_${uid}`, 1, {
-                upgrade(db) {
-                    const s = db.createObjectStore('session', {
-                        keyPath: 'ID'
-                    })
-                    s.createIndex('by-to', 'To')
 
-                    const m = db.createObjectStore('message', {
-                        keyPath: 'CliId'
-                    })
-                    m.createIndex('by-target', 'Target')
-                    m.createIndex('by-mid', 'Mid')
-                    m.createIndex('by-sid', 'SID')
-                    m.createIndex('by-cliid', 'CliId')
-                    m.createIndex('by-time', 'ReceiveAt')
-                }
-            })
-        ).pipe(
-            onNext(db => {
-                this.db = db
-            }),
-            map(() => this)
-        )
+        return fromPromise(this.openDb(uid))
+            .pipe(
+                onNext((r) => {
+                    console.log('db init')
+                    this.db = r
+                }),
+                map((r) => {
+                    console.log('db init')
+                    return this
+                })
+            )
+    }
+
+    getDb(): Observable<IDBPDatabase<GlideDBSchema>> {
+        return of(this.db).pipe(delay(200), takeWhile((r) => r != null, true))
+    }
+
+    private async openDb(uid: string): Promise<IDBPDatabase<GlideDBSchema>> {
+        const database = await openDB<GlideDBSchema>(`db_${uid}`, 1, {
+            upgrade(db) {
+                const s = db.createObjectStore('session', {
+                    keyPath: 'ID'
+                })
+                s.createIndex('by-to', 'To')
+
+                const m = db.createObjectStore('message', {
+                    keyPath: 'CliId'
+                })
+                m.createIndex('by-target', 'Target')
+                m.createIndex('by-mid', 'Mid')
+                m.createIndex('by-sid', 'SID')
+                m.createIndex('by-cliid', 'CliId')
+                m.createIndex('by-time', 'ReceiveAt')
+            }
+        })
+        this.db = database
+        return database
     }
 
     close(): Observable<any> {
@@ -77,85 +91,90 @@ export class GlideDb {
 export class SessionDbCache implements SessionListCache {
 
     static version = 1
-    private readonly _db: IDBPDatabase<GlideDBSchema>
+    private readonly _db: GlideDb
 
-    constructor(db: IDBPDatabase<GlideDBSchema>) {
+    constructor(db: GlideDb) {
         this._db = db
     }
 
-    get(sid: string): Observable<SessionBaseInfo> {
-        return fromPromise(this._db.get('session', sid))
+    getSession(sid: string): Observable<SessionBaseInfo> {
+        return fromPromise(this._db.db.get('session', sid))
     }
 
-    set(sid: string, info: SessionBaseInfo): Observable<any> {
-        return fromPromise(this._db.put('session', info))
+    setSession(sid: string, info: SessionBaseInfo): Observable<any> {
+        return fromPromise(this._db.db.put('session', info))
     }
 
-    clear(): Observable<any> {
-        return fromPromise(this._db.clear('session'))
+    clearAllSession(): Observable<any> {
+        return fromPromise(this._db.db.clear('session'))
     }
 
-    getAll(): Observable<SessionBaseInfo[]> {
-        return fromPromise(this._db.getAll('session'))
+    getAllSession(): Observable<SessionBaseInfo[]> {
+        return this._db.getDb().pipe(
+            mergeMap((db) => {
+                return db.getAll('session')
+            })
+        )
+        // return fromPromise(this._db.db.getAll('session'))
     }
 
-    remove(sid: string): Observable<any> {
-        return fromPromise(this._db.delete('session', sid))
+    removeSession(sid: string): Observable<any> {
+        return fromPromise(this._db.db.delete('session', sid))
     }
 
-    contain(sid: string): Observable<boolean> {
-        return fromPromise(this._db.get('session', sid)).pipe(
+    containSession(sid: string): Observable<boolean> {
+        return fromPromise(this._db.db.get('session', sid)).pipe(
             map(info => info != null)
         )
     }
 
-    size(): Observable<number> {
-        return fromPromise(this._db.count('session'))
+    sessionCount(): Observable<number> {
+        return fromPromise(this._db.db.count('session'))
     }
 }
 
 export class ChatMessageDbCache implements ChatMessageCache {
 
-    private readonly _db: IDBPDatabase<GlideDBSchema>
+    private readonly _db: GlideDb
 
-    constructor(db: IDBPDatabase<GlideDBSchema>) {
+    constructor(db: GlideDb) {
         this._db = db
     }
 
-    add(message: MessageBaseInfo): Observable<any> {
-        return fromPromise(this._db.add('message', message))
+    addMessage(message: MessageBaseInfo): Observable<any> {
+        return fromPromise(this._db.db.add('message', message))
     }
 
-    addAll(messages: MessageBaseInfo[]): Observable<any> {
+    addMessages(messages: MessageBaseInfo[]): Observable<any> {
         return of(null)
     }
 
-    update(message: MessageBaseInfo): Observable<any> {
-        return fromPromise(this._db.put('message', message))
+    updateMessage(message: MessageBaseInfo): Observable<any> {
+        return fromPromise(this._db.db.put('message', message))
     }
 
-    updateStatus(cliId: number, status: MessageStatus): Observable<void> {
+    updateMessageStatus(cliId: number, status: MessageStatus): Observable<void> {
         return of(null)
     }
 
-    delete(cliId: string): Observable<void> {
-        return fromPromise(this._db.delete('message', cliId))
+    deleteMessage(cliId: string): Observable<void> {
+        return fromPromise(this._db.db.delete('message', cliId))
     }
 
-    deleteBySid(sid: string): Observable<void> {
+    deleteMessageBySid(sid: string): Observable<void> {
         throw new Error("Method not implemented.");
     }
 
-    getByCliId(cliId: string): Observable<MessageBaseInfo> {
-        return fromPromise(this._db.get('message', cliId))
+    getMessageByCliId(cliId: string): Observable<MessageBaseInfo> {
+        return fromPromise(this._db.db.get('message', cliId))
     }
 
-    getByMid(mid: number): Observable<MessageBaseInfo> {
+    getMessageByMid(mid: number): Observable<MessageBaseInfo> {
         throw new Error("Method not implemented.");
     }
 
     getSessionMessagesByTime(sid: string, beforeTime: number): Observable<MessageBaseInfo[]> {
-        return fromPromise(this._db.getAllFromIndex('message', 'by-sid', IDBKeyRange.only(sid)))
+        return fromPromise(this._db.db.getAllFromIndex('message', 'by-sid', IDBKeyRange.only(sid)))
     }
 
     getSessionMessageBySeq(sid: string, beforeSeq: number): Observable<MessageBaseInfo> {

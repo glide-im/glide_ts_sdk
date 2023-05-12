@@ -4,6 +4,7 @@ import {useRef, useState} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {SettingDialog} from "./SettingsDialog";
+import {showSnack} from "../widget/SnackBar";
 
 
 export const Guest = withRouter((props: RouteComponentProps) => {
@@ -19,7 +20,7 @@ export const Guest = withRouter((props: RouteComponentProps) => {
 
         Account.getInstance().guest(n, `https://api.dicebear.com/6.x/adventurer/svg?seed=${n}`).subscribe({
             error: (e) => {
-                alert(e)
+                showSnack(e.message)
             },
             complete: () => {
                 props.history.replace('/im')

@@ -11,90 +11,96 @@ import {SessionBaseInfo} from "./session";
 import {MessageStatus} from "./message";
 import {ChatMessageDbCache, GlideDb, SessionDbCache} from "./db";
 
-class GlideCache implements SessionListCache, ChatMessageCache {
+export class GlideCache implements SessionListCache, ChatMessageCache {
 
     private _db: GlideDb = new GlideDb();
 
     private _sessionDbCache: SessionListCache
     private _messageDbCache: ChatMessageCache
 
-    constructor(uid: string) {
-        this._db.init(uid).subscribe()
+    init(uid: string): Observable<GlideCache> {
+        this._sessionDbCache = new SessionDbCache(this._db)
+        this._messageDbCache = new ChatMessageDbCache(this._db)
 
-        this._sessionDbCache = new SessionDbCache(this._db.db)
-        this._messageDbCache = new ChatMessageDbCache(this._db.db)
+        return this._db.init(uid)
+            .pipe(
+                map(() => {
+                    console.log('cache init')
+                    return this
+                }),
+            )
     }
 
-    add(message: MessageBaseInfo): Observable<void> {
-        return undefined;
+    addMessage(message: MessageBaseInfo): Observable<void> {
+        return this._messageDbCache.addMessage(message)
     }
 
-    addAll(messages: MessageBaseInfo[]): Observable<void> {
-        return undefined;
+    addMessages(messages: MessageBaseInfo[]): Observable<void> {
+        return this._messageDbCache.addMessages(messages)
     }
 
-    clear(): Observable<void> {
-        return undefined;
+    clearAllSession(): Observable<void> {
+        return this._sessionDbCache.clearAllSession()
     }
 
-    contain(sid: string): Observable<boolean> {
-        return undefined;
+    containSession(sid: string): Observable<boolean> {
+        return this._sessionDbCache.containSession(sid)
     }
 
-    delete(cliId: string): Observable<void> {
-        return undefined;
+    deleteMessage(cliId: string): Observable<void> {
+        return this._messageDbCache.deleteMessage(cliId)
     }
 
-    deleteBySid(sid: string): Observable<void> {
-        return undefined;
+    deleteMessageBySid(sid: string): Observable<void> {
+        return this._messageDbCache.deleteMessageBySid(sid)
     }
 
-    get(sid: string): Observable<SessionBaseInfo | null> {
-        return undefined;
+    getSession(sid: string): Observable<SessionBaseInfo | null> {
+        return this._sessionDbCache.getSession(sid)
     }
 
-    getAll(): Observable<SessionBaseInfo[]> {
-        return undefined;
+    getAllSession(): Observable<SessionBaseInfo[]> {
+        return this._sessionDbCache.getAllSession()
     }
 
-    getByCliId(cliId: string): Observable<MessageBaseInfo | null> {
-        return undefined;
+    getMessageByCliId(cliId: string): Observable<MessageBaseInfo | null> {
+        return this._messageDbCache.getMessageByCliId(cliId)
     }
 
-    getByMid(mid: number): Observable<MessageBaseInfo | null> {
-        return undefined;
+    getMessageByMid(mid: number): Observable<MessageBaseInfo | null> {
+        return this._messageDbCache.getMessageByMid(mid)
     }
 
     getLatestSessionMessage(sid: string): Observable<MessageBaseInfo | null> {
-        return undefined;
+        return this._messageDbCache.getLatestSessionMessage(sid)
     }
 
     getSessionMessageBySeq(sid: string, beforeSeq: number): Observable<MessageBaseInfo | null> {
-        return undefined;
+        return this._messageDbCache.getSessionMessageBySeq(sid, beforeSeq)
     }
 
     getSessionMessagesByTime(sid: string, beforeTime: number): Observable<MessageBaseInfo[]> {
-        return undefined;
+        return this._messageDbCache.getSessionMessagesByTime(sid, beforeTime)
     }
 
-    remove(sid: string): Observable<void> {
-        return undefined;
+    removeSession(sid: string): Observable<void> {
+        return this._sessionDbCache.removeSession(sid)
     }
 
-    set(sid: string, info: SessionBaseInfo): Observable<void> {
-        return undefined;
+    setSession(sid: string, info: SessionBaseInfo): Observable<void> {
+        return this._sessionDbCache.setSession(sid, info)
     }
 
-    size(): Observable<number> {
-        return undefined;
+    sessionCount(): Observable<number> {
+        return this._sessionDbCache.sessionCount()
     }
 
-    update(message: MessageBaseInfo): Observable<void> {
-        return undefined;
+    updateMessage(message: MessageBaseInfo): Observable<void> {
+        return this._messageDbCache.updateMessage(message)
     }
 
-    updateStatus(cliId: number, status: MessageStatus): Observable<void> {
-        return undefined;
+    updateMessageStatus(cliId: number, status: MessageStatus): Observable<void> {
+        return this._messageDbCache.updateMessageStatus(cliId, status)
     }
 
 }

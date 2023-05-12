@@ -45,21 +45,21 @@ export interface IChatMessage {
 
 export interface ChatMessageCache {
 
-    add(message: MessageBaseInfo): Observable<void>
+    addMessage(message: MessageBaseInfo): Observable<void>
 
-    addAll(messages: MessageBaseInfo[]): Observable<void>
+    addMessages(messages: MessageBaseInfo[]): Observable<void>
 
-    update(message: MessageBaseInfo): Observable<void>
+    updateMessage(message: MessageBaseInfo): Observable<void>
 
-    updateStatus(cliId: number, status: MessageStatus): Observable<void>
+    updateMessageStatus(cliId: number, status: MessageStatus): Observable<void>
 
-    delete(cliId: string): Observable<void>
+    deleteMessage(cliId: string): Observable<void>
 
-    deleteBySid(sid: string): Observable<void>
+    deleteMessageBySid(sid: string): Observable<void>
 
-    getByCliId(cliId: string): Observable<MessageBaseInfo | null>
+    getMessageByCliId(cliId: string): Observable<MessageBaseInfo | null>
 
-    getByMid(mid: number): Observable<MessageBaseInfo | null>
+    getMessageByMid(mid: number): Observable<MessageBaseInfo | null>
 
     getSessionMessagesByTime(sid: string, beforeTime: number): Observable<MessageBaseInfo[]>
 

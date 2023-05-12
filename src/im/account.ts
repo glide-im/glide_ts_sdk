@@ -1,15 +1,17 @@
-import {catchError, concat, map, mergeMap, Observable, timeout} from "rxjs";
+import {catchError, concat, delay, map, mergeMap, Observable, of, timeout} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
 import {ContactsList} from "./contacts_list";
 import {GlideUserInfo} from "./def";
-import {Cache} from "./cache";
+import {Cache, GlideCache} from "./cache";
 import {Actions, CommonMessage} from "./message";
 import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
 import {Ws} from "./ws";
 import {getCookie} from "../utils/Cookies";
-import {onComplete} from "../rx/next";
+import {onComplete, onError, onNext} from "../rx/next";
+import {GlideDb} from "./db";
+import {onErrorResumeNext} from "rxjs/operators";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -27,6 +29,7 @@ export class Account {
     private uid: string;
     private sessions: InternalSessionList = new InternalSessionListImpl(this);
     private contacts: ContactsList = new ContactsList();
+    private cache: GlideCache = new GlideCache();
     server: string = process.env.REACT_APP_WS_URL;
     token: string;
 
@@ -54,9 +57,16 @@ export class Account {
     }
 
     public guest(nickname: string, avatar: string): Observable<string> {
+
         return Api.guest(nickname, avatar)
             .pipe(
                 mergeMap(res => this.initAccount(res)),
+                onNext(res => {
+                    console.log(res)
+                }),
+                onError(err => {
+                    console.log("gust login failed ", err)
+                })
             )
     }
 
@@ -117,19 +127,28 @@ export class Account {
         this.token = auth.token;
         Cache.storeToken(auth.token);
 
-        const initUserInfo: Observable<string> = Cache.loadUserInfo(auth.uid.toString())
+        const initUserInfo: Observable<string> = Cache.loadUserInfo1(this.getUID())
             .pipe(
                 map(us => {
-                    this.userInfo = us[0];
+                    this.userInfo = us;
                     return "load user info success";
                 })
             )
 
         return concat(
+            this.initCache(),
             initUserInfo,
+            this.sessions.init(this.cache),
             this.connectIMServer(),
-            this.sessions.init()
         )
+    }
+
+    private initCache(): Observable<string> {
+        return this.cache.init(this.getUID())
+            .pipe(
+                map(() => "cache init success"),
+                catchError(err => `cache init failed ${err}`),
+            )
     }
 
     private connectIMServer(): Observable<string> {
@@ -139,7 +158,7 @@ export class Account {
 
         const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
             .pipe(
-                map(() => "IM auth success"),
+                map(() => "ws auth success"),
             )
 
         return Ws.connect(server)
