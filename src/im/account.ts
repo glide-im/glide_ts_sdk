@@ -1,4 +1,4 @@
-import {catchError, concat, delay, map, mergeMap, Observable, of, timeout} from "rxjs";
+import {catchError, concat, delay, map, mergeMap, Observable, of, retry, timeout} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
@@ -10,8 +10,6 @@ import {InternalSessionList, InternalSessionListImpl, SessionList} from "./sessi
 import {Ws} from "./ws";
 import {getCookie} from "../utils/Cookies";
 import {onComplete, onError, onNext} from "../rx/next";
-import {GlideDb} from "./db";
-import {onErrorResumeNext} from "rxjs/operators";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -62,7 +60,7 @@ export class Account {
             .pipe(
                 mergeMap(res => this.initAccount(res)),
                 onNext(res => {
-                    console.log(res)
+                    console.log("INIT >> ", res)
                 }),
                 onError(err => {
                     console.log("gust login failed ", err)
@@ -144,11 +142,14 @@ export class Account {
     }
 
     private initCache(): Observable<string> {
-        return this.cache.init(this.getUID())
-            .pipe(
-                map(() => "cache init success"),
-                catchError(err => `cache init failed ${err}`),
-            )
+        return concat(
+            of("cache init start"),
+            this.cache.init(this.getUID())
+                .pipe(
+                    catchError(err => of(`cache init failed ${err}`)),
+                ),
+            of("cache init complete"),
+        )
     }
 
     private connectIMServer(): Observable<string> {

@@ -18,17 +18,10 @@ export class GlideCache implements SessionListCache, ChatMessageCache {
     private _sessionDbCache: SessionListCache
     private _messageDbCache: ChatMessageCache
 
-    init(uid: string): Observable<GlideCache> {
+    init(uid: string): Observable<string> {
         this._sessionDbCache = new SessionDbCache(this._db)
         this._messageDbCache = new ChatMessageDbCache(this._db)
-
         return this._db.init(uid)
-            .pipe(
-                map(() => {
-                    console.log('cache init')
-                    return this
-                }),
-            )
     }
 
     addMessage(message: MessageBaseInfo): Observable<void> {

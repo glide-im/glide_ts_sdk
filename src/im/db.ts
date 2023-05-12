@@ -1,10 +1,9 @@
 import {SessionListCache} from "./session_list";
 import {SessionBaseInfo} from "./session";
 import {DBSchema, IDBPDatabase, openDB} from "idb";
-import {concat, delay, map, mergeMap, Observable, of, takeWhile} from "rxjs";
+import {catchError, concat, map, mergeMap, Observable, of, retry} from "rxjs";
 import {fromPromise} from "rxjs/internal/observable/innerFrom";
 import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
-import {onNext} from "../rx/next";
 import {MessageStatus} from "./message";
 
 export class Db {
@@ -34,23 +33,31 @@ export class GlideDb {
 
     db: IDBPDatabase<GlideDBSchema>
 
-    init(uid: string): Observable<GlideDb> {
-
-        return fromPromise(this.openDb(uid))
-            .pipe(
-                onNext((r) => {
-                    console.log('db init')
-                    this.db = r
-                }),
-                map((r) => {
-                    console.log('db init')
-                    return this
-                })
-            )
+    init(uid: string): Observable<string> {
+        return concat(
+            fromPromise(this.openDb(uid)).pipe(
+                map(r => `db init success, db:${r.name} version: ${r.version}`)
+            ),
+            this.getDb().pipe(
+                map(r => "db ready"),
+                catchError(e => "prepare db error " + e)
+            ),
+            of("db init complete")
+        )
     }
 
     getDb(): Observable<IDBPDatabase<GlideDBSchema>> {
-        return of(this.db).pipe(delay(200), takeWhile((r) => r != null, true))
+        // when db is not ready, retry 10 times, each time delay 100ms
+        return new Observable<IDBPDatabase<GlideDBSchema>>(subscriber => {
+            if (this.db) {
+                subscriber.next(this.db)
+                subscriber.complete()
+            } else {
+                subscriber.error('db not ready')
+            }
+        }).pipe(
+            retry({count: 10, delay: 200, resetOnSuccess: true}),
+        )
     }
 
     private async openDb(uid: string): Promise<IDBPDatabase<GlideDBSchema>> {
@@ -69,6 +76,15 @@ export class GlideDb {
                 m.createIndex('by-sid', 'SID')
                 m.createIndex('by-cliid', 'CliId')
                 m.createIndex('by-time', 'ReceiveAt')
+            },
+            blocked(currentVersion: number, blockedVersion: number | null, event: IDBVersionChangeEvent) {
+                console.log('db blocked')
+            },
+            blocking(currentVersion: number, blockedVersion: number | null, event: IDBVersionChangeEvent) {
+                console.log('db blocking')
+            },
+            terminated() {
+                console.log('db terminated')
             }
         })
         this.db = database

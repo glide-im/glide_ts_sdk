@@ -1,4 +1,4 @@
-import {catchError, concat, delay, groupBy, map, mergeMap, Observable, of, Subject, toArray} from "rxjs";
+import {catchError, concat, groupBy, map, mergeMap, Observable, of, Subject, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {CliCustomMessage, CommonMessage, Message} from "./message";
@@ -90,21 +90,18 @@ export class InternalSessionListImpl implements InternalSessionList {
 
         return concat(
             of("start load session from cache"),
-            this.cache.getAllSession()
-                .pipe(
-                    onNext((res) => {
-                        res.forEach((v) => this.add(fromBaseInfo(v), false))
-                    }),
-                    map(() => "load session from cache complete"),
-                    catchError(err => `load session from cache failed, ${err}`)
-                )
-            ,
+            this.cache.getAllSession().pipe(
+                onNext((res) => {
+                    res.forEach((v) => this.add(fromBaseInfo(v), false))
+                }),
+                map((s) => "load session from cache complete, " + s.length + " session"),
+                catchError(err => of("load session from cache failed, " + err))
+            ),
             of("start sync session from server"),
-            this.getSessions()
-                .pipe(
-                    mergeMap(() => of(this.sessionMap.size + "session sync complete")),
-                    catchError(err=>`session sync failed, ${err}`)
-                )
+            this.getSessions(true).pipe(
+                map(() => "session sync complete"),
+                catchError(err => `session sync failed, ${err}`)
+            )
         )
     }
 
@@ -123,10 +120,7 @@ export class InternalSessionListImpl implements InternalSessionList {
         return createSession(id, 1)
             .init()
             .pipe(
-                onNext((r) => {
-                    this.add(r, true);
-                }),
-                map((s) => s as ISession),
+                mergeMap((s) => this.add(s, true))
             )
     }
 
@@ -161,8 +155,9 @@ export class InternalSessionListImpl implements InternalSessionList {
                         mergeMap(ss => of(ss)),
                         mergeMap(ss => {
                             const session = fromSessionBean(ss)
-                            this.add(session, true)
-                            return session.init()
+                            return this.add(session, true).pipe(
+                                mergeMap(() => session.init()),
+                            )
                         }),
                     )
                 }),
@@ -179,15 +174,15 @@ export class InternalSessionListImpl implements InternalSessionList {
         const sessionType = action.indexOf("group") !== -1 ? 2 : 1
         const target = sessionType === 2 ? message.data.to : message.data.from
 
-        const sid = getSID(sessionType, target);
-        const s = this.sessionMap.get(sid);
+        const s = this.get(getSID(sessionType, target))
 
-        if (s !== undefined) {
+        if (s !== null) {
             s.onMessage(action, message.data as Message)
         } else {
             const ses = createSession(target, sessionType)
-            this.add(ses, true)
-            ses.init().pipe(delay(500)).subscribe(() => {
+            ses.init().pipe(
+                mergeMap(() => this.add(ses, true)),
+            ).subscribe(() => {
                 ses.onMessage(action, message.data as Message)
             })
         }
@@ -195,11 +190,11 @@ export class InternalSessionListImpl implements InternalSessionList {
 
     private add(s: InternalSession, updateDb: Boolean): Observable<any> {
         if (this.sessionMap.has(s.ID)) {
-            return of(null)
+            return of(this.sessionMap.get(s.ID))
         }
         if (!updateDb) {
             this.sessionMap.set(s.ID, s)
-            console.log('SessionList', "session added: ", s, this.sessionMap.values())
+            console.log('SessionList', "session added: ", s.ID)
             this.sessionEventSubject.next({event: Event.create, session: s})
             return of(null)
         }
@@ -213,7 +208,7 @@ export class InternalSessionListImpl implements InternalSessionList {
         );
     }
 
-    public get(sid: string): ISession | null {
+    public get(sid: string): InternalSession | null {
         if (!this.sessionMap.has(sid)) {
             return null
         }

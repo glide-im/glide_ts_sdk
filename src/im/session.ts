@@ -184,7 +184,6 @@ class InternalSessionImpl implements InternalSession {
         } else {
             return Cache.loadUserInfo1(this.To)
                 .pipe(
-                    delay(500),
                     onNext(info => {
                         this.userInfo = info;
                         this.Title = info.name;
@@ -193,8 +192,7 @@ class InternalSessionImpl implements InternalSession {
                         this.updateSubject.next(Event.update);
                     }),
                     // mergeMap(() => this.getMessageHistry(0)),
-                    mergeMap(() => of(this)),
-                    first(),
+                    map(() => this),
                 );
         }
     }
