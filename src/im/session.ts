@@ -1,4 +1,4 @@
-import {delay, filter, interval, map, mergeMap, Observable, of, Subject, take, throwError} from "rxjs";
+import {concat, delay, filter, interval, map, mergeMap, Observable, of, Subject, take, throwError, toArray} from "rxjs";
 import {SessionBean} from "../api/model";
 import {Account} from "./account";
 import {ChatMessage, ChatMessageCache, SendingStatus} from "./chat_message";
@@ -74,19 +74,27 @@ export interface InternalSession extends ISession {
 
     update(session: SessionBean)
 
-    init(cache: ChatMessageCache): Observable<InternalSession>;
+    init(): Observable<InternalSession>;
+
+    setCache(cache: ChatMessageCache)
 }
 
-export function createSession(to: string, type: SessionType): InternalSession {
-    return InternalSessionImpl.create(to, type);
+export function createSession(to: string, type: SessionType, cache: ChatMessageCache): InternalSession {
+    const ret = InternalSessionImpl.create(to, type);
+    ret.setCache(cache)
+    return ret
 }
 
-export function fromSessionBean(sessionBean: SessionBean): InternalSession {
-    return InternalSessionImpl.fromSessionBean(sessionBean);
+export function fromSessionBean(sessionBean: SessionBean, cache: ChatMessageCache): InternalSession {
+    const ret = InternalSessionImpl.fromSessionBean(sessionBean);
+    ret.setCache(cache)
+    return ret
 }
 
-export function fromBaseInfo(baseInfo: SessionBaseInfo): InternalSession {
-    return InternalSessionImpl.fromBaseInfo(baseInfo);
+export function fromBaseInfo(baseInfo: SessionBaseInfo, cache: ChatMessageCache): InternalSession {
+    const ret = InternalSessionImpl.fromBaseInfo(baseInfo);
+    ret.setCache(cache)
+    return ret
 }
 
 class InternalSessionImpl implements InternalSession {
@@ -110,6 +118,7 @@ class InternalSessionImpl implements InternalSession {
     private readonly _updateSubject: Subject<Event> = new Subject<Event>();
 
     private initialized = false;
+    private cache: ChatMessageCache
 
     private constructor() {
 
@@ -167,6 +176,10 @@ class InternalSessionImpl implements InternalSession {
         return session;
     }
 
+    public setCache(cache: ChatMessageCache) {
+        this.cache = cache;
+    }
+
     waitInit(): Observable<InternalSession> {
         return interval(100).pipe(
             filter(() => this.initialized),
@@ -180,8 +193,7 @@ class InternalSessionImpl implements InternalSession {
         this.updateSubject.next(Event.update);
     }
 
-    public init(cache: ChatMessageCache): Observable<InternalSession> {
-
+    public init(): Observable<InternalSession> {
         const initBaseInfo = this.isGroup() ? of(Cache.getChannelInfo(this.ID)) : Cache.loadUserInfo1(this.To)
 
         if (this.To === "the_world_channel") {
@@ -194,18 +206,30 @@ class InternalSessionImpl implements InternalSession {
             })
         }
 
-        return initBaseInfo.pipe(
-            map((info) => {
-                Logger.log(this.tag, "init session ", info.id, info.name, info.avatar)
-                this.Title = info.name ?? this.To
-                this.Avatar = info.avatar ?? "-"
-                this.updateSubject.next(Event.update)
-                return this
-            }),
-            onNext(() => {
-                this.initialized = true
-            })
+
+        return concat(
+            initBaseInfo.pipe(
+                onNext((info) => {
+                    Logger.log(this.tag, "init session ", info.id, info.name, info.avatar)
+                    this.Title = info.name ?? this.To
+                    this.Avatar = info.avatar ?? "-"
+                    this.updateSubject.next(Event.update)
+                    this.initialized = true
+                })
+            ),
+            this.cache.getSessionMessagesByTime(this.ID, new Date().getTime()).pipe(
+                mergeMap((msgs) => of(...msgs)),
+                map((msg) => ChatMessage.createFromBaseInfo(msg)),
+                onNext((msg) => this.addMessageByOrder(msg, true)),
+                toArray(),
+                onNext((msgs) => {
+                    Logger.log(this.tag, "init session ", this.ID, "message count", msgs.length)
+                })
+            )
+        ).pipe(
+            map((info) => this)
         )
+
     }
 
     public isGroup(): boolean {
@@ -253,9 +277,22 @@ class InternalSessionImpl implements InternalSession {
 
         Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [message]);
         // TODO 优化
-        Cache.cacheUserInfo(message.from).then(() => {
-            this.addMessageByOrder(c);
+
+        this.cache.addMessage(c).pipe(
+            onNext(() => {
+                this.addMessageByOrder(c)
+            })
+        ).subscribe({
+            next: () => {
+
+            },
+            error: (err) => {
+                Logger.error(this.tag, [c], "add message error", err)
+            }
         })
+        // Cache.cacheUserInfo(message.from).then(() => {
+        //     this.addMessageByOrder(c);
+        // })
     }
 
     public sendTextMessage(msg: string): Observable<ChatMessage> {
@@ -286,7 +323,7 @@ class InternalSessionImpl implements InternalSession {
         return this.messageList.slice(index, this.messageList.length - index);
     }
 
-    private addMessageByOrder(message: ChatMessage) {
+    private addMessageByOrder(message: ChatMessage, isHistory = false) {
 
         const isNewMessage = !this.messageMap.has(message.getId());
 
@@ -305,6 +342,9 @@ class InternalSessionImpl implements InternalSession {
         // 收到老消息
         // const isNotHistoryMessage = this.messageList[this.messageList.length - 1].getId() === message.getId()
 
+        if (isHistory) {
+            return
+        }
         if (this.messageList.length > 0 && isNewMessage) {
             if (!message.FromMe && !this.isSelected()) {
                 this.UnreadCount++;
@@ -352,6 +392,11 @@ class InternalSessionImpl implements InternalSession {
         const r = ChatMessage.create(this.ID, m);
         r.Sending = SendingStatus.Sending;
 
+        this.cache.addMessage(r).subscribe({
+            error: (err) => {
+                Logger.error(this.tag, [r], "add message error", err)
+            }
+        })
         this.addMessageByOrder(r);
 
         let sendObservable: Observable<Message>
@@ -409,5 +454,5 @@ function uuid(len, radix): string {
         }
     }
 
-    return uuid.join('');
+    return uuid.join('').replaceAll("-", "").toUpperCase();
 }

@@ -93,7 +93,7 @@ export interface CommonMessage<T> {
 
 // 聊天消息
 export interface Message {
-    cliMid: string;
+    cliMid: string | null;
     mid: number;
     seq: number;
     from: string;

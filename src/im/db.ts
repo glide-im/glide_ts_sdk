@@ -16,11 +16,9 @@ interface GlideDBSchema extends DBSchema {
         value: MessageBaseInfo,
         key: string,
         indexes: {
-            'by-target': string,
             'by-mid': number,
             'by-sid': string,
             'by-cliid': string,
-            'by-time': number,
         }
     }
 }
@@ -65,13 +63,12 @@ export class GlideDb {
                 s.createIndex('by-to', 'To')
 
                 const m = db.createObjectStore('message', {
-                    keyPath: 'CliId'
+                    keyPath: 'CliMid',
+                    autoIncrement: true
                 })
-                m.createIndex('by-target', 'Target')
                 m.createIndex('by-mid', 'Mid')
                 m.createIndex('by-sid', 'SID')
-                m.createIndex('by-cliid', 'CliId')
-                m.createIndex('by-time', 'ReceiveAt')
+                m.createIndex('by-cliid', 'CliMid')
             },
             blocked(currentVersion: number, blockedVersion: number | null, event: IDBVersionChangeEvent) {
                 console.log('db blocked')
@@ -173,7 +170,22 @@ export class ChatMessageDbCache implements ChatMessageCache {
     }
 
     addMessage(message: MessageBaseInfo): Observable<any> {
-        const m: MessageBaseInfo = <MessageBaseInfo>{}
+        const m: MessageBaseInfo = {
+            CliMid: "",
+            Content: "",
+            From: "",
+            IsGroup: false,
+            Mid: 0,
+            ReceiveAt: 0,
+            SID: "",
+            SendAt: 0,
+            Seq: 0,
+            Status: 0,
+            Target: "",
+            To: "",
+            Type: 0
+
+        }
 
         // copy all properties to m
         for (const key in m) {
@@ -182,7 +194,11 @@ export class ChatMessageDbCache implements ChatMessageCache {
             }
         }
 
-        return fromPromise(this._db.db.add('message', m))
+        return this._db.getDb().pipe(
+            mergeMap((db) => {
+                return db.put('message', m)
+            })
+        )
     }
 
     addMessages(messages: MessageBaseInfo[]): Observable<any> {

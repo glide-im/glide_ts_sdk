@@ -99,10 +99,10 @@ export class InternalSessionListImpl implements InternalSessionList {
             of("start load session from cache"),
             this.cache.getAllSession().pipe(
                 mergeMap((res) => of(...res)),
-                mergeMap((v) => this.add(fromBaseInfo(v), false)),
-                map((res) => {
-                    Logger.log(this.tag, "load session from cache, " + res.ID)
-                    res.init(this.cache).subscribe({})
+                mergeMap((bi) => this.add(fromBaseInfo(bi, this.cache), false)),
+                mergeMap((session) => {
+                    Logger.log(this.tag, "load session from cache, " + session.ID)
+                    return session.init()
                 }),
                 catchError(err => {
                     Logger.error("load session from cache failed, " + err)
@@ -133,12 +133,11 @@ export class InternalSessionListImpl implements InternalSessionList {
         if (this.getByUid(id) !== null) {
             return of(this.getByUid(id))
         }
-        const newSession = createSession(id, SessionType.Single)
-
+        const newSession = createSession(id, SessionType.Single, this.cache)
         return this.add(newSession, true).pipe(
             onNext((r) => {
                 // 不等待初始化完成
-                r.init(this.cache).subscribe()
+                r.init().subscribe()
             })
         )
     }
@@ -173,9 +172,9 @@ export class InternalSessionListImpl implements InternalSessionList {
                     return group.pipe(
                         mergeMap(ss => of(ss)),
                         mergeMap(ss => {
-                            const session = fromSessionBean(ss)
+                            const session = fromSessionBean(ss, this.cache)
                             return this.add(session, true).pipe(
-                                mergeMap(() => session.init(this.cache)),
+                                mergeMap(() => session.init()),
                             )
                         }),
                     )
@@ -198,7 +197,8 @@ export class InternalSessionListImpl implements InternalSessionList {
         if (s !== null) {
             s.onMessage(action, message.data as Message)
         } else {
-            const ses = createSession(target, sessionType)
+            const ses = createSession(target, sessionType, this.cache)
+            ses.setCache(this.cache)
             this.add(ses, true).pipe(
                 onNext((r => r.onMessage(action, message.data as Message))),
             ).subscribe({

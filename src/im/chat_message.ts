@@ -17,18 +17,18 @@ export interface MessageUpdateListener {
 }
 
 export interface MessageBaseInfo {
+    readonly Mid: number;
+    readonly CliMid: string;
     readonly SID: string;
-    readonly CliId: string;
     readonly From: string;
     readonly To: string;
     readonly Content: string;
-    readonly Mid: number;
+    readonly Type: number;
     readonly Seq: number;
     readonly SendAt: number;
     readonly Status: number;
     readonly ReceiveAt: number;
     readonly IsGroup: boolean;
-    readonly Type: number;
     readonly Target: string;
 }
 
@@ -73,7 +73,7 @@ export class ChatMessage implements MessageBaseInfo {
     ReceiveAt: number;
 
     public SID: string;
-    public CliId: string;
+    public CliMid: string;
     public From: string;
     public To: string;
     public Content: string;
@@ -104,8 +104,29 @@ export class ChatMessage implements MessageBaseInfo {
         }
     }
 
+    public static createFromBaseInfo(info: MessageBaseInfo): ChatMessage {
+        const ret = new ChatMessage();
+        ret.SID = info.SID;
+        ret.CliMid = info.CliMid;
+        ret.From = info.From;
+        ret.To = info.To;
+        ret.Content = info.Content;
+        ret.Mid = info.Mid;
+        ret.Seq = info.Seq;
+        ret.SendAt = info.SendAt;
+        ret.Status = info.Status;
+        ret.ReceiveAt = info.ReceiveAt;
+        ret.IsGroup = info.IsGroup;
+        ret.Type = info.Type;
+        ret.Target = info.Target;
+        ret.FromMe = info.From === Account.getInstance().getUID();
+        ret.OrderKey = info.SendAt
+        return ret;
+    }
+
     public static create(sid: string, m: Message): ChatMessage {
         const ret = new ChatMessage();
+        ret.SID = sid
         ret.From = m.from;
         ret.To = m.to;
         ret.Content = m.content;
@@ -114,17 +135,21 @@ export class ChatMessage implements MessageBaseInfo {
         ret.FromMe = m.from === Account.getInstance().getUID();
         ret.Status = m.status
         ret.Type = m.type
-        ret.CliId = m.cliMid
+        ret.CliMid = m.cliMid
         ret.Target = ret.FromMe ? m.to : m.from
         ret.OrderKey = m.sendAt
         ret.Seq = m.seq
 
-        if (ret.CliId === undefined || ret.CliId === "") {
+        if (ret.CliMid === undefined || ret.CliMid === "") {
             // TODO optimize
             if (ret.Mid === undefined) {
-                return ret
+                ret.Mid = 0
+                return ret;
             }
-            ret.CliId = ret.Mid.toString()
+            ret.CliMid = ret.Mid.toString()
+        }
+        if (ret.Mid === undefined) {
+            ret.Mid = 0
         }
         return ret;
     }
@@ -142,7 +167,7 @@ export class ChatMessage implements MessageBaseInfo {
 
     public getId(): string {
         // TODO fixme
-        return this.CliId;
+        return this.CliMid;
     }
 
     public getUserInfo(): Observable<GlideBaseInfo> {
