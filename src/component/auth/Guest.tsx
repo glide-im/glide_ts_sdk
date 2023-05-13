@@ -5,6 +5,7 @@ import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {SettingDialog} from "./SettingsDialog";
 import {showSnack} from "../widget/SnackBar";
+import {Logger} from "../../utils/Logger";
 
 
 export const Guest = withRouter((props: RouteComponentProps) => {
@@ -23,6 +24,8 @@ export const Guest = withRouter((props: RouteComponentProps) => {
                 showSnack(e.message)
             },
             complete: () => {
+                Logger.log("=======0", Account.session().getSessionsTemped())
+                Logger.log("=======1", Account.getInstance().getUserInfo())
                 props.history.replace('/im')
             }
         })

@@ -74,6 +74,8 @@ export interface SessionListCache {
 
 export class InternalSessionListImpl implements InternalSessionList {
 
+    private tag = "InternalSessionListImpl"
+
     private account: Account;
     private currentSession: string = "0";
 
@@ -97,24 +99,22 @@ export class InternalSessionListImpl implements InternalSessionList {
             of("start load session from cache"),
             this.cache.getAllSession().pipe(
                 mergeMap((res) => of(...res)),
-                map((v) =>
-                    this.add(fromBaseInfo(v), false).pipe(
-                        onNext((res) => {
-                            res.init(this.cache).subscribe()
-                        }),
-                        catchError(err => {
-                            Logger.error("load session from cache failed, " + err)
-                            return of(null)
-                        })
-                    )
-                ),
+                mergeMap((v) => this.add(fromBaseInfo(v), false)),
+                map((res) => {
+                    Logger.log(this.tag, "load session from cache, " + res.ID)
+                    res.init(this.cache).subscribe({})
+                }),
+                catchError(err => {
+                    Logger.error("load session from cache failed, " + err)
+                    return of(null)
+                }),
                 filter((v) => v !== null),
                 toArray(),
                 map((s) => "load session from cache complete, " + s.length + " session"),
                 catchError(err => of("load session from cache failed, " + err))
             ),
             of("start sync session from server"),
-            this.getSessions(true).pipe(
+            this.getSessions(false).pipe(
                 map(() => "session sync complete"),
                 catchError(err => `session sync failed, ${err}`)
             )
@@ -200,35 +200,31 @@ export class InternalSessionListImpl implements InternalSessionList {
         } else {
             const ses = createSession(target, sessionType)
             this.add(ses, true).pipe(
-                onNext((r => {
-                        r.onMessage(action, message.data as Message)
-                        r.init(this.cache).subscribe()
-                    })
-                ),
+                onNext((r => r.onMessage(action, message.data as Message))),
             ).subscribe({
                 error: err => Logger.error("SessionList.onMessage", err)
             })
         }
     }
 
-    private add(s: InternalSession, updateDb: Boolean): Observable<InternalSession> {
-        if (this.sessionMap.has(s.ID)) {
-            return of(this.sessionMap.get(s.ID))
+    private add(session: InternalSession, updateDb: Boolean): Observable<InternalSession> {
+        if (this.sessionMap.has(session.ID)) {
+            return of(this.sessionMap.get(session.ID))
         }
         if (!updateDb) {
-            this.sessionMap.set(s.ID, s)
-            Logger.log('SessionList', "session added: ", s.ID)
-            this.sessionEventSubject.next({event: Event.create, session: s})
-            return of(s)
+            this.sessionMap.set(session.ID, session)
+            Logger.log('SessionList', "session added: ", session.ID)
+            this.sessionEventSubject.next({event: Event.create, session: session})
+            return of(session)
         }
-        return this.cache.setSession(s.ID, s as SessionBaseInfo).pipe(
+        return this.cache.setSession(session.ID, session as SessionBaseInfo).pipe(
             onNext(() => {
-                    this.sessionMap.set(s.ID, s)
-                    Logger.log('SessionList', "session added: ", s.ID)
-                    this.sessionEventSubject.next({event: Event.create, session: s})
+                    this.sessionMap.set(session.ID, session)
+                    Logger.log('SessionList', "session added: ", session.ID)
+                    this.sessionEventSubject.next({event: Event.create, session: session})
                 }
             ),
-            map(() => s)
+            map(() => session)
         );
     }
 

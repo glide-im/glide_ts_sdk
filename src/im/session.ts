@@ -4,7 +4,7 @@ import {Account} from "./account";
 import {ChatMessage, ChatMessageCache, SendingStatus} from "./chat_message";
 import {Cache} from "./cache";
 import {Actions, Message, MessageType} from "./message";
-import {IMWsClient} from "./i_m_ws_client";
+import {IMWsClient} from "./im_ws_client";
 import {Event} from "./session_list";
 import {time2HourMinute} from "../utils/TimeUtils";
 import {onNext} from "../rx/next";
@@ -182,7 +182,7 @@ class InternalSessionImpl implements InternalSession {
 
     public init(cache: ChatMessageCache): Observable<InternalSession> {
 
-        const initBaseInfo = this.isGroup() ? of(Cache.getChannelInfo(this.To)) : Cache.loadUserInfo1(this.To)
+        const initBaseInfo = this.isGroup() ? of(Cache.getChannelInfo(this.ID)) : Cache.loadUserInfo1(this.To)
 
         if (this.To === "the_world_channel") {
             of("Hi, 我来了").pipe(
@@ -196,6 +196,7 @@ class InternalSessionImpl implements InternalSession {
 
         return initBaseInfo.pipe(
             map((info) => {
+                Logger.log(this.tag, "init session ", info.id, info.name, info.avatar)
                 this.Title = info.name ?? this.To
                 this.Avatar = info.avatar ?? "-"
                 this.updateSubject.next(Event.update)
@@ -250,7 +251,7 @@ class InternalSessionImpl implements InternalSession {
 
         // todo filter none-display message
 
-        Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [message.content]);
+        Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [message]);
         // TODO 优化
         Cache.cacheUserInfo(message.from).then(() => {
             this.addMessageByOrder(c);

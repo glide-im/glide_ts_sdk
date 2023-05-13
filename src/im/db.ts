@@ -114,7 +114,26 @@ export class SessionDbCache implements SessionListCache {
     }
 
     setSession(sid: string, info: SessionBaseInfo): Observable<any> {
-        return fromPromise(this._db.db.put('session', info))
+        const s: SessionBaseInfo = {
+            Avatar: "",
+            ID: "",
+            LastMessage: "",
+            LastMessageSender: "",
+            Title: "",
+            To: "",
+            Type: undefined,
+            UnreadCount: 0,
+            UpdateAt: ""
+        }
+
+        // copy all properties to s
+        for (const key in s) {
+            if (info.hasOwnProperty(key)) {
+                s[key] = info[key]
+            }
+        }
+
+        return fromPromise(this._db.db.put('session', s))
     }
 
     clearAllSession(): Observable<any> {
@@ -154,15 +173,26 @@ export class ChatMessageDbCache implements ChatMessageCache {
     }
 
     addMessage(message: MessageBaseInfo): Observable<any> {
-        return fromPromise(this._db.db.add('message', message))
+        const m: MessageBaseInfo = <MessageBaseInfo>{}
+
+        // copy all properties to m
+        for (const key in m) {
+            if (message.hasOwnProperty(key)) {
+                m[key] = message[key]
+            }
+        }
+
+        return fromPromise(this._db.db.add('message', m))
     }
 
     addMessages(messages: MessageBaseInfo[]): Observable<any> {
+        // TODO: batch add
         return of(null)
     }
 
     updateMessage(message: MessageBaseInfo): Observable<any> {
-        return fromPromise(this._db.db.put('message', message))
+        const m: MessageBaseInfo = {...message}
+        return fromPromise(this._db.db.put('message', m))
     }
 
     updateMessageStatus(cliId: number, status: MessageStatus): Observable<void> {

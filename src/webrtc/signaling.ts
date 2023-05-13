@@ -1,6 +1,6 @@
 import {Incoming, PeerInfo, WsIncoming} from "./dialing";
 import {mLog} from "./log";
-import {IMWsClient} from "../im/i_m_ws_client";
+import {IMWsClient} from "../im/im_ws_client";
 import {Account} from "../im/account";
 import {Actions} from "../im/message";
 import {filter, firstValueFrom, map} from "rxjs";

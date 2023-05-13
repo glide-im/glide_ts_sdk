@@ -7,7 +7,7 @@ import {GlideBaseInfo} from "./def";
 import {Cache, GlideCache} from "./cache";
 import {Actions, CommonMessage} from "./message";
 import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
-import {IMWsClient} from "./i_m_ws_client";
+import {IMWsClient} from "./im_ws_client";
 import {getCookie} from "../utils/Cookies";
 import {onError, onNext} from "../rx/next";
 import {Logger} from "../utils/Logger";
@@ -140,7 +140,7 @@ export class Account {
             .pipe(
                 map(us => {
                     this.userInfo = us;
-                    return "load user info success";
+                    return `init user info success ${us.id}, ${us.name}`
                 })
             )
 

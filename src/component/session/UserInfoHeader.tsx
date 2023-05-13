@@ -1,7 +1,7 @@
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import React, {useEffect, useRef, useState} from "react";
-import {IMWsClient} from "../../im/i_m_ws_client";
+import {IMWsClient} from "../../im/im_ws_client";
 import {Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import {grey} from "@mui/material/colors";
 
@@ -17,11 +17,15 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
 
     const [online, setOnline] = useState(IMWsClient.isReady())
 
+    useEffect(()=>{
+
+    })
+
     useEffect(() => {
 
         const sp = IMWsClient.events().subscribe({
             next: (e) => {
-                e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
+                //e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
             }
         })
         return () => sp.unsubscribe()

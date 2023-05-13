@@ -1,5 +1,5 @@
 import {GlideBaseInfo} from "./def";
-import {IMWsClient} from "./i_m_ws_client";
+import {IMWsClient} from "./im_ws_client";
 import {Actions, Message} from "./message";
 import {Cache} from "./cache";
 import {filter, map} from "rxjs";

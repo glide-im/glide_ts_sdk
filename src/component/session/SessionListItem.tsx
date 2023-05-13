@@ -3,13 +3,14 @@ import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
 import {useParams} from "react-router-dom";
-import {ISession, SessionType} from "../../im/session";
+import {ISession, SessionBaseInfo, SessionType} from "../../im/session";
+import {Logger} from "../../utils/Logger";
 
 export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession) => void }) {
 
     const {sid} = useParams<{ sid: string }>();
-    const [msg, setMsg] = useState(props.chat.LastMessage)
-    const [unread, setUnread] = useState(props.chat.UnreadCount)
+
+    const [sessionInfo, setSessionInfo] = useState<SessionBaseInfo>({...props.chat})
 
     useEffect(() => {
         const sp = props.chat.messageSubject.subscribe((msg) => {
@@ -25,12 +26,11 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
     }, [props.chat, sid])
 
     useEffect(() => {
-        console.log("SessionListItem", "init", props.chat)
+        Logger.log("SessionListItem", "init", [props.chat])
         const sp = props.chat.updateSubject.subscribe({
             next: (s) => {
-                console.log("SessionListItem", "chat updated", props.chat)
-                setMsg(`${props.chat.LastMessageSender}: ${props.chat.LastMessage}`)
-                setUnread(props.chat.UnreadCount)
+                Logger.log("SessionListItem", "chat updated", [props.chat])
+                setSessionInfo({...props.chat})
             }
         })
         return () => sp.unsubscribe()
@@ -42,14 +42,15 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
 
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
-                        selected={props.chat.ID === sid}>
+                        selected={sessionInfo.ID === sid}>
             <ListItemIcon>
-                <Badge variant={'standard'} badgeContent={unread} overlap="rectangular"
+                <Badge variant={'standard'} badgeContent={sessionInfo.UnreadCount} overlap="rectangular"
                        color={"secondary"}>
-                    <Avatar variant={'circular'} sx={{bgcolor: green[500]}} src={props.chat.Avatar}/>
+                    <Avatar variant={'circular'} sx={{bgcolor: green[500]}} src={sessionInfo.Avatar}/>
                 </Badge>
             </ListItemIcon>
-            <ListItemText primary={props.chat.Title} secondary={msg}
+            <ListItemText primary={sessionInfo.Title}
+                          secondary={`${sessionInfo.LastMessageSender}: ${sessionInfo.LastMessage}`}
                           primaryTypographyProps={{style: {color: 'black'}}}
                           secondaryTypographyProps={{
                               style: {
@@ -62,7 +63,7 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
                               }
                           }}/>
             <ListSubheader sx={{bgcolor: 'transparent'}} disableGutters disableSticky component={'span'}>
-                {props.chat.UpdateAt}
+                {sessionInfo.UpdateAt}
             </ListSubheader>
         </ListItemButton>
     </>

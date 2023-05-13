@@ -4,25 +4,26 @@ import {Logger} from "../utils/Logger";
 import {WebSockEvent, WsClient} from "./ws_client";
 import {onNext} from "../rx/next";
 
-
 const ackTimeout = 3000;
 const heartbeatInterval = 30000;
 const connectionTimeout = 3000;
 const requestTimeout = 3000;
 
-
 class IMWebSocketClient extends WsClient {
 
     private tag1 = 'WebSocketClient';
-
     private seq: number;
-
     private heartbeat: Subscription | null;
 
     constructor() {
         super();
         this.seq = 1;
         this.startHeartbeat()
+        this.events().subscribe({
+            next: (e) => {
+                Logger.log(this.tag1, "websocket event changed >>", [e])
+            }
+        })
         this.messages().subscribe({
             next: (m) => {
                 Logger.log(this.tag1, "receive message >>", [m])
