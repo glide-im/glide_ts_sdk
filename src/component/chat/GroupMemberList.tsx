@@ -29,7 +29,7 @@ export function GroupMemberList(props: { id: string }) {
 
     const avatars = ch.getMembers()
         .map(value => {
-                return <li style={style} key={value.uid}>
+                return <li style={style} key={value.id}>
                     <Avatar src={value.avatar} alt={value.name}
                             style={{height: '30px', width: '30px', border: '1px solid gray'}}/>
                 </li>

@@ -2,7 +2,8 @@ import {Account} from "./account";
 import {Message, MessageStatus, MessageType} from "./message";
 import {Cache} from "./cache";
 import {Observable, Subject} from "rxjs";
-import {GlideUserInfo} from "./def";
+import {GlideBaseInfo} from "./def";
+import {Logger} from "../utils/Logger";
 
 export enum SendingStatus {
     Unknown,
@@ -38,7 +39,7 @@ export interface IChatMessage {
 
     getId(): string
 
-    getUserInfo(): Observable<GlideUserInfo>
+    getUserInfo(): Observable<GlideBaseInfo>
 
     getDisplayContent(): string
 }
@@ -144,7 +145,7 @@ export class ChatMessage implements MessageBaseInfo {
         return this.CliId;
     }
 
-    public getUserInfo(): Observable<GlideUserInfo> {
+    public getUserInfo(): Observable<GlideBaseInfo> {
         switch (this.Type) {
             case 100:
             case 101:
@@ -189,7 +190,7 @@ export class ChatMessage implements MessageBaseInfo {
 
     public update2(m: ChatMessage) {
         if (m.Type !== MessageType.StreamMarkdown && m.Type !== MessageType.StreamText) {
-            console.log("update a non stream message")
+            Logger.log("ChatMessage", "update a non stream message")
             return;
         }
         this.Status = m.Status

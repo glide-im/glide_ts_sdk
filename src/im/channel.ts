@@ -1,16 +1,17 @@
-import {GlideUserInfo} from "./def";
-import {Ws} from "./ws";
+import {GlideBaseInfo} from "./def";
+import {IMWsClient} from "./i_m_ws_client";
 import {Actions, Message} from "./message";
 import {Cache} from "./cache";
+import {filter, map} from "rxjs";
 
 export class Channel {
 
     public Avatar: string;
     public Id: string;
     public Name: string;
-    public Members: Map<string, GlideUserInfo> = new Map()
+    public Members: Map<string, GlideBaseInfo> = new Map()
 
-    public onMemberAdd: (m: GlideUserInfo) => void | null = null
+    public onMemberAdd: (m: GlideBaseInfo) => void | null = null
     public onMemberRemove: (m: string) => void | null = null
 
     constructor(id: string) {
@@ -19,14 +20,14 @@ export class Channel {
     }
 
     public init() {
-        Ws.addMessageListener((m) => {
-            switch (m.action) {
-                case Actions.MessageGroup:
-                    const data = m.data as Message;
-                    this.onMessage(data)
-                    break;
-            }
-        })
+        IMWsClient.messages()
+            .pipe(
+                filter((m) => m.action === Actions.MessageGroup),
+                map((m) => m.data as Message),
+            )
+            .subscribe({
+                next: (m) => this.onMessage(m),
+            })
     }
 
     public onMessage(m: Message) {
@@ -45,7 +46,7 @@ export class Channel {
         }
     }
 
-    public getMembers(): Array<GlideUserInfo> {
+    public getMembers(): Array<GlideBaseInfo> {
         return Array.from(this.Members.values())
     }
 

@@ -1,9 +1,9 @@
 import {Incoming, PeerInfo, WsIncoming} from "./dialing";
 import {mLog} from "./log";
-import {Ws} from "../im/ws";
+import {IMWsClient} from "../im/i_m_ws_client";
 import {Account} from "../im/account";
 import {Actions} from "../im/message";
-import {firstValueFrom} from "rxjs";
+import {filter, firstValueFrom, map} from "rxjs";
 
 export enum SignalingType {
     Hi = 2000,
@@ -85,16 +85,17 @@ export class WsSignaling implements Signaling {
 
     constructor() {
 
-        Ws.addMessageListener((message) => {
-            if (message.action === Actions.MessageCli) {
-                this.onSignalingMessage(message.data as SignalingMessage)
-            }
+        IMWsClient.messages().pipe(
+            filter((m) => m.action === Actions.MessageCli),
+            map((m) => m.data as SignalingMessage),
+        ).subscribe({
+            next: (m) => this.onSignalingMessage(m),
         })
     }
 
     available(): boolean {
         this.myId = Account.getInstance().getUID();
-        return Ws.isConnected() && this.myId !== null;
+        return IMWsClient.isReady() && this.myId !== null;
     }
 
     addMessageListener(l: (m: SignalingMessage) => void): () => void {
@@ -113,7 +114,7 @@ export class WsSignaling implements Signaling {
         const m = {
             content: content, from: this.myId, id: 0, to: to, type: type.valueOf(),
         };
-        return firstValueFrom(Ws.sendCliCustomMessage(m))
+        return firstValueFrom(IMWsClient.sendCliCustomMessage(m))
     }
 
     deleteIncoming(peerId: string) {

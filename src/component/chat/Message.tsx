@@ -6,7 +6,7 @@ import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {Cache} from "../../im/cache";
 import {ChatMessage, SendingStatus} from "../../im/chat_message";
-import {GlideUserInfo} from "../../im/def";
+import {GlideBaseInfo} from "../../im/def";
 import {MessageStatus, MessageType} from "../../im/message";
 import {ImageViewer} from "../widget/ImageViewer";
 import {Markdown} from "../widget/Markdown";
@@ -25,13 +25,13 @@ const messageBoxStyle = function (): CSSProperties {
 export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    let sender: GlideUserInfo | null = Cache.getUserInfo(msg.From)
+    let sender: GlideBaseInfo | null = Cache.getUserInfo(msg.From)
 
     const [sending, setSending] = useState(msg.Sending)
 
     if (sender === null) {
         sender = {
-            avatar: "", name: msg.From, uid: msg.From
+            avatar: "", name: msg.From, id: msg.From
         }
     }
 
@@ -99,18 +99,18 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
 
 interface Props extends RouteComponentProps {
-    ui: GlideUserInfo;
+    ui: GlideBaseInfo;
     onClick?: (id: number) => void
 }
 
 const UserAvatar = withRouter((props: Props) => {
 
-    const isSelf = props.ui.uid === Account.getInstance().getUID();
+    const isSelf = props.ui.id === Account.getInstance().getUID();
     const handleClick = () => {
         if (isSelf) {
             return
         }
-        Account.getInstance().getSessionList().createSession(props.ui.uid).subscribe((ses) => {
+        Account.getInstance().getSessionList().createSession(props.ui.id).subscribe((ses) => {
             Account.session().setSelectedSession(ses.ID)
             props.history.replace(`/im/session/${ses.ID}`);
         })

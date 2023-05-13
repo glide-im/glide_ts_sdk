@@ -1,6 +1,6 @@
 import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {Api} from "../api/api";
-import {GlideChannelInfo, GlideUserInfo} from "./def";
+import { GlideBaseInfo} from "./def";
 import {onErrorResumeNext} from "rxjs/operators";
 import {UserInfoBean} from "../api/model";
 import {onNext} from "../rx/next";
@@ -10,6 +10,7 @@ import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
 import {SessionBaseInfo} from "./session";
 import {MessageStatus} from "./message";
 import {ChatMessageDbCache, GlideDb, SessionDbCache} from "./db";
+import {Logger} from "../utils/Logger";
 
 export class GlideCache implements SessionListCache, ChatMessageCache {
 
@@ -100,13 +101,13 @@ export class GlideCache implements SessionListCache, ChatMessageCache {
 
 class cache {
 
-    private tempUserInfo = new Map<string, GlideUserInfo>();
+    private tempUserInfo = new Map<string, GlideBaseInfo>();
 
     constructor() {
         this.tempUserInfo.set('system', {
             avatar: "https://im.dengzii.com/system.png",
             name: "系统",
-            uid: "system",
+            id: "system",
         })
     }
 
@@ -118,15 +119,15 @@ class cache {
         setCookie("token", token, 1);
     }
 
-    public getUserInfo(id: string): GlideUserInfo | null {
+    public getUserInfo(id: string): GlideBaseInfo | null {
         let i = this.tempUserInfo.get(id);
         if (i !== null && i !== undefined) {
             return i
         }
-        const res = this._readObject(`ui_${id}`);
+        const res = cache._readObject(`ui_${id}`);
         if (res !== null) {
             this.tempUserInfo.set(id, res);
-            console.log('[cache]', "restore cache user info", res)
+            Logger.log('Cache', "restore cache user info", res)
             return res
         }
         return null
@@ -139,7 +140,6 @@ class cache {
                 return
             }
             this.loadUserInfo(id).subscribe(r => {
-                console.log('cache user info', this.tempUserInfo.get(id))
                 resolved()
             }, r => {
                 resolved()
@@ -148,40 +148,40 @@ class cache {
         return new Promise<any>(execute)
     }
 
-    public getChannelInfo(id: string): GlideChannelInfo | null {
+    public getChannelInfo(id: string): GlideBaseInfo | null {
         if (id === 'the_world_channel') {
             return {avatar: "https://im.dengzii.com/world_channel.png", id: id, name: "世界频道",}
         }
         return {avatar: "", id: id, name: id}
     }
 
-    public loadUserInfo1(id: string): Observable<GlideUserInfo> {
-        const cache = this.getUserInfo(id);
-        if (cache !== null) {
-            return of(cache)
+    public loadUserInfo1(id: string): Observable<GlideBaseInfo> {
+        const ci = this.getUserInfo(id);
+        if (ci !== null) {
+            return of(ci)
         }
 
         return from(Api.getUserInfo(id)).pipe(
-            map<UserInfoBean[], GlideUserInfo>((us, i) => {
+            map<UserInfoBean[], GlideBaseInfo>((us, i) => {
                 const u = us[0];
-                const m: GlideUserInfo = {
+                const m: GlideBaseInfo = {
                     avatar: u.avatar,
                     name: u.nick_name,
-                    uid: u.uid.toString(),
+                    id: u.uid.toString(),
                 }
-                this._writeObject(`ui_${id}`, m);
-                this.tempUserInfo.set(m.uid, m);
+                cache._writeObject(`ui_${id}`, m);
+                this.tempUserInfo.set(m.id, m);
                 return m;
             }),
             onErrorResumeNext(of({
                 avatar: "-",
                 name: `${id}`,
-                uid: `${id}`,
+                id: `${id}`,
             })),);
 
     }
 
-    public loadUserInfo(...id: string[]): Observable<GlideUserInfo[]> {
+    public loadUserInfo(...id: string[]): Observable<GlideBaseInfo[]> {
 
         return of(...id).pipe(
             groupBy<string, boolean>(id => {
@@ -199,10 +199,10 @@ class cache {
                             return Api.getUserInfo(...ids)
                         }),
                         mergeMap(userInfos => of(...userInfos)),
-                        map<UserInfoBean, GlideUserInfo>(u => ({
+                        map<UserInfoBean, GlideBaseInfo>(u => ({
                             avatar: u.avatar,
                             name: u.nick_name,
-                            uid: u.uid.toString()
+                            id: u.uid.toString()
                         })),
                     )
                 }
@@ -210,8 +210,8 @@ class cache {
             toArray(),
             onNext(userInfo => {
                 userInfo.forEach(u => {
-                    this._writeObject(`ui_${id}`, u);
-                    this.tempUserInfo.set(u.uid, u);
+                    cache._writeObject(`ui_${id}`, u);
+                    this.tempUserInfo.set(u.id, u);
                 });
             })
         )
@@ -223,17 +223,17 @@ class cache {
         localStorage.clear();
     }
 
-    private _readObject(key: string): any | null {
+     static _readObject(key: string): any | null {
         const val = localStorage.getItem(key);
         if (val === null) {
             return null;
         }
-        console.log('[cache]', "read cache", key, val)
+        //console.log('[cache]', "read cache", key, val)
         return JSON.parse(val);
     }
 
-    private _writeObject(key: string, val: any): void {
-        console.log('[cache]', "write cache", key, val)
+     static _writeObject(key: string, val: any): void {
+        //console.log('[cache]', "write cache", key, val)
         localStorage.setItem(key, JSON.stringify(val));
     }
 }

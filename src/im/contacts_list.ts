@@ -48,7 +48,7 @@ export class ContactsList {
                 mergeMap(ids => Cache.loadUserInfo(...ids)),
                 onNext(userInfo => {
                     userInfo.forEach(u => {
-                        this.contacts.get(u.uid)?.setInfo(u)
+                        this.contacts.get(u.id)?.setInfo(u)
                     })
                 }),
                 mergeMap(() => of(Array.from(this.contacts.values())))

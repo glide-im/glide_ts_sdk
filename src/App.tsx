@@ -38,11 +38,7 @@ function App() {
         if (authed) {
             subscription = Account.getInstance().auth()
                 .subscribe({
-                    next: (r) => {
-                        console.log(r)
-                    },
                     error: (e) => {
-                        console.log("auth error", e);
                         setState({
                             isAuthenticated: false,
                             isLoading: false,

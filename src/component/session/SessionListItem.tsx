@@ -14,7 +14,7 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
     useEffect(() => {
         const sp = props.chat.messageSubject.subscribe((msg) => {
             if (!msg.FromMe && props.chat.ID !== sid) {
-                if (props.chat.Type === SessionType.Group) {
+                if (props.chat.Type === SessionType.Channel) {
                     showSnack(`[${props.chat.Title}] ${msg.getSenderName()}: ${props.chat.LastMessage}`)
                 } else {
                     showSnack(`${props.chat.Title}: ${props.chat.LastMessage}`)

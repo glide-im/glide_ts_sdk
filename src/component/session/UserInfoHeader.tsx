@@ -1,7 +1,7 @@
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import React, {useEffect, useRef, useState} from "react";
-import {State, Ws} from "../../im/ws";
+import {IMWsClient} from "../../im/i_m_ws_client";
 import {Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import {grey} from "@mui/material/colors";
 
@@ -11,24 +11,20 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
     let u = Account.getInstance().getUserInfo()
     if (u === null) {
         u = {
-            avatar: "-", name: "-", uid: "-"
+            avatar: "-", name: "-", id: "-"
         }
     }
 
-    const [online, setOnline] = useState(Ws.isConnected())
+    const [online, setOnline] = useState(IMWsClient.isReady())
 
     useEffect(() => {
-        const l = (s: State, _: any) => {
-            if (s === State.CLOSED) {
-                setOnline(false)
-            } else if (s === State.CONNECTED) {
-                setOnline(true)
+
+        const sp = IMWsClient.events().subscribe({
+            next: (e) => {
+                e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
             }
-        }
-        Ws.addStateListener(l)
-        return () => {
-            Ws.removeStateListener(l)
-        }
+        })
+        return () => sp.unsubscribe()
     }, []);
 
     const onExitClick = () => {
@@ -46,7 +42,7 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
                 <Avatar src={u.avatar} sx={{width: 40, height: 40, bgcolor: grey[400]}}/>
                 <div className={'text-left flex flex-col ml-5'}>
                     <span className={'text-base'}>{u.name}</span>
-                    <span className={'text-sm'}>UID: {u.uid}</span>
+                    <span className={'text-sm'}>UID: {u.id}</span>
                 </div>
             </div>
 

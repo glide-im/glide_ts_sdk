@@ -50,7 +50,7 @@ export function SessionMessageList() {
     //     </Box>
     // }
 
-    return <MessageListView messages={messages} isGroup={session.Type === SessionType.Group}/>
+    return <MessageListView messages={messages} isGroup={session.Type === SessionType.Channel}/>
 }
 
 const messageListStyle: CSSProperties = {

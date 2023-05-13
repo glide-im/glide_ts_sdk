@@ -6,10 +6,6 @@ import {fromPromise} from "rxjs/internal/observable/innerFrom";
 import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
 import {MessageStatus} from "./message";
 
-export class Db {
-
-}
-
 interface GlideDBSchema extends DBSchema {
     session: {
         value: SessionBaseInfo,

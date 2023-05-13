@@ -1,5 +1,5 @@
 import { ContactsBean } from "../api/model";
-import { GlideUserInfo } from "./def";
+import { GlideBaseInfo } from "./def";
 
 export class Contacts {
 
@@ -20,7 +20,7 @@ export class Contacts {
         return contact;
     }
 
-    public setInfo(u: GlideUserInfo){
+    public setInfo(u: GlideBaseInfo){
         this.avatar = u.avatar;
         this.name = u.name;
     }

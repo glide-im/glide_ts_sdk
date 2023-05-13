@@ -1,18 +1,20 @@
-import {delay, first, map, mergeMap, Observable, of, Subject} from "rxjs";
+import {delay, filter, interval, map, mergeMap, Observable, of, Subject, take, throwError} from "rxjs";
 import {SessionBean} from "../api/model";
 import {Account} from "./account";
-import {ChatMessage, SendingStatus} from "./chat_message";
-import {GlideUserInfo} from "./def";
+import {ChatMessage, ChatMessageCache, SendingStatus} from "./chat_message";
 import {Cache} from "./cache";
-import {Message, MessageType} from "./message";
-import {Ws} from "./ws";
+import {Actions, Message, MessageType} from "./message";
+import {IMWsClient} from "./i_m_ws_client";
 import {Event} from "./session_list";
-import {onNext} from "../rx/next";
 import {time2HourMinute} from "../utils/TimeUtils";
+import {onNext} from "../rx/next";
+import {Logger} from "../utils/Logger";
+
+export type SessionId = string
 
 export enum SessionType {
     Single = 1,
-    Group = 2
+    Channel = 2
 }
 
 export function getSID(type: number, to: string): string {
@@ -34,7 +36,7 @@ export function getSID(type: number, to: string): string {
 export interface SessionBaseInfo {
 
     // sid
-    readonly ID: string;
+    readonly ID: SessionId;
     readonly Avatar: string;
     readonly Title: string;
     readonly UpdateAt: string;
@@ -50,6 +52,8 @@ export interface ISession extends SessionBaseInfo {
     readonly messageSubject: Subject<ChatMessage>;
     readonly updateSubject: Subject<Event>;
 
+    waitInit(): Observable<InternalSession>;
+
     clearUnread(): void;
 
     sendTextMessage(content: string): Observable<ChatMessage>;
@@ -64,16 +68,16 @@ export interface ISession extends SessionBaseInfo {
 }
 
 export interface InternalSession extends ISession {
-    onMessage(action: string, message: Message)
+    onMessage(action: Actions, message: Message)
 
     update(session: SessionBaseInfo)
 
     update(session: SessionBean)
 
-    init(): Observable<InternalSession>;
+    init(cache: ChatMessageCache): Observable<InternalSession>;
 }
 
-export function createSession(to: string, type: number): InternalSession {
+export function createSession(to: string, type: SessionType): InternalSession {
     return InternalSessionImpl.create(to, type);
 }
 
@@ -87,7 +91,9 @@ export function fromBaseInfo(baseInfo: SessionBaseInfo): InternalSession {
 
 class InternalSessionImpl implements InternalSession {
 
-    public ID: string;
+    private tag = "InternalSessionImpl";
+
+    public ID: SessionId;
     public Avatar: string;
     public Title: string;
     public UpdateAt: string;
@@ -97,13 +103,13 @@ class InternalSessionImpl implements InternalSession {
     public Type: SessionType;
     public To: string;
 
-    private userInfo: GlideUserInfo | null = null;
-
     private messageList = new Array<ChatMessage>();
     private messageMap = new Map<string, ChatMessage>();
 
     private readonly _messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
     private readonly _updateSubject: Subject<Event> = new Subject<Event>();
+
+    private initialized = false;
 
     private constructor() {
 
@@ -131,14 +137,6 @@ class InternalSessionImpl implements InternalSession {
         ret.LastMessageSender = "-"
         if (type === 1) {
             ret.Title = Cache.getUserInfo(to)?.name ?? ret.ID;
-        }
-        if (ret.To === "the_world_channel") {
-            of("Hi, 我来了").pipe(
-                delay(2000),
-                mergeMap(msg => ret.sendTextMessage(msg)),
-            ).subscribe(msg => {
-
-            })
         }
         return ret;
     }
@@ -169,40 +167,48 @@ class InternalSessionImpl implements InternalSession {
         return session;
     }
 
+    waitInit(): Observable<InternalSession> {
+        return interval(100).pipe(
+            filter(() => this.initialized),
+            take(1),
+            map(() => this)
+        )
+    }
+
     public clearUnread() {
         this.UnreadCount = 0;
         this.updateSubject.next(Event.update);
     }
 
-    public init(): Observable<InternalSessionImpl> {
-        console.log('Session', 'init...')
-        if (this.isGroup()) {
-            const info = Cache.getChannelInfo(this.To)
-            this.Avatar = info?.avatar ?? ""
-            this.Title = info?.name ?? '-'
-            return of(this);
-        } else {
-            return Cache.loadUserInfo1(this.To)
-                .pipe(
-                    onNext(info => {
-                        this.userInfo = info;
-                        this.Title = info.name;
-                        this.Avatar = info.avatar;
-                        console.log('Session', 'info updated', info)
-                        this.updateSubject.next(Event.update);
-                    }),
-                    // mergeMap(() => this.getMessageHistry(0)),
-                    map(() => this),
-                );
+    public init(cache: ChatMessageCache): Observable<InternalSession> {
+
+        const initBaseInfo = this.isGroup() ? of(Cache.getChannelInfo(this.To)) : Cache.loadUserInfo1(this.To)
+
+        if (this.To === "the_world_channel") {
+            of("Hi, 我来了").pipe(
+                delay(2000),
+                mergeMap(msg => this.sendTextMessage(msg)),
+            ).subscribe({
+                next: (msg) => Logger.log(this.tag, 'hello message sent'),
+                error: (err) => Logger.error(this.tag, 'hello message send failed', err)
+            })
         }
+
+        return initBaseInfo.pipe(
+            map((info) => {
+                this.Title = info.name ?? this.To
+                this.Avatar = info.avatar ?? "-"
+                this.updateSubject.next(Event.update)
+                return this
+            }),
+            onNext(() => {
+                this.initialized = true
+            })
+        )
     }
 
     public isGroup(): boolean {
-        return this.Type === SessionType.Group;
-    }
-
-    public getUserInfo(): GlideUserInfo | null {
-        return this.userInfo;
+        return this.Type === SessionType.Channel;
     }
 
     public getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]> {
@@ -235,7 +241,7 @@ class InternalSessionImpl implements InternalSession {
     }
 
 
-    public onMessage(action: string, message: Message) {
+    public onMessage(action: Actions, message: Message) {
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
@@ -244,7 +250,7 @@ class InternalSessionImpl implements InternalSession {
 
         // todo filter none-display message
 
-        console.log(">>> Session onMessage", this.ID, message.mid, message.type, message.status, message.content);
+        Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [message.content]);
         // TODO 优化
         Cache.cacheUserInfo(message.from).then(() => {
             this.addMessageByOrder(c);
@@ -299,7 +305,6 @@ class InternalSessionImpl implements InternalSession {
         // const isNotHistoryMessage = this.messageList[this.messageList.length - 1].getId() === message.getId()
 
         if (this.messageList.length > 0 && isNewMessage) {
-            console.log("Session", "update session last message", this.ID, message.getDisplayContent());
             if (!message.FromMe && !this.isSelected()) {
                 this.UnreadCount++;
             }
@@ -348,7 +353,19 @@ class InternalSessionImpl implements InternalSession {
 
         this.addMessageByOrder(r);
 
-        return Ws.sendMessage(this.Type, m).pipe(
+        let sendObservable: Observable<Message>
+        switch (this.Type) {
+            case SessionType.Single:
+                sendObservable = IMWsClient.sendChatMessage(m)
+                break;
+            case SessionType.Channel:
+                sendObservable = IMWsClient.sendChannelMessage(m)
+                break;
+            default:
+                return throwError(() => new Error("unknown session type"));
+        }
+
+        return sendObservable.pipe(
             map(resp => {
                 const r = ChatMessage.create(this.ID, resp);
                 r.Sending = SendingStatus.Sent;

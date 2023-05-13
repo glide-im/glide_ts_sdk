@@ -5,6 +5,7 @@ import React, {useRef, useState} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {SettingDialog} from './SettingsDialog';
+import {showSnack} from "../widget/SnackBar";
 
 export const Auth = withRouter((props: RouteComponentProps) => {
 
@@ -26,11 +27,8 @@ export const Auth = withRouter((props: RouteComponentProps) => {
         Account.getInstance()
             .login(account, password)
             .subscribe({
-                next: (r) => {
-                    console.log(r)
-                },
                 error: (e) => {
-                    alert(e)
+                    showSnack("登录失败：" + e.messag)
                 },
                 complete: () => {
                     props.history.replace("/im");

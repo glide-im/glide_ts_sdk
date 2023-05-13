@@ -84,7 +84,7 @@ export enum Actions {
 // 公共消息体
 export interface CommonMessage<T> {
     seq: number;
-    action: string;
+    action: Actions;
     data: T;
     to?: string | null;
     from?: string | null;

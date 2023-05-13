@@ -9,7 +9,7 @@ export const Profile = withRouter((props: RouteComponentProps) => {
     let u = Account.getInstance().getUserInfo()
     if (u === null) {
         u = {
-            avatar: "-", name: "-", uid: "-"
+            avatar: "-", name: "-", id: "-"
         }
     }
 
@@ -29,7 +29,7 @@ export const Profile = withRouter((props: RouteComponentProps) => {
         </Grid>
         <Box width={"100%"} color={"#666"}>
             <Typography variant={"subtitle1"} color={"black"} textAlign={"center"}>{u.name}</Typography>
-            <Typography variant={"subtitle2"} textAlign={"center"}>uid: {u.uid}</Typography>
+            <Typography variant={"subtitle2"} textAlign={"center"}>uid: {u.id}</Typography>
         </Box>
         <Box bottom={0} position={"absolute"} width={'100%'} p={2} boxSizing={"border-box"}>
             <Button fullWidth variant={"outlined"} size={"large"} onClick={logout}>

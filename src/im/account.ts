@@ -1,15 +1,16 @@
-import {catchError, concat, delay, map, mergeMap, Observable, of, retry, timeout} from "rxjs";
+import {catchError, concat, map, mergeMap, Observable, of, throwError, timeout} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
 import {ContactsList} from "./contacts_list";
-import {GlideUserInfo} from "./def";
+import {GlideBaseInfo} from "./def";
 import {Cache, GlideCache} from "./cache";
 import {Actions, CommonMessage} from "./message";
 import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
-import {Ws} from "./ws";
+import {IMWsClient} from "./i_m_ws_client";
 import {getCookie} from "../utils/Cookies";
-import {onComplete, onError, onNext} from "../rx/next";
+import {onError, onNext} from "../rx/next";
+import {Logger} from "../utils/Logger";
 
 export enum MessageLevel {
     // noinspection JSUnusedGlobalSymbols
@@ -24,6 +25,8 @@ export type MessageListener = (level: MessageLevel, msg: string) => void
 
 export class Account {
 
+    private tag = "Account";
+
     private uid: string;
     private sessions: InternalSessionList = new InternalSessionListImpl(this);
     private contacts: ContactsList = new ContactsList();
@@ -37,7 +40,7 @@ export class Account {
         this.token = getCookie('token')
     }
 
-    private userInfo: GlideUserInfo | null = null;
+    private userInfo: GlideBaseInfo | null = null;
 
     public static session(): SessionList {
         return Account.instance.getSessionList();
@@ -51,6 +54,12 @@ export class Account {
         return Api.login(account, password)
             .pipe(
                 mergeMap(res => this.initAccount(res)),
+                onNext(res => {
+                    Logger.log(this.tag, "Login", res)
+                }),
+                onError(err => {
+                    Logger.error(this.tag, "Login", "auth failed", err)
+                })
             )
     }
 
@@ -60,20 +69,22 @@ export class Account {
             .pipe(
                 mergeMap(res => this.initAccount(res)),
                 onNext(res => {
-                    console.log("INIT >> ", res)
+                    Logger.log(this.tag, "GustLogin", res)
                 }),
                 onError(err => {
-                    console.log("gust login failed ", err)
+                    Logger.error(this.tag, "GustLogin", "auth failed", err)
                 })
             )
     }
 
     public auth(): Observable<string> {
-        Cache.clean()
         return Api.auth(this.token)
             .pipe(
                 mergeMap(res => {
                     return this.initAccount(res)
+                }),
+                onNext(res => {
+                    Logger.log(this.tag, "TokenAuth", res)
                 }),
                 timeout(5000),
                 catchError(err => {
@@ -87,14 +98,14 @@ export class Account {
         this.sessions = new InternalSessionListImpl(this)
         this.contacts = new ContactsList()
         this.clearAuth()
-        Ws.close()
+        IMWsClient.close()
     }
 
     public clearAuth() {
-        console.log("clearAuth");
+        Logger.log(this.tag, "clean auth info");
         this.uid = "";
         this.token = "";
-        Ws.close();
+        IMWsClient.close();
         Cache.storeToken("");
     }
 
@@ -114,7 +125,7 @@ export class Account {
         return this.uid;
     }
 
-    public getUserInfo(): GlideUserInfo | null {
+    public getUserInfo(): GlideBaseInfo | null {
         return this.userInfo;
     }
 
@@ -137,7 +148,8 @@ export class Account {
             this.initCache(),
             initUserInfo,
             this.sessions.init(this.cache),
-            this.connectIMServer(),
+            IMWsClient.connect(this.server),
+            this.authWs(),
         )
     }
 
@@ -152,45 +164,59 @@ export class Account {
         )
     }
 
-    private connectIMServer(): Observable<string> {
-
-        const data = {Token: this.token};
-        const server = this.server;
-
-        const authWs = Ws.request<AuthBean>(Actions.ApiUserAuth, data)
-            .pipe(
-                map(() => "ws auth success"),
-            )
-
-        return Ws.connect(server)
-            .pipe(
-                mergeMap(() => authWs),
-                onComplete(() => Ws.addMessageListener((r) => {
-                    this.onMessage(r)
-                })),
-            )
+    private authWs(): Observable<string> {
+        return concat(
+            of("ws auth start"),
+            IMWsClient.request<AuthBean>(Actions.ApiUserAuth, {Token: this.token})
+                .pipe(
+                    map(() => "ws auth success"),
+                    onNext(() => {
+                        this.startHandleMessage()
+                    }),
+                    catchError(err => {
+                        if (err.hasOwnProperty("name") && err.name === "TimeoutError") {
+                            return throwError(() => "ws auth timeout");
+                        } else {
+                            return throwError(() => "ws auth failed");
+                        }
+                    }),
+                )
+        )
     }
 
-    private onMessage(m: CommonMessage<any>) {
-        switch (m.action) {
-            // case Actions.NotifyContact:
-            //     this.contacts.onNewContactNotify(m.data);
-            //     break;
-            case Actions.MessageCli:
-            case Actions.NotifyGroup:
-            case Actions.MessageChat:
-            case Actions.MessageGroup:
-            case Actions.MessageChatRecall:
-            case Actions.MessageGroupRecall:
-                this.sessions.onMessage(m);
-                break;
-            case Actions.NotifyKickOut:
-                alert("kick out");
-                this.logout();
-                break;
-            case Actions.NotifyNeedAuth:
-                this.logout();
-                break;
-        }
+    private startHandleMessage() {
+
+        IMWsClient.messages().subscribe({
+            next: (m: CommonMessage<any>) => {
+                switch (m.action) {
+                    // case Actions.NotifyContact:
+                    //     this.contacts.onNewContactNotify(m.data);
+                    //     break;
+                    case Actions.MessageCli:
+                    case Actions.NotifyGroup:
+                    case Actions.MessageChat:
+                    case Actions.MessageGroup:
+                    case Actions.MessageChatRecall:
+                    case Actions.MessageGroupRecall:
+                        this.sessions.onMessage(m);
+                        break;
+                    case Actions.NotifyKickOut:
+                        alert("kick out");
+                        this.logout();
+                        break;
+                    case Actions.NotifyNeedAuth:
+                        this.logout();
+                        break;
+                }
+            },
+            error: (err) => {
+                Logger.error(this.tag, "ws messages error", err)
+            },
+            complete: () => {
+                Logger.log(this.tag, "ws messages complete")
+            }
+        });
+
+
     }
 }
