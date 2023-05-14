@@ -5,6 +5,7 @@ import {showSnack} from "../widget/SnackBar";
 import {useParams} from "react-router-dom";
 import {ISession, SessionBaseInfo, SessionType} from "../../im/session";
 import {Logger} from "../../utils/Logger";
+import {time2Str} from "../../utils/TimeUtils";
 
 export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession) => void }) {
 
@@ -40,6 +41,13 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
         props.onSelect(props.chat)
     }
 
+    let updateAt = ""
+    if (sessionInfo.UpdateAt > 0) {
+        updateAt = time2Str(sessionInfo.UpdateAt)
+    }
+
+    Logger.log("SessionListItem", "render", [props.chat])
+
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
                         selected={sessionInfo.ID === sid}>
@@ -62,8 +70,11 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
                                   lineClamp: 2,
                               }
                           }}/>
-            <ListSubheader sx={{bgcolor: 'transparent'}} disableGutters disableSticky component={'span'}>
-                {sessionInfo.UpdateAt}
+            <ListSubheader sx={{bgcolor: 'transparent'}} disableGutters disableSticky component={'span'} style={{
+                minWidth: '60px',
+                textAlign: 'right',
+            }}>
+                {updateAt}
             </ListSubheader>
         </ListItemButton>
     </>

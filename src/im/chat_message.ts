@@ -121,6 +121,7 @@ export class ChatMessage implements MessageBaseInfo {
         ret.Target = info.Target;
         ret.FromMe = info.From === Account.getInstance().getUID();
         ret.OrderKey = info.SendAt
+        ret.SendAt = ret.SendAt > 1000000000 ? ret.SendAt : ret.SendAt * 1000
         return ret;
     }
 
@@ -140,6 +141,8 @@ export class ChatMessage implements MessageBaseInfo {
         ret.OrderKey = m.sendAt
         ret.Seq = m.seq
 
+        ret.SendAt = ret.SendAt > 10000000000 ? ret.SendAt : ret.SendAt * 1000
+
         if (ret.CliMid === undefined || ret.CliMid === "") {
             // TODO optimize
             if (ret.Mid === undefined) {
@@ -152,17 +155,6 @@ export class ChatMessage implements MessageBaseInfo {
             ret.Mid = 0
         }
         return ret;
-    }
-
-    public getDisplayTime(): string {
-        const date = new Date(this.SendAt);
-
-        // format date like 19:01
-        const hour = date.getHours();
-        const minute = date.getMinutes();
-        const hourStr = hour < 10 ? "0" + hour : hour.toString();
-        const minuteStr = minute < 10 ? "0" + minute : minute.toString();
-        return hourStr + ":" + minuteStr;
     }
 
     public getId(): string {
@@ -200,6 +192,9 @@ export class ChatMessage implements MessageBaseInfo {
                     return isMe ? "你已加入频道" : `${name} 加入频道`;
                 }
                 return isMe ? "你已离开频道" : `${name} 离开频道`;
+            // case MessageType.StreamMarkdown:
+            // case MessageType.StreamText:
+            //     return '[流消息]'
             case MessageType.Image:
                 return '[图片]'
             case MessageType.Audio:

@@ -6,7 +6,6 @@ import {Cache} from "./cache";
 import {Actions, Message, MessageType} from "./message";
 import {IMWsClient} from "./im_ws_client";
 import {Event} from "./session_list";
-import {time2HourMinute} from "../utils/TimeUtils";
 import {onNext} from "../rx/next";
 import {Logger} from "../utils/Logger";
 
@@ -39,7 +38,7 @@ export interface SessionBaseInfo {
     readonly ID: SessionId;
     readonly Avatar: string;
     readonly Title: string;
-    readonly UpdateAt: string;
+    readonly UpdateAt: number;
     readonly LastMessageSender: string;
     readonly LastMessage: string;
     readonly UnreadCount: number;
@@ -70,9 +69,7 @@ export interface ISession extends SessionBaseInfo {
 export interface InternalSession extends ISession {
     onMessage(action: Actions, message: Message)
 
-    update(session: SessionBaseInfo)
-
-    update(session: SessionBean)
+    update(session: SessionBean | SessionBaseInfo)
 
     init(): Observable<InternalSession>;
 
@@ -104,7 +101,7 @@ class InternalSessionImpl implements InternalSession {
     public ID: SessionId;
     public Avatar: string;
     public Title: string;
-    public UpdateAt: string;
+    public UpdateAt: number;
     public LastMessageSender: string;
     public LastMessage: string;
     public UnreadCount: number = 0;
@@ -120,8 +117,15 @@ class InternalSessionImpl implements InternalSession {
     private initialized = false;
     private cache: ChatMessageCache
 
-    private constructor() {
+    private constructor(type: SessionType, to: string) {
+        this.LastMessage = "-"
+        this.LastMessageSender = "-"
+        this.UnreadCount = 0
 
+        this.To = to;
+        this.Type = type;
+        this.ID = this.getSID();
+        this.Title = this.ID;
     }
 
     get messageSubject(): Subject<ChatMessage> {
@@ -136,43 +140,23 @@ class InternalSessionImpl implements InternalSession {
         return this.ID === Account.session().getCurrentSession()?.ID;
     }
 
-    public static create(to: string, type: number): InternalSessionImpl {
-        const ret = new InternalSessionImpl();
-        ret.To = to;
-        ret.Type = type;
-        ret.ID = ret.getSID();
-        ret.Title = ret.ID;
-        ret.LastMessage = "-"
-        ret.LastMessageSender = "-"
-        if (type === 1) {
-            ret.Title = Cache.getUserInfo(to)?.name ?? ret.ID;
-        }
-        return ret;
+    public static create(to: string, type: SessionType): InternalSessionImpl {
+        return new InternalSessionImpl(type, to);
     }
 
     public static fromSessionBean(sb: SessionBean): InternalSessionImpl {
-        let session = new InternalSessionImpl();
-        session.To = sb.To.toString();
-        session.ID = session.getSID();
-        session.Title = session.ID;
-        session.UpdateAt = sb.UpdateAt.toString();
-        session.LastMessageSender = "-";
-        session.LastMessage = '-';
-        session.UnreadCount = 0;
-        session.Type = SessionType.Single;
+        let session = new InternalSessionImpl(SessionType.Single, sb.To.toString());
+        session.UpdateAt = sb.UpdateAt;
         return session;
     }
 
     public static fromBaseInfo(baseInfo: SessionBaseInfo): InternalSessionImpl {
-        let session = new InternalSessionImpl();
-        session.To = baseInfo.To;
-        session.ID = baseInfo.ID;
+        let session = new InternalSessionImpl(baseInfo.Type, baseInfo.To);
         session.Title = baseInfo.Title;
         session.UpdateAt = baseInfo.UpdateAt;
         session.LastMessageSender = baseInfo.LastMessageSender;
         session.LastMessage = baseInfo.LastMessage;
         session.UnreadCount = baseInfo.UnreadCount;
-        session.Type = baseInfo.Type;
         return session;
     }
 
@@ -206,10 +190,9 @@ class InternalSessionImpl implements InternalSession {
             })
         }
 
-
         return concat(
             initBaseInfo.pipe(
-                onNext((info) => {
+                map((info) => {
                     Logger.log(this.tag, "init session ", info.id, info.name, info.avatar)
                     this.Title = info.name ?? this.To
                     this.Avatar = info.avatar ?? "-"
@@ -217,12 +200,16 @@ class InternalSessionImpl implements InternalSession {
                     this.initialized = true
                 })
             ),
-            this.cache.getSessionMessagesByTime(this.ID, new Date().getTime()).pipe(
+            this.cache.getSessionMessagesByTime(this.ID, Date.now()).pipe(
                 mergeMap((msgs) => of(...msgs)),
                 map((msg) => ChatMessage.createFromBaseInfo(msg)),
-                onNext((msg) => this.addMessageByOrder(msg, true)),
                 toArray(),
-                onNext((msgs) => {
+                map((msgs) => {
+                    const sorted = msgs.sort((a, b) => a.SendAt - b.SendAt)
+                    for (let m in sorted) {
+                        this.messageList.push(sorted[m])
+                        this.messageMap.set(sorted[m].getId(), sorted[m])
+                    }
                     Logger.log(this.tag, "init session ", this.ID, "message count", msgs.length)
                 })
             )
@@ -270,14 +257,11 @@ class InternalSessionImpl implements InternalSession {
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
-
         const c = ChatMessage.create(this.ID, message)
-
         // todo filter none-display message
 
         Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [message]);
         // TODO 优化
-
         this.cache.addMessage(c).pipe(
             onNext(() => {
                 this.addMessageByOrder(c)
@@ -323,7 +307,7 @@ class InternalSessionImpl implements InternalSession {
         return this.messageList.slice(index, this.messageList.length - index);
     }
 
-    private addMessageByOrder(message: ChatMessage, isHistory = false) {
+    private addMessageByOrder(message: ChatMessage) {
 
         const isNewMessage = !this.messageMap.has(message.getId());
 
@@ -341,10 +325,6 @@ class InternalSessionImpl implements InternalSession {
 
         // 收到老消息
         // const isNotHistoryMessage = this.messageList[this.messageList.length - 1].getId() === message.getId()
-
-        if (isHistory) {
-            return
-        }
         if (this.messageList.length > 0 && isNewMessage) {
             if (!message.FromMe && !this.isSelected()) {
                 this.UnreadCount++;
@@ -353,7 +333,7 @@ class InternalSessionImpl implements InternalSession {
             this.LastMessage = message.getDisplayContent();
             this.LastMessageSender = message.getSenderName();
 
-            this.UpdateAt = time2HourMinute(message.SendAt);
+            this.UpdateAt = message.SendAt;
             this.messageSubject.next(message)
         }
         this.updateSubject.next(Event.update);
@@ -421,9 +401,22 @@ class InternalSessionImpl implements InternalSession {
         );
     }
 
-    update(session: SessionBaseInfo);
-    update(session: SessionBean);
     update(session: SessionBaseInfo | SessionBean) {
+        Logger.log(this.tag, "update", [session])
+        if (this.isSessionBaseInfo(session)) {
+            this.Avatar = session.Avatar;
+            this.Title = session.Title;
+            this.UpdateAt = session.UpdateAt;
+            this.LastMessage = session.LastMessage;
+            this.LastMessageSender = session.LastMessageSender;
+            this.UnreadCount = session.UnreadCount;
+        } else {
+
+        }
+    }
+
+    private isSessionBaseInfo(session: SessionBaseInfo | SessionBean): session is SessionBaseInfo {
+        return (session as SessionBaseInfo).ID !== undefined;
     }
 }
 

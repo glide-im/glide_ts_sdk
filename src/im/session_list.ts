@@ -1,7 +1,7 @@
 import {catchError, concat, filter, groupBy, map, mergeMap, Observable, of, Subject, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {Account} from "./account";
-import {CliCustomMessage, CommonMessage, Message} from "./message";
+import {Actions, CliCustomMessage, CommonMessage, Message} from "./message";
 import {onNext} from "../rx/next";
 import {
     createSession,
@@ -82,10 +82,11 @@ export class InternalSessionListImpl implements InternalSessionList {
     private sessionEventSubject = new Subject<SessionEvent>()
     private sessionMap: Map<SessionId, InternalSession> = new Map<SessionId, InternalSession>()
 
-    private cache: SessionListCache & ChatMessageCache;
+    private readonly cache: SessionListCache & ChatMessageCache;
 
-    constructor(account: Account) {
+    constructor(account: Account, cache: SessionListCache & ChatMessageCache) {
         this.account = account
+        this.cache = cache
     }
 
     public static getInstance(): SessionList {
@@ -93,7 +94,6 @@ export class InternalSessionListImpl implements InternalSessionList {
     }
 
     public init(cache: SessionListCache & ChatMessageCache): Observable<string> {
-        this.cache = cache
 
         return concat(
             of("start load session from cache"),
@@ -188,21 +188,35 @@ export class InternalSessionListImpl implements InternalSessionList {
     }
 
     public onMessage(message: CommonMessage<Message | CliCustomMessage>) {
-        const action = message.action;
-        const sessionType = action.indexOf("group") !== -1 ? 2 : 1
-        const target = sessionType === 2 ? message.data.to : message.data.from
+
+        let sessionType: SessionType = SessionType.Single
+        let target = message.data.from
+
+        switch (message.action) {
+            case Actions.MessageChat:
+            case Actions.MessageChatRecall:
+                sessionType = SessionType.Single
+                target = message.data.from
+                break;
+            case Actions.MessageGroupRecall:
+            case Actions.MessageGroup:
+            case Actions.NotifyGroup:
+                sessionType = SessionType.Channel
+                target = message.data.to
+                break;
+        }
 
         const s = this.get(getSID(sessionType, target))
 
         if (s !== null) {
-            s.onMessage(action, message.data as Message)
+            s.onMessage(message.action, message.data as Message)
         } else {
-            const ses = createSession(target, sessionType, this.cache)
-            ses.setCache(this.cache)
-            this.add(ses, true).pipe(
-                onNext((r => r.onMessage(action, message.data as Message))),
+            of(createSession(target, sessionType, this.cache)).pipe(
+                mergeMap((ses) => this.add(ses, true)),
+                mergeMap((ses) => ses.init()),
             ).subscribe({
-                error: err => Logger.error("SessionList.onMessage", err)
+                next: (r) => r.onMessage(message.action, message.data as Message),
+                error: err => Logger.error(this.tag, "SessionList.onMessage", err)
             })
         }
     }

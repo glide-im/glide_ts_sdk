@@ -120,7 +120,7 @@ export class SessionDbCache implements SessionListCache {
             To: "",
             Type: undefined,
             UnreadCount: 0,
-            UpdateAt: ""
+            UpdateAt: 0
         }
 
         // copy all properties to s

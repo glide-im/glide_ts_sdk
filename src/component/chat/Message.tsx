@@ -11,6 +11,7 @@ import {MessageStatus, MessageType} from "../../im/message";
 import {ImageViewer} from "../widget/ImageViewer";
 import {Markdown} from "../widget/Markdown";
 import {ChatContext} from "./context/ChatContext";
+import {time2Str} from "../../utils/TimeUtils";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -81,7 +82,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
                     {sender.name}
                 </Typography>
                 <Typography className={'font-sans'} variant={"caption"} ml={1} component={"span"} color={grey[500]}>
-                    {msg.getDisplayTime()}
+                    {time2Str(msg.SendAt)}
                 </Typography>
             </Box>}
 

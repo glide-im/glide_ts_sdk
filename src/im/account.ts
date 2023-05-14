@@ -28,9 +28,9 @@ export class Account {
     private tag = "Account";
 
     private uid: string;
-    private sessions: InternalSessionList = new InternalSessionListImpl(this);
-    private contacts: ContactsList = new ContactsList();
-    private cache: GlideCache = new GlideCache();
+    private sessions: InternalSessionList
+    private contacts: ContactsList
+    private readonly cache: GlideCache
     server: string = process.env.REACT_APP_WS_URL;
     token: string;
 
@@ -38,6 +38,9 @@ export class Account {
 
     constructor() {
         this.token = getCookie('token')
+        this.cache = new GlideCache()
+        this.contacts = new ContactsList()
+        this.sessions = new InternalSessionListImpl(this, this.cache)
     }
 
     private userInfo: GlideBaseInfo | null = null;
@@ -95,7 +98,7 @@ export class Account {
     }
 
     public logout() {
-        this.sessions = new InternalSessionListImpl(this)
+        this.sessions = new InternalSessionListImpl(this, this.cache)
         this.contacts = new ContactsList()
         this.clearAuth()
         IMWsClient.close()
@@ -140,7 +143,7 @@ export class Account {
             .pipe(
                 map(us => {
                     this.userInfo = us;
-                    return `init user info success ${us.id}, ${us.name}`
+                    return `init account info success ${us.id}, ${us.name}`
                 })
             )
 

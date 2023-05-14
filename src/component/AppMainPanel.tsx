@@ -41,7 +41,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
                     <Switch>
                         <Route path={`${match.url}/session/:sid`}>
                             <Grid alignItems={"center"} container style={{height: "100%"}}>
-                                <Grid item xs={3} className={'flex flex-col w-full'}>
+                                <Grid item xs={4} className={'flex flex-col w-full'}>
                                     <div className={'h-[95vh] w-full'}>
                                         <Box className={'flex-auto'}>
                                             <UserInfoHeader/>
@@ -53,7 +53,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
                                     </div>
                                 </Grid>
 
-                                <Grid item xs={9} style={{height: "100%"}}>
+                                <Grid item xs={8} style={{height: "100%"}}>
                                     <Divider orientation={"vertical"} style={{float: "left"}}/>
                                     <ChatRoomContainer/>
                                 </Grid>

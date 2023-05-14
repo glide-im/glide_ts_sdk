@@ -116,7 +116,7 @@ class cache {
     }
 
     public storeToken(token: string) {
-        setCookie("token", token, 1);
+        setCookie("token", token, 7);
     }
 
     public getUserInfo(id: string): GlideBaseInfo | null {
@@ -124,28 +124,13 @@ class cache {
         if (i !== null && i !== undefined) {
             return i
         }
-        const res = cache._readObject(`ui_${id}`);
+        const res = cache._readObject(`user_${id}`);
         if (res !== null) {
             this.tempUserInfo.set(id, res);
             Logger.log('Cache', "restore cache user info", res)
             return res
         }
         return null
-    }
-
-    public cacheUserInfo(id: string): Promise<any> {
-        const execute = (resolved, reject) => {
-            if (this.tempUserInfo.has(id)) {
-                resolved()
-                return
-            }
-            this.loadUserInfo(id).subscribe(r => {
-                resolved()
-            }, r => {
-                resolved()
-            })
-        }
-        return new Promise<any>(execute)
     }
 
     public getChannelInfo(id: string): GlideBaseInfo | null {
@@ -162,14 +147,14 @@ class cache {
         }
 
         return from(Api.getUserInfo(id)).pipe(
-            map<UserInfoBean[], GlideBaseInfo>((us, i) => {
-                const u = us[0];
+            map(r => r[0]),
+            map<UserInfoBean, GlideBaseInfo>((us, i) => {
                 const m: GlideBaseInfo = {
-                    avatar: u.avatar,
-                    name: u.nick_name,
-                    id: u.uid.toString(),
+                    avatar: us.avatar,
+                    name: us.nick_name,
+                    id: us.uid.toString(),
                 }
-                cache._writeObject(`ui_${id}`, m);
+                cache._writeObject(`user_${id}`, m);
                 this.tempUserInfo.set(m.id, m);
                 return m;
             }),
@@ -225,7 +210,7 @@ class cache {
 
      static _readObject(key: string): any | null {
         const val = localStorage.getItem(key);
-        if (val === null) {
+        if (val === null && val === "") {
             return null;
         }
         //console.log('[cache]', "read cache", key, val)
