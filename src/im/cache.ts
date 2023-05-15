@@ -1,4 +1,4 @@
-import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {catchError, from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {GlideBaseInfo} from "./def";
 import {onErrorResumeNext} from "rxjs/operators";
@@ -154,21 +154,24 @@ class BaseInfoCache {
         return from(Api.getUserInfo(id)).pipe(
             map(r => r[0]),
             map<UserInfoBean, GlideBaseInfo>((us, i) => {
-                const m: GlideBaseInfo = {
+                const m = {
                     avatar: us.avatar,
                     name: us.nick_name,
                     id: us.uid.toString(),
-                }
+                } as GlideBaseInfo
                 BaseInfoCache._writeObject(`user_${id}`, m);
                 this.tempCache.set(m.id, m);
                 return m;
             }),
-            onErrorResumeNext(of({
-                avatar: "-",
-                name: `${id}`,
-                id: `${id}`,
-            })),);
-
+            catchError(e => {
+                Logger.error('Cache', 'load user info failed', e)
+                return of({
+                    avatar: "",
+                    name: id,
+                    id: id,
+                } as GlideBaseInfo)
+            })
+        )
     }
 
     public loadUserInfo(...id: string[]): Observable<GlideBaseInfo[]> {

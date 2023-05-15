@@ -26,15 +26,30 @@ const messageBoxStyle = function (): CSSProperties {
 export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    let sender: GlideBaseInfo | null = Cache.getUserInfo(msg.From)
+    const baseInfo = Cache.getUserInfo(msg.From) ?? {
+        name: msg.From,
+        id: msg.From,
+        avatar: ""
+    }
+    const [sender, setSender] = useState<GlideBaseInfo>(baseInfo)
 
     const [sending, setSending] = useState(msg.Sending)
 
-    if (sender === null) {
-        sender = {
-            avatar: "", name: msg.From, id: msg.From
+    useEffect(() => {
+        if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline || msg.Type === 99) {
+            return
         }
-    }
+        if (baseInfo.name !== props.msg.From) {
+            return
+        }
+        console.log('=================', props.msg, props.msg.From)
+        const sp = Cache.loadUserInfo1(props.msg.From).subscribe({
+            next: (u) => {
+                setSender(u)
+            }
+        })
+        return () => sp.unsubscribe()
+    }, [props.msg.From])
 
     useEffect(() => {
         if (!msg.FromMe) {
