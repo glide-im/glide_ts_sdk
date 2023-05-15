@@ -40,9 +40,12 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         if (!msg.FromMe) {
             return;
         }
-        msg.addUpdateListener(() => {
-            setSending(msg.Sending)
+        const sp = msg.events().subscribe({
+            next: (c) => {
+                setSending(c.Sending)
+            }
         })
+        return () => sp.unsubscribe()
     }, [msg])
 
     if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline || msg.Type === 99) {
@@ -139,14 +142,16 @@ function MessageContent(props: { msg: ChatMessage }) {
     const [status, setStatus] = useState(props.msg.Status)
 
     useEffect(() => {
-        const s = props.msg.addUpdateListener(() => {
-            setContent(props.msg.getDisplayContent())
-            setStatus(props.msg.Status)
-            setTimeout(() => {
-                chatContext.scrollToBottom()
-            }, 500)
+        const sp = props.msg.events().subscribe({
+            next: (c) => {
+                setContent(c.getDisplayContent())
+                setStatus(c.Status)
+                setTimeout(() => {
+                    chatContext.scrollToBottom()
+                }, 500)
+            }
         })
-        return () => s()
+        return () => sp.unsubscribe()
     }, [chatContext, props.msg])
 
 

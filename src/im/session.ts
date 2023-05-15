@@ -1,7 +1,7 @@
 import {concat, delay, filter, interval, map, mergeMap, Observable, of, Subject, take, throwError, toArray} from "rxjs";
 import {SessionBean} from "../api/model";
 import {Account} from "./account";
-import {ChatMessage, ChatMessageCache, SendingStatus} from "./chat_message";
+import {ChatMessage, ChatMessageCache, ChatMessageImpl, SendingStatus} from "./chat_message";
 import {Cache} from "./cache";
 import {Actions, Message, MessageType} from "./message";
 import {IMWsClient} from "./im_ws_client";
@@ -108,10 +108,10 @@ class InternalSessionImpl implements InternalSession {
     public Type: SessionType;
     public To: string;
 
-    private messageList = new Array<ChatMessage>();
-    private messageMap = new Map<string, ChatMessage>();
+    private messageList = new Array<ChatMessageImpl>();
+    private messageMap = new Map<string, ChatMessageImpl>();
 
-    private readonly _messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
+    private readonly _messageSubject: Subject<ChatMessageImpl> = new Subject<ChatMessageImpl>();
     private readonly _updateSubject: Subject<Event> = new Subject<Event>();
 
     private initialized = false;
@@ -202,7 +202,7 @@ class InternalSessionImpl implements InternalSession {
             ),
             this.cache.getSessionMessagesByTime(this.ID, Date.now()).pipe(
                 mergeMap((msgs) => of(...msgs)),
-                map((msg) => ChatMessage.createFromBaseInfo(msg)),
+                map((msg) => ChatMessageImpl.createFromBaseInfo(msg)),
                 toArray(),
                 map((msgs) => {
                     const sorted = msgs.sort((a, b) => a.SendAt - b.SendAt)
@@ -257,7 +257,7 @@ class InternalSessionImpl implements InternalSession {
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
-        const c = ChatMessage.create(this.ID, message)
+        const c = ChatMessageImpl.create(this.ID, message)
         // todo filter none-display message
 
         Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [message]);
@@ -307,7 +307,7 @@ class InternalSessionImpl implements InternalSession {
         return this.messageList.slice(index, this.messageList.length - index);
     }
 
-    private addMessageByOrder(message: ChatMessage) {
+    private addMessageByOrder(message: ChatMessageImpl) {
 
         const isNewMessage = !this.messageMap.has(message.getId());
 
@@ -369,7 +369,7 @@ class InternalSessionImpl implements InternalSession {
             type: type,
             status: 0,
         };
-        const r = ChatMessage.create(this.ID, m);
+        const r = ChatMessageImpl.create(this.ID, m);
         r.Sending = SendingStatus.Sending;
 
         this.cache.addMessage(r).subscribe({
@@ -393,7 +393,7 @@ class InternalSessionImpl implements InternalSession {
 
         return sendObservable.pipe(
             map(resp => {
-                const r = ChatMessage.create(this.ID, resp);
+                const r = ChatMessageImpl.create(this.ID, resp);
                 r.Sending = SendingStatus.Sent;
                 this.addMessageByOrder(r);
                 return r;

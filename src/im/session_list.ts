@@ -216,7 +216,7 @@ export class InternalSessionListImpl implements InternalSessionList {
                 mergeMap((ses) => ses.init()),
             ).subscribe({
                 next: (r) => r.onMessage(message.action, message.data as Message),
-                error: err => Logger.error(this.tag, "SessionList.onMessage", err)
+                error: err => Logger.error(this.tag, "onMessage", err)
             })
         }
     }
@@ -227,14 +227,14 @@ export class InternalSessionListImpl implements InternalSessionList {
         }
         if (!updateDb) {
             this.sessionMap.set(session.ID, session)
-            Logger.log('SessionList', "session added: ", session.ID)
+            Logger.log(this.tag, "session added: ", session.ID)
             this.sessionEventSubject.next({event: Event.create, session: session})
             return of(session)
         }
         return this.cache.setSession(session.ID, session as SessionBaseInfo).pipe(
             onNext(() => {
                     this.sessionMap.set(session.ID, session)
-                    Logger.log('SessionList', "session added: ", session.ID)
+                    Logger.log(this.tag, "session added: ", session.ID)
                     this.sessionEventSubject.next({event: Event.create, session: session})
                 }
             ),

@@ -25,7 +25,7 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
 
         const sp = IMWsClient.events().subscribe({
             next: (e) => {
-                //e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
+                e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
             }
         })
         return () => sp.unsubscribe()

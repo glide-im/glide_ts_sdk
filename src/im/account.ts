@@ -12,17 +12,6 @@ import {getCookie} from "../utils/Cookies";
 import {onError, onNext} from "../rx/next";
 import {Logger} from "../utils/Logger";
 
-export enum MessageLevel {
-    // noinspection JSUnusedGlobalSymbols
-    LevelDefault,
-    LevelInfo,
-    LevelError,
-    LevelSuccess,
-    LevelWarning
-}
-
-export type MessageListener = (level: MessageLevel, msg: string) => void
-
 export class Account {
 
     private tag = "Account";

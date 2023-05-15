@@ -12,10 +12,6 @@ export enum SendingStatus {
     Failed,
 }
 
-export interface MessageUpdateListener {
-    (message: ChatMessage): void
-}
-
 export interface MessageBaseInfo {
     readonly Mid: number;
     readonly CliMid: string;
@@ -30,10 +26,14 @@ export interface MessageBaseInfo {
     readonly ReceiveAt: number;
     readonly IsGroup: boolean;
     readonly Target: string;
+
+    readonly FromMe: boolean;
+    readonly OrderKey: number;
+    readonly Sending: SendingStatus;
+
 }
 
-export interface IChatMessage {
-    getDisplayTime(): string
+export interface ChatMessage extends MessageBaseInfo {
 
     getSenderName(): string
 
@@ -42,6 +42,10 @@ export interface IChatMessage {
     getUserInfo(): Observable<GlideBaseInfo>
 
     getDisplayContent(): string
+
+    update(message: Message | MessageBaseInfo)
+
+    events(): Observable<ChatMessage>
 }
 
 export interface ChatMessageCache {
@@ -69,8 +73,11 @@ export interface ChatMessageCache {
     getLatestSessionMessage(sid: string): Observable<MessageBaseInfo | null>
 }
 
-export class ChatMessage implements MessageBaseInfo {
-    ReceiveAt: number;
+export class ChatMessageImpl implements ChatMessage {
+
+    private tag = "ChatMessageImpl"
+
+    public ReceiveAt: number;
 
     public SID: string;
     public CliMid: string;
@@ -82,30 +89,22 @@ export class ChatMessage implements MessageBaseInfo {
     public SendAt: number;
 
     public Status: number;
-    public FromMe: boolean;
     public IsGroup: boolean;
     public Type: number;
     public Target: string;
 
 
+    public FromMe: boolean;
     public OrderKey: number;
-
     public Sending: SendingStatus = SendingStatus.Unknown;
 
     private streamMessages = new Array<ChatMessage>();
-    private updateListener: Array<MessageUpdateListener> = [];
+    private updateSubject = new Subject<ChatMessage>();
 
     private streamMessageSubject = new Subject<ChatMessage>();
 
-    public addUpdateListener(l: MessageUpdateListener): () => void {
-        this.updateListener.push(l)
-        return () => {
-            this.updateListener = this.updateListener.filter((v) => v !== l)
-        }
-    }
-
-    public static createFromBaseInfo(info: MessageBaseInfo): ChatMessage {
-        const ret = new ChatMessage();
+    public static createFromBaseInfo(info: MessageBaseInfo): ChatMessageImpl {
+        const ret = new ChatMessageImpl();
         ret.SID = info.SID;
         ret.CliMid = info.CliMid;
         ret.From = info.From;
@@ -125,8 +124,8 @@ export class ChatMessage implements MessageBaseInfo {
         return ret;
     }
 
-    public static create(sid: string, m: Message): ChatMessage {
-        const ret = new ChatMessage();
+    public static create(sid: string, m: Message): ChatMessageImpl {
+        const ret = new ChatMessageImpl();
         ret.SID = sid
         ret.From = m.from;
         ret.To = m.to;
@@ -155,6 +154,10 @@ export class ChatMessage implements MessageBaseInfo {
             ret.Mid = 0
         }
         return ret;
+    }
+
+    events(): Subject<ChatMessage> {
+        return this.updateSubject;
     }
 
     public getId(): string {
@@ -208,7 +211,7 @@ export class ChatMessage implements MessageBaseInfo {
         }
     }
 
-    public update2(m: ChatMessage) {
+    private updateStreamMessage(m: ChatMessage) {
         if (m.Type !== MessageType.StreamMarkdown && m.Type !== MessageType.StreamText) {
             Logger.log("ChatMessage", "update a non stream message")
             return;
@@ -242,14 +245,15 @@ export class ChatMessage implements MessageBaseInfo {
                 break;
             default:
         }
-        this.updateListener.forEach((l) => {
-            l(this)
-        })
+        this.updateSubject.next(this)
     }
 
     public update(m: ChatMessage): void {
+
+        Logger.log(this.tag, "update message", [this], [m])
+
         if (m.Type === MessageType.StreamMarkdown || m.Type === MessageType.StreamText) {
-            this.update2(m)
+            this.updateStreamMessage(m)
             return;
         }
 
@@ -258,15 +262,14 @@ export class ChatMessage implements MessageBaseInfo {
         this.Content = m.Content;
         this.Mid = m.Mid;
         this.SendAt = m.SendAt;
-        // this.IsMe = m.IsMe;
         this.Status = m.Status;
-        this.Sending = m.Sending;
         this.Type = m.Type;
         this.OrderKey = m.SendAt
+        this.Sending = m.Sending
+        this.Seq = m.Seq
+        this.ReceiveAt = m.ReceiveAt
 
-        this.updateListener.forEach((l) => {
-            l(this)
-        })
+        this.updateSubject.next(this)
     }
 
     private initForStreamMessage() {

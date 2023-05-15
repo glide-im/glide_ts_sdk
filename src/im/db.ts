@@ -3,7 +3,7 @@ import {SessionBaseInfo} from "./session";
 import {DBSchema, IDBPDatabase, openDB} from "idb";
 import {catchError, concat, map, mergeMap, Observable, of, retry} from "rxjs";
 import {fromPromise} from "rxjs/internal/observable/innerFrom";
-import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
+import {ChatMessageCache, MessageBaseInfo, SendingStatus} from "./chat_message";
 import {MessageStatus} from "./message";
 
 interface GlideDBSchema extends DBSchema {
@@ -171,6 +171,9 @@ export class ChatMessageDbCache implements ChatMessageCache {
 
     addMessage(message: MessageBaseInfo): Observable<any> {
         const m: MessageBaseInfo = {
+            FromMe: false,
+            OrderKey: 0,
+            Sending: SendingStatus.Unknown,
             CliMid: "",
             Content: "",
             From: "",
@@ -184,7 +187,6 @@ export class ChatMessageDbCache implements ChatMessageCache {
             Target: "",
             To: "",
             Type: 0
-
         }
 
         // copy all properties to m

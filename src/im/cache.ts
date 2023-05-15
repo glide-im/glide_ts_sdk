@@ -1,6 +1,6 @@
 import {from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {Api} from "../api/api";
-import { GlideBaseInfo} from "./def";
+import {GlideBaseInfo} from "./def";
 import {onErrorResumeNext} from "rxjs/operators";
 import {UserInfoBean} from "../api/model";
 import {onNext} from "../rx/next";
@@ -99,15 +99,20 @@ export class GlideCache implements SessionListCache, ChatMessageCache {
 
 }
 
-class cache {
+class BaseInfoCache {
 
-    private tempUserInfo = new Map<string, GlideBaseInfo>();
+    private tempCache = new Map<string, GlideBaseInfo>();
 
     constructor() {
-        this.tempUserInfo.set('system', {
+        this.tempCache.set('system', {
             avatar: "https://im.dengzii.com/system.png",
             name: "系统",
             id: "system",
+        })
+        this.tempCache.set('the_world_channel', {
+            avatar: "https://im.dengzii.com/world_channel.png",
+            id: 'the_world_channel',
+            name: "世界频道"
         })
     }
 
@@ -120,13 +125,13 @@ class cache {
     }
 
     public getUserInfo(id: string): GlideBaseInfo | null {
-        let i = this.tempUserInfo.get(id);
+        let i = this.tempCache.get(id);
         if (i !== null && i !== undefined) {
             return i
         }
-        const res = cache._readObject(`user_${id}`);
+        const res = BaseInfoCache._readObject(`user_${id}`);
         if (res !== null) {
-            this.tempUserInfo.set(id, res);
+            this.tempCache.set(id, res);
             Logger.log('Cache', "restore cache user info", res)
             return res
         }
@@ -154,8 +159,8 @@ class cache {
                     name: us.nick_name,
                     id: us.uid.toString(),
                 }
-                cache._writeObject(`user_${id}`, m);
-                this.tempUserInfo.set(m.id, m);
+                BaseInfoCache._writeObject(`user_${id}`, m);
+                this.tempCache.set(m.id, m);
                 return m;
             }),
             onErrorResumeNext(of({
@@ -195,20 +200,20 @@ class cache {
             toArray(),
             onNext(userInfo => {
                 userInfo.forEach(u => {
-                    cache._writeObject(`ui_${id}`, u);
-                    this.tempUserInfo.set(u.id, u);
+                    BaseInfoCache._writeObject(`ui_${id}`, u);
+                    this.tempCache.set(u.id, u);
                 });
             })
         )
     }
 
     public clean() {
-        // this.tempUserInfo.clear();
+        // this.tempCache.clear();
         // TODO fix
         localStorage.clear();
     }
 
-     static _readObject(key: string): any | null {
+    static _readObject(key: string): any | null {
         const val = localStorage.getItem(key);
         if (val === null && val === "") {
             return null;
@@ -217,10 +222,10 @@ class cache {
         return JSON.parse(val);
     }
 
-     static _writeObject(key: string, val: any): void {
+    static _writeObject(key: string, val: any): void {
         //console.log('[cache]', "write cache", key, val)
         localStorage.setItem(key, JSON.stringify(val));
     }
 }
 
-export const Cache = new cache();
+export const Cache = new BaseInfoCache();
