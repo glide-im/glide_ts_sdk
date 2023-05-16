@@ -42,7 +42,7 @@ export class Rxios {
             }
             const s = response.data as Response<T>;
             if (s.Code !== 100) {
-                throw new Error(s.Code + "," + s.Msg);
+                throw s;
             }
             return s.Data
         })

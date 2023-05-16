@@ -52,13 +52,8 @@ function App() {
                         })
                     }
                 });
-        } else {
-            Account.getInstance().logout()
         }
-        return (() => {
-            Account.getInstance().logout()
-            subscription?.unsubscribe()
-        })
+        return () => subscription?.unsubscribe()
     }, [authed])
 
 

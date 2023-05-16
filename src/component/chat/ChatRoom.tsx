@@ -12,7 +12,6 @@ import {Event} from "../../im/session_list";
 import {filter, map} from "rxjs";
 
 export function ChatRoomContainer() {
-    const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
 
     const {sid} = useParams<{ sid: string }>();
     const [session, setSession] = React.useState(null);
@@ -38,10 +37,6 @@ export function ChatRoomContainer() {
             </Typography>
         </Box>
     }
-    const scrollToBottom = async () => {
-        if (scrollRef.current)
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
 
     const sendMessage = (msg: string, type: number) => {
         if (session != null) {
@@ -62,16 +57,13 @@ export function ChatRoomContainer() {
             <Divider/>
             <Box className={'w-full flex-auto'}>
                 <div className={'flex flex-col h-full'}>
-                    <ChatContext.Provider value={{scrollToBottom}}>
-                        <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef}
-                             className={'BeautyScrollBar overflow-y-auto flex w-full'}>
-                            <SessionMessageList/>
-                        </Box>
+                    <Box>
+                        <SessionMessageList/>
+                    </Box>
 
-                        <Box className={'h-16 px-5'}>
-                            <MessageInputV2 session={sid} onSend={sendMessage}/>
-                        </Box>
-                    </ChatContext.Provider>
+                    <Box className={'h-16 px-5'}>
+                        <MessageInputV2 session={sid} onSend={sendMessage}/>
+                    </Box>
                 </div>
 
             </Box>
@@ -85,7 +77,7 @@ export const ChatRoomContainerMobile = withRouter((props: RouteComponentProps) =
     const session = Account.getInstance().getSessionList().get(sid);
 
     if (session === null) {
-        props.history.replace( "/im/session")
+        props.history.replace("/im/session")
         return <Loading/>
     }
 
@@ -104,7 +96,7 @@ export const ChatRoomContainerMobile = withRouter((props: RouteComponentProps) =
             <Toolbar>
                 <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => {
                     session.clearUnread()
-                    props.history.replace( "/im/session")
+                    props.history.replace("/im/session")
                 }}>
                     <ArrowBack/>
                 </IconButton>

@@ -18,23 +18,32 @@ export function time2Str(timestamp: number) {
     if (!isMilliSec) {
         timestamp *= 1000;
     }
-    const now = new Date().getTime();
-    const diff = now - timestamp;
+    const now = new Date();
+    const date = new Date(timestamp);
+
+    const diff = now.getTime() - timestamp;
+    const isYesterday = date.getDate() === now.getDate() - 1;
     if (diff < 60 * 1000) {
         return "刚刚";
     } else if (diff < 60 * 60 * 1000) {
         return Math.floor(diff / (60 * 1000)) + "分钟前";
     } else if (diff < 2 * 60 * 60 * 1000) {
         return "1小时前";
-    } else if (diff < 24 * 60 * 60 * 1000) {
+    } else if (diff < 24 * 60 * 60 * 1000 && !isYesterday) {
         const date = new Date(timestamp);
         const hour = date.getHours();
         const minute = date.getMinutes();
         const hourStr = hour < 10 ? "0" + hour : hour.toString();
         const minuteStr = minute < 10 ? "0" + minute : minute.toString();
         return hourStr + ":" + minuteStr;
-    } else if (diff < 7 * 24 * 60 * 60 * 1000) {
+    } else if (isYesterday) {
         const date = new Date(timestamp);
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+        const hourStr = hour < 10 ? "0" + hour : hour.toString();
+        const minuteStr = minute < 10 ? "0" + minute : minute.toString();
+        return "昨天" + hourStr + ":" + minuteStr;
+    } else if (diff < 7 * 24 * 60 * 60 * 1000) {
         const day = date.getDay();
         const hour = date.getHours();
         const minute = date.getMinutes();
@@ -45,12 +54,12 @@ export function time2Str(timestamp: number) {
         const date = new Date(timestamp);
         const m = date.getMonth();
         const d = date.getDay();
-        return  (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d) ;
+        return (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d);
     }
 }
 
 function dayOfWeek2Str(day: number) {
-switch (day) {
+    switch (day) {
         case 0:
             return "周日";
         case 1:

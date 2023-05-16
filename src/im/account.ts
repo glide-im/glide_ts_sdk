@@ -11,6 +11,7 @@ import {IMWsClient} from "./im_ws_client";
 import {getCookie} from "../utils/Cookies";
 import {onError, onNext} from "../rx/next";
 import {Logger} from "../utils/Logger";
+import {isResponse, Response} from "../api/response";
 
 export class Account {
 
@@ -51,7 +52,7 @@ export class Account {
                 }),
                 onError(err => {
                     Logger.error(this.tag, "Login", "auth failed", err)
-                })
+                }),
             )
     }
 
@@ -80,8 +81,10 @@ export class Account {
                 }),
                 timeout(5000),
                 catchError(err => {
-                    this.clearAuth();
-                    throw new Error("auth failed: " + err);
+                    if (isResponse(err)) {
+                        this.clearAuth()
+                    }
+                    return throwError(err)
                 })
             )
     }

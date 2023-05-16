@@ -28,7 +28,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
             .login(account, password)
             .subscribe({
                 error: (e) => {
-                    showSnack("登录失败：" + e.messag)
+                    showSnack("登录失败：" + e.message ?? e)
                 },
                 complete: () => {
                     props.history.replace("/im");

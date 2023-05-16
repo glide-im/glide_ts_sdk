@@ -60,20 +60,23 @@ const messageListStyle: CSSProperties = {
 // type MessageListItemData = string | ChatMessage
 
 function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
-    const chatContext = React.useContext(ChatContext)
     // TODO use useMemo
     // const messages: MessageListItemData[] = useMemo(() => {
     //     return ["", ...props.messages]
     // }, [props.messages])
 
     const messages = props.messages
-    console.log(">>>>>render message list", messages)
 
+    const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
     const messageListEle = useRef<HTMLUListElement>()
 
+    const scrollToBottom = async () => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+
     useEffect(() => {
-        chatContext.scrollToBottom()
-    }, [chatContext])
+        scrollToBottom().then()
+    }, [messages])
 
     const list = messages.map(value => {
         if (typeof value === "string") {
@@ -86,7 +89,10 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
         return <ListItem key={value.getId()} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
     })
 
-    return <Box className={'w-full'} display={"flex"} alignContent={"flex-end"}>
+    return <Box height={"calc(95vh - 60px - 60px)"}
+                className={'BeautyScrollBar overflow-y-auto flex w-full'}
+                display={"flex"}
+                alignContent={"flex-end"}>
         <List disablePadding ref={messageListEle} style={messageListStyle}>
             {list}
         </List>
