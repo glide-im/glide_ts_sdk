@@ -2,10 +2,10 @@ import {Box, List, ListItem, Typography} from "@mui/material";
 import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {ChatMessageItem} from "./Message";
 import {ChatMessage} from "../../im/chat_message";
-import {ChatContext} from "./context/ChatContext";
 import {useParams} from "react-router-dom";
 import {ISession, SessionType} from "../../im/session";
 import {Account} from "../../im/account";
+import { ChatContext } from "./context/ChatContext";
 
 export function SessionMessageList() {
 
@@ -89,14 +89,16 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
         return <ListItem key={value.getId()} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
     })
 
-    return <Box height={"calc(95vh - 60px - 60px)"}
-                className={'BeautyScrollBar overflow-y-auto flex w-full'}
-                display={"flex"}
-                alignContent={"flex-end"}>
-        <List disablePadding ref={messageListEle} style={messageListStyle}>
-            {list}
-        </List>
-    </Box>
+    return <ChatContext.Provider value={{scrollToBottom}}>
+        <Box height={"calc(95vh - 60px - 60px)"}
+             className={'BeautyScrollBar overflow-y-auto flex w-full'}
+             display={"flex"}
+             alignContent={"flex-end"}>
+            <List disablePadding ref={messageListEle} style={messageListStyle}>
+                {list}
+            </List>
+        </Box>
+    </ChatContext.Provider>
 }
 
 

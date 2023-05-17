@@ -1,7 +1,6 @@
 import {catchError, from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {GlideBaseInfo} from "./def";
-import {onErrorResumeNext} from "rxjs/operators";
 import {UserInfoBean} from "../api/model";
 import {onNext} from "../rx/next";
 import {getCookie, setCookie} from "../utils/Cookies";

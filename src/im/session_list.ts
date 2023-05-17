@@ -18,15 +18,15 @@ import {ChatMessageCache} from "./chat_message";
 import {Logger} from "../utils/Logger";
 
 
-export enum Event {
+export enum SessionListEventType {
     create = 0,
     update = 1,
     deleted = 2,
     init = 3,
 }
 
-export interface SessionEvent {
-    event: Event
+export interface SessionListEvent {
+    event: SessionListEventType
     session?: ISession
 }
 
@@ -41,7 +41,7 @@ export interface SessionList {
 
     createSession(id: SessionId): Observable<ISession>
 
-    event(): Observable<SessionEvent>
+    event(): Observable<SessionListEvent>
 
     getSessionsTemped(): ISession[]
 }
@@ -79,7 +79,7 @@ export class InternalSessionListImpl implements InternalSessionList {
     private account: Account;
     private currentSession: string = "0";
 
-    private sessionEventSubject = new Subject<SessionEvent>()
+    private sessionEventSubject = new Subject<SessionListEvent>()
     private sessionMap: Map<SessionId, InternalSession> = new Map<SessionId, InternalSession>()
 
     private readonly cache: SessionListCache & ChatMessageCache;
@@ -142,7 +142,7 @@ export class InternalSessionListImpl implements InternalSessionList {
         )
     }
 
-    public event(): Observable<SessionEvent> {
+    public event(): Observable<SessionListEvent> {
         return this.sessionEventSubject
     }
 
@@ -228,14 +228,14 @@ export class InternalSessionListImpl implements InternalSessionList {
         if (!updateDb) {
             this.sessionMap.set(session.ID, session)
             Logger.log(this.tag, "session added: ", session.ID)
-            this.sessionEventSubject.next({event: Event.create, session: session})
+            this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
             return of(session)
         }
         return this.cache.setSession(session.ID, session as SessionBaseInfo).pipe(
             onNext(() => {
                     this.sessionMap.set(session.ID, session)
                     Logger.log(this.tag, "session added: ", session.ID)
-                    this.sessionEventSubject.next({event: Event.create, session: session})
+                    this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
                 }
             ),
             map(() => session)

@@ -2,12 +2,17 @@ import {useEffect} from "react";
 import {closeSnackbar, enqueueSnackbar, SnackbarProvider} from 'notistack';
 import {IconButton} from "@mui/material";
 import {CloseRounded} from "@mui/icons-material";
+import {Logger} from "../../utils/Logger";
 
 let snack = (s: string) => {
     console.log("show snack:", s);
 }
 
 export function showSnack(msg: string) {
+    if (!msg) {
+        Logger.error("SnackBar", "showSnack msg is null")
+        return
+    }
     const m = msg.length > 30 ? msg.substring(0, 30) + "..." : msg;
     snack(m);
 }
@@ -33,6 +38,6 @@ export function SnackBar() {
     }, [])
 
     return <SnackbarProvider maxSnack={3}
-                             anchorOrigin={{vertical: "top", horizontal: "center"}} ><span/></SnackbarProvider>
+                             anchorOrigin={{vertical: "top", horizontal: "center"}}><span/></SnackbarProvider>
 
 }

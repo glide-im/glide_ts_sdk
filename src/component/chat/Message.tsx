@@ -12,6 +12,8 @@ import {ImageViewer} from "../widget/ImageViewer";
 import {Markdown} from "../widget/Markdown";
 import {ChatContext} from "./context/ChatContext";
 import {time2Str} from "../../utils/TimeUtils";
+import {filter} from "rxjs";
+import {Logger} from "../../utils/Logger";
 
 const messageBoxStyle = function (): CSSProperties {
     return {
@@ -36,13 +38,12 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
     const [sending, setSending] = useState(msg.Sending)
 
     useEffect(() => {
-        if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline || msg.Type === 99) {
+        if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline) {
             return
         }
         if (baseInfo.name !== props.msg.From) {
             return
         }
-        console.log('=================', props.msg, props.msg.From)
         const sp = Cache.loadUserInfo1(props.msg.From).subscribe({
             next: (u) => {
                 setSender(u)
@@ -55,15 +56,18 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         if (!msg.FromMe) {
             return;
         }
-        const sp = msg.events().subscribe({
+        const sp = Account.session().get(props.msg.SID)?.event.pipe(
+            filter((e) => e.message),
+            filter((c) => c.message.getId() === props.msg.getId())
+        ).subscribe({
             next: (c) => {
-                setSending(c.Sending)
+                setSending(c.message.Sending)
             }
         })
-        return () => sp.unsubscribe()
+        return () => sp?.unsubscribe()
     }, [msg])
 
-    if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline || msg.Type === 99) {
+    if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline) {
         return <Grid container padding={"4px 8px"}>
             <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                 <Typography variant={"body2"} textAlign={"center"} px={1}
@@ -157,17 +161,21 @@ function MessageContent(props: { msg: ChatMessage }) {
     const [status, setStatus] = useState(props.msg.Status)
 
     useEffect(() => {
-        const sp = props.msg.events().subscribe({
+        Logger.log("MessageContent", props.msg.Content, props.msg.getId())
+        const sp = Account.session().get(props.msg.SID)?.event.pipe(
+            filter((e) => e.message?.getId() === props.msg.getId()),
+        ).subscribe({
             next: (c) => {
-                setContent(c.getDisplayContent())
-                setStatus(c.Status)
+                const msg = c.message as ChatMessage
+                setContent(msg.getDisplayContent())
+                setStatus(msg.Status)
                 setTimeout(() => {
                     chatContext.scrollToBottom()
                 }, 500)
             }
         })
-        return () => sp.unsubscribe()
-    }, [chatContext, props.msg])
+        return () => sp?.unsubscribe()
+    }, [props.msg])
 
 
     switch (props.msg.Type) {

@@ -12,6 +12,7 @@ import {Guest} from "./component/auth/Guest";
 import {Loading} from "./component/widget/Loading";
 import {Subscription} from "rxjs";
 import {Auth} from "./component/auth/Auth";
+import {IMWsClient} from "./im/im_ws_client";
 
 function App() {
 
@@ -29,6 +30,10 @@ function App() {
         }
         if (ws) {
             Account.getInstance().server = ws
+        }
+
+        return () => {
+            IMWsClient.close()
         }
     }, [])
 

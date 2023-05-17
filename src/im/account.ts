@@ -11,7 +11,8 @@ import {IMWsClient} from "./im_ws_client";
 import {getCookie} from "../utils/Cookies";
 import {onError, onNext} from "../rx/next";
 import {Logger} from "../utils/Logger";
-import {isResponse, Response} from "../api/response";
+import {isResponse} from "../api/response";
+import {showSnack} from "../component/widget/SnackBar";
 
 export class Account {
 
@@ -196,7 +197,7 @@ export class Account {
                         this.sessions.onMessage(m);
                         break;
                     case Actions.NotifyKickOut:
-                        alert("kick out");
+                        showSnack("kick out");
                         this.logout();
                         break;
                     case Actions.NotifyNeedAuth:

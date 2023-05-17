@@ -28,7 +28,7 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
 
     useEffect(() => {
         Logger.log("SessionListItem", "init", [props.chat])
-        const sp = props.chat.updateSubject.subscribe({
+        const sp = props.chat.event.subscribe({
             next: (s) => {
                 Logger.log("SessionListItem", "chat updated", [props.chat])
                 setSessionInfo({...props.chat})

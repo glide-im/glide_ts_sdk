@@ -8,7 +8,7 @@ import {ArrowBack} from "@mui/icons-material";
 import {Loading} from "../widget/Loading";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {ChatContext} from "./context/ChatContext";
-import {Event} from "../../im/session_list";
+import {SessionListEventType} from "../../im/session_list";
 import {filter, map} from "rxjs";
 
 export function ChatRoomContainer() {
@@ -23,7 +23,7 @@ export function ChatRoomContainer() {
     useEffect(() => {
         if (session === null) {
             const sp = Account.session().event().pipe(
-                filter((e) => e.event === Event.create && e.session.ID === sid),
+                filter((e) => e.event === SessionListEventType.create && e.session.ID === sid),
                 map((e) => e.session)
             ).subscribe((e) => setSession(e))
             return () => sp.unsubscribe()

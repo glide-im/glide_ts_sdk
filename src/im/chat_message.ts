@@ -1,14 +1,15 @@
 import {Account} from "./account";
 import {Message, MessageStatus, MessageType} from "./message";
 import {Cache} from "./cache";
-import {Observable, Subject} from "rxjs";
+import {map, Observable, scan, Subject} from "rxjs";
 import {GlideBaseInfo} from "./def";
 import {Logger} from "../utils/Logger";
 
 export enum SendingStatus {
     Unknown,
     Sending,
-    Sent,
+    ServerAck,
+    ClientAck,
     Failed,
 }
 
@@ -19,10 +20,10 @@ export interface MessageBaseInfo {
     readonly From: string;
     readonly To: string;
     readonly Content: string;
-    readonly Type: number;
+    readonly Type: MessageType;
     readonly Seq: number;
     readonly SendAt: number;
-    readonly Status: number;
+    readonly Status: MessageStatus;
     readonly ReceiveAt: number;
     readonly IsGroup: boolean;
     readonly Target: string;
@@ -31,6 +32,19 @@ export interface MessageBaseInfo {
     readonly OrderKey: number;
     readonly Sending: SendingStatus;
 
+}
+
+export enum MessageUpdateType {
+    Initial,
+    UpdateContent,
+    Delete,
+    UpdateStatus,
+    UpdateSending,
+}
+
+export interface ChatMessageUpdateEvent {
+    readonly message: ChatMessage
+    readonly type: MessageUpdateType
 }
 
 export interface ChatMessage extends MessageBaseInfo {
@@ -45,7 +59,13 @@ export interface ChatMessage extends MessageBaseInfo {
 
     update(message: Message | MessageBaseInfo)
 
-    events(): Observable<ChatMessage>
+    events(): Observable<ChatMessageUpdateEvent>
+
+    setMid(mid: number)
+
+    setStatus(status: MessageStatus)
+
+    setSendingStatus(sending: SendingStatus)
 }
 
 export interface ChatMessageCache {
@@ -73,7 +93,41 @@ export interface ChatMessageCache {
     getLatestSessionMessage(sid: string): Observable<MessageBaseInfo | null>
 }
 
-export class ChatMessageImpl implements ChatMessage {
+interface StreamMessageSegment {
+    content: string
+    seq: number
+}
+
+
+export function createChatMessage(info: MessageBaseInfo): ChatMessageImpl {
+    const ret = new ChatMessageImpl();
+    for (const key in ret) {
+        if (info.hasOwnProperty(key)) {
+            ret[key] = info[key]
+        }
+    }
+    ret.init()
+    return ret;
+}
+
+export function createChatMessage2(sid: string, m: Message): ChatMessageImpl {
+    const ret = new ChatMessageImpl();
+    ret.SID = sid
+    ret.From = m.from;
+    ret.To = m.to;
+    ret.Content = m.content;
+    ret.Mid = m.mid;
+    ret.SendAt = m.sendAt;
+    ret.Status = m.status
+    ret.Type = m.type
+    ret.CliMid = m.cliMid
+    ret.OrderKey = m.sendAt
+    ret.Seq = m.seq
+    ret.init()
+    return ret;
+}
+
+class ChatMessageImpl implements ChatMessage {
 
     private tag = "ChatMessageImpl"
 
@@ -98,66 +152,60 @@ export class ChatMessageImpl implements ChatMessage {
     public OrderKey: number;
     public Sending: SendingStatus = SendingStatus.Unknown;
 
-    private streamMessages = new Array<ChatMessage>();
-    private updateSubject = new Subject<ChatMessage>();
+    private streamMessageSource: Subject<StreamMessageSegment> = null
+    private eventSubject = new Subject<ChatMessageUpdateEvent>();
 
-    private streamMessageSubject = new Subject<ChatMessage>();
+    init() {
 
-    public static createFromBaseInfo(info: MessageBaseInfo): ChatMessageImpl {
-        const ret = new ChatMessageImpl();
-        ret.SID = info.SID;
-        ret.CliMid = info.CliMid;
-        ret.From = info.From;
-        ret.To = info.To;
-        ret.Content = info.Content;
-        ret.Mid = info.Mid;
-        ret.Seq = info.Seq;
-        ret.SendAt = info.SendAt;
-        ret.Status = info.Status;
-        ret.ReceiveAt = info.ReceiveAt;
-        ret.IsGroup = info.IsGroup;
-        ret.Type = info.Type;
-        ret.Target = info.Target;
-        ret.FromMe = info.From === Account.getInstance().getUID();
-        ret.OrderKey = info.SendAt
-        ret.SendAt = ret.SendAt > 1000000000 ? ret.SendAt : ret.SendAt * 1000
-        return ret;
-    }
+        this.Mid = this.Mid || -1
+        this.Content = this.Content || ""
+        this.Target = this.FromMe ? this.To : this.From
+        this.FromMe = this.From === Account.getInstance().getUID();
+        this.SendAt = this.SendAt > 10000000000 ? this.SendAt : this.SendAt * 1000
 
-    public static create(sid: string, m: Message): ChatMessageImpl {
-        const ret = new ChatMessageImpl();
-        ret.SID = sid
-        ret.From = m.from;
-        ret.To = m.to;
-        ret.Content = m.content;
-        ret.Mid = m.mid;
-        ret.SendAt = m.sendAt;
-        ret.FromMe = m.from === Account.getInstance().getUID();
-        ret.Status = m.status
-        ret.Type = m.type
-        ret.CliMid = m.cliMid
-        ret.Target = ret.FromMe ? m.to : m.from
-        ret.OrderKey = m.sendAt
-        ret.Seq = m.seq
-
-        ret.SendAt = ret.SendAt > 10000000000 ? ret.SendAt : ret.SendAt * 1000
-
-        if (ret.CliMid === undefined || ret.CliMid === "") {
-            // TODO optimize
-            if (ret.Mid === undefined) {
-                ret.Mid = 0
-                return ret;
+        if (this.Type === MessageType.StreamMarkdown || this.Type === MessageType.StreamText) {
+            if (this.Status === MessageStatus.StreamFinish || this.Status === MessageStatus.StreamCancel) {
+                return
             }
-            ret.CliMid = ret.Mid.toString()
+            this.streamMessageSource = new Subject<StreamMessageSegment>()
+            this.streamMessageSource.pipe(
+                scan((acc, value) => {
+                    acc.push(value)
+                    return acc
+                    // sort by seq
+                    // const insertAt = acc.findIndex((v) => {
+                    //     return v.seq > value.seq
+                    // })
+                    // if (insertAt === -1) {
+                    //     acc.push(value)
+                    //     return acc
+                    // } else {
+                    //     return acc.splice(insertAt, 0, value, ...acc.splice(insertAt))
+                    // }
+                }, new Array<StreamMessageSegment>()),
+                map((value) => {
+                    return value.sort((a, b) => a.seq - b.seq).map((v) => {
+                        return v.content
+                    }).join("")
+                })
+            ).subscribe({
+                next: (message) => {
+                    this.Content = message
+                    Logger.log(this.tag, "stream message update", message)
+                    this.eventSubject.next({
+                        message: this as ChatMessage,
+                        type: MessageUpdateType.UpdateContent
+                    })
+                },
+                error: (err) => {
+                    Logger.error(this.tag, "stream message error", err)
+                }
+            })
         }
-        if (ret.Mid === undefined) {
-            ret.Mid = 0
-        }
-        return ret;
     }
 
-    events(): Subject<ChatMessage> {
-        return this.updateSubject;
+    events(): Subject<ChatMessageUpdateEvent> {
+        return this.eventSubject;
     }
 
     public getId(): string {
@@ -213,52 +261,80 @@ export class ChatMessageImpl implements ChatMessage {
 
     private updateStreamMessage(m: ChatMessage) {
         if (m.Type !== MessageType.StreamMarkdown && m.Type !== MessageType.StreamText) {
-            Logger.log("ChatMessage", "update a non stream message")
+            Logger.log(this.tag, "update a non stream message")
             return;
         }
         this.Status = m.Status
         switch (m.Status) {
             case MessageStatus.StreamStart:
+                this.eventSubject.next({
+                    message: this,
+                    type: MessageUpdateType.UpdateStatus
+                })
                 break;
             case MessageStatus.StreamSending:
-                if (!this.Content) {
-                    this.Content = ""
-                }
-                this.streamMessages.push(m)
-                // TODO optimize, use rxjs to sort and join the stream messages
-                //this.streamMessageSubject.next(m)
-                this.streamMessages = this.streamMessages.sort((a, b) => {
-                    return a.Seq - b.Seq
+                this.streamMessageSource?.next({
+                    seq: m.Seq,
+                    content: m.Content
                 })
-                this.Content = this.streamMessages.map((m) => m.Content).join("")
                 break;
             case MessageStatus.StreamFinish:
                 setTimeout(() => {
-                    this.streamMessages = []
-                }, 2000)
+                    this.eventSubject.next({
+                        message: this,
+                        type: MessageUpdateType.UpdateStatus
+                    })
+                }, 1000)
                 break;
             case MessageStatus.StreamCancel:
                 this.Content = m.Content
                 setTimeout(() => {
-                    this.streamMessages = []
-                }, 2000)
+
+                    this.eventSubject.next({
+                        message: this,
+                        type: MessageUpdateType.UpdateStatus
+                    })
+                }, 1000)
                 break;
             default:
         }
-        this.updateSubject.next(this)
+    }
+
+    public setSendingStatus(sending: SendingStatus) {
+        this.Sending = sending
+        this.eventSubject.next({
+            message: this,
+            type: MessageUpdateType.UpdateSending
+        })
+    }
+
+    public setMid(mid: number) {
+        this.Mid = mid
+        this.eventSubject.next({
+            message: this,
+            type: MessageUpdateType.UpdateContent
+        })
+    }
+
+    public setStatus(status: MessageStatus) {
+        this.Status = status
+        this.eventSubject.next({
+            message: this,
+            type: MessageUpdateType.UpdateStatus
+        })
     }
 
     public update(m: ChatMessage): void {
 
-        Logger.log(this.tag, "update message", [this], [m])
+        Logger.log(this.tag, "update message", [this.Content], [m.Content])
 
         if (m.Type === MessageType.StreamMarkdown || m.Type === MessageType.StreamText) {
             this.updateStreamMessage(m)
             return;
         }
 
-        this.From = m.From;
-        this.To = m.To;
+        // this.From = m.From;
+        // this.To = m.To;
         this.Content = m.Content;
         this.Mid = m.Mid;
         this.SendAt = m.SendAt;
@@ -269,14 +345,9 @@ export class ChatMessageImpl implements ChatMessage {
         this.Seq = m.Seq
         this.ReceiveAt = m.ReceiveAt
 
-        this.updateSubject.next(this)
-    }
-
-    private initForStreamMessage() {
-        this.streamMessageSubject.pipe(
-
-        ).subscribe((m) => {
-            this.Content = m.Content
+        this.eventSubject.next({
+            message: this,
+            type: MessageUpdateType.UpdateStatus
         })
     }
 }

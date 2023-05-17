@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {ISession} from "../../im/session";
-import {Event} from "../../im/session_list";
+import {SessionListEventType} from "../../im/session_list";
 import {SessionListItem} from "./SessionListItem";
 
 
@@ -25,14 +25,14 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
         const sp = sessionList.event().subscribe({
             next: (e) => {
                 switch (e.event) {
-                    case Event.create:
+                    case SessionListEventType.create:
                         setSessions(sessionList.getSessionsTemped())
                         break;
-                    case Event.update:
+                    case SessionListEventType.update:
                         setSessions(sessionList.getSessionsTemped())
                         break;
-                    case Event.deleted:
-                    case Event.init:
+                    case SessionListEventType.deleted:
+                    case SessionListEventType.init:
                         break;
                 }
             }

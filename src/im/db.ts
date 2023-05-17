@@ -209,8 +209,7 @@ export class ChatMessageDbCache implements ChatMessageCache {
     }
 
     updateMessage(message: MessageBaseInfo): Observable<any> {
-        const m: MessageBaseInfo = {...message}
-        return fromPromise(this._db.db.put('message', m))
+        return this.addMessage(message)
     }
 
     updateMessageStatus(cliId: number, status: MessageStatus): Observable<void> {
