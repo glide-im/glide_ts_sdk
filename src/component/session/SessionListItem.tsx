@@ -46,7 +46,10 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
         updateAt = time2Str(sessionInfo.UpdateAt)
     }
 
-    Logger.log("SessionListItem", "render", [props.chat])
+    let lastMessage = `${sessionInfo.LastMessageSender}: ${sessionInfo.LastMessage}`
+    if (sessionInfo.LastMessageSender === "" || sessionInfo.LastMessage == "") {
+        lastMessage = "[还没有消息]"
+    }
 
     return <>
         <ListItemButton style={{cursor: "pointer"}} sx={{bgcolor: 'background.paper'}} onClick={onItemClick}
@@ -58,7 +61,7 @@ export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession)
                 </Badge>
             </ListItemIcon>
             <ListItemText primary={sessionInfo.Title}
-                          secondary={`${sessionInfo.LastMessageSender}: ${sessionInfo.LastMessage}`}
+                          secondary={lastMessage}
                           primaryTypographyProps={{style: {color: 'black'}}}
                           secondaryTypographyProps={{
                               style: {

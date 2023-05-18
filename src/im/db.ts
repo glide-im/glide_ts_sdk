@@ -221,7 +221,11 @@ export class ChatMessageDbCache implements ChatMessageCache {
     }
 
     deleteMessageBySid(sid: string): Observable<void> {
-        throw new Error("Method not implemented.");
+        return this._db.getDb().pipe(
+            mergeMap((db) => {
+                return db.delete('message', sid)
+            })
+        )
     }
 
     getMessageByCliId(cliId: string): Observable<MessageBaseInfo> {

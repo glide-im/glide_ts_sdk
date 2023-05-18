@@ -1,11 +1,12 @@
 import {Box, List, ListItem, Typography} from "@mui/material";
-import React, {CSSProperties, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {ChatMessageItem} from "./Message";
 import {ChatMessage} from "../../im/chat_message";
 import {useParams} from "react-router-dom";
-import {ISession, SessionType} from "../../im/session";
+import {ISession, SessionEventType, SessionType} from "../../im/session";
 import {Account} from "../../im/account";
-import { ChatContext } from "./context/ChatContext";
+import {ChatContext} from "./context/ChatContext";
+import {filter} from "rxjs";
 
 export function SessionMessageList() {
 
@@ -17,6 +18,15 @@ export function SessionMessageList() {
         setSession(Account.session().get(sid))
     }, [sid])
 
+
+    useEffect(() => {
+        const sp = session?.event.pipe(
+            filter((e) => e.type === SessionEventType.ReloadMessageHistory),
+        ).subscribe((e) => {
+            setMessages([...session.getMessages()])
+        })
+        return () => sp?.unsubscribe()
+    }, [session])
 
     useEffect(() => {
         if (session === null) {
@@ -86,7 +96,7 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
     })
 
     return <ChatContext.Provider value={{scrollToBottom}}>
-        <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef}
+        <Box height={"calc(95vh - 64px - 64px)"} ref={scrollRef}
              className={'BeautyScrollBar overflow-y-auto flex w-full'}
              display={"flex"}
              alignContent={"flex-end"}>

@@ -9,6 +9,7 @@ import {
     of,
     Subject,
     take,
+    tap,
     throwError,
     timeout,
     toArray
@@ -73,6 +74,7 @@ export enum SessionEventType {
     UpdateLastMessage = "update_last_message",
     NewMessage = "new_message",
     MessageUpdate = "message_update",
+    ReloadMessageHistory = "message_history",
 }
 
 export interface SessionEvent {
@@ -99,6 +101,8 @@ export interface ISession extends SessionBaseInfo {
     getMessages(): ChatMessage[]
 
     getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]>
+
+    clearMessageHistory(): Observable<any>
 }
 
 export interface InternalSession extends ISession {
@@ -211,6 +215,30 @@ class InternalSessionImpl implements InternalSession {
             filter(() => this.initialized),
             take(1),
             map(() => this)
+        )
+    }
+
+    public clearMessageHistory(): Observable<any> {
+        return of(...this.messageList).pipe(
+            mergeMap((message) => this.cache.deleteMessage(message.getId())),
+            toArray(),
+            tap(() => {
+                this.messageList = []
+                this.messageMap.clear()
+                this.LastMessage = ""
+                this.LastMessageSender = ""
+                this.UpdateAt = Date.now()
+
+                this.clearUnread()
+                this.event.next({
+                    type: SessionEventType.UpdateLastMessage,
+                    session: this,
+                });
+                this.event.next({
+                    type: SessionEventType.ReloadMessageHistory,
+                    session: this,
+                });
+            })
         )
     }
 
