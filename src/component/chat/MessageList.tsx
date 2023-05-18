@@ -53,10 +53,6 @@ export function SessionMessageList() {
     return <MessageListView messages={messages} isGroup={session.Type === SessionType.Channel}/>
 }
 
-const messageListStyle: CSSProperties = {
-    overflow: "revert", width: "100%",
-}
-
 // type MessageListItemData = string | ChatMessage
 
 function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
@@ -90,11 +86,11 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
     })
 
     return <ChatContext.Provider value={{scrollToBottom}}>
-        <Box height={"calc(95vh - 60px - 60px)"}
+        <Box height={"calc(95vh - 60px - 60px)"} ref={scrollRef}
              className={'BeautyScrollBar overflow-y-auto flex w-full'}
              display={"flex"}
              alignContent={"flex-end"}>
-            <List disablePadding ref={messageListEle} style={messageListStyle}>
+            <List disablePadding ref={messageListEle} className={'w-full'}>
                 {list}
             </List>
         </Box>
