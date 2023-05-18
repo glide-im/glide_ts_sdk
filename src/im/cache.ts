@@ -80,8 +80,8 @@ export class GlideCache implements SessionListCache, ChatMessageCache {
         return this._sessionDbCache.removeSession(sid)
     }
 
-    setSession(sid: string, info: SessionBaseInfo): Observable<void> {
-        return this._sessionDbCache.setSession(sid, info)
+    setSession(info: SessionBaseInfo): Observable<void> {
+        return this._sessionDbCache.setSession(info)
     }
 
     sessionCount(): Observable<number> {

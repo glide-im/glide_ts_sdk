@@ -59,7 +59,7 @@ export interface InternalSessionList extends SessionList {
 export interface SessionListCache {
     getSession(sid: SessionId): Observable<SessionBaseInfo | null>
 
-    setSession(sid: SessionId, info: SessionBaseInfo): Observable<void>
+    setSession(info: SessionBaseInfo): Observable<void>
 
     clearAllSession(): Observable<void>
 
@@ -231,7 +231,7 @@ export class InternalSessionListImpl implements InternalSessionList {
             this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
             return of(session)
         }
-        return this.cache.setSession(session.ID, session as SessionBaseInfo).pipe(
+        return this.cache.setSession(session as SessionBaseInfo).pipe(
             onNext(() => {
                     this.sessionMap.set(session.ID, session)
                     Logger.log(this.tag, "session added: ", session.ID)

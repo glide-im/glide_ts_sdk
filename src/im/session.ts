@@ -27,6 +27,7 @@ import {Cache} from "./cache";
 import {Actions, Message, MessageStatus, MessageType} from "./message";
 import {IMWsClient} from "./im_ws_client";
 import {Logger} from "../utils/Logger";
+import {SessionListCache} from "./session_list";
 
 export type SessionId = string
 
@@ -107,22 +108,22 @@ export interface InternalSession extends ISession {
 
     init(): Observable<InternalSession>;
 
-    setCache(cache: ChatMessageCache)
+    setCache(cache: SessionListCache & ChatMessageCache)
 }
 
-export function createSession(to: string, type: SessionType, cache: ChatMessageCache): InternalSession {
+export function createSession(to: string, type: SessionType, cache: SessionListCache & ChatMessageCache): InternalSession {
     const ret = InternalSessionImpl.create(to, type);
     ret.setCache(cache)
     return ret
 }
 
-export function fromSessionBean(sessionBean: SessionBean, cache: ChatMessageCache): InternalSession {
+export function fromSessionBean(sessionBean: SessionBean, cache: SessionListCache & ChatMessageCache): InternalSession {
     const ret = InternalSessionImpl.fromSessionBean(sessionBean);
     ret.setCache(cache)
     return ret
 }
 
-export function fromBaseInfo(baseInfo: SessionBaseInfo, cache: ChatMessageCache): InternalSession {
+export function fromBaseInfo(baseInfo: SessionBaseInfo, cache: SessionListCache & ChatMessageCache): InternalSession {
     const ret = InternalSessionImpl.fromBaseInfo(baseInfo);
     ret.setCache(cache)
     return ret
@@ -149,7 +150,7 @@ class InternalSessionImpl implements InternalSession {
     private readonly _updateSubject: Subject<SessionEvent> = new Subject<SessionEvent>();
 
     private initialized = false;
-    private cache: ChatMessageCache
+    private cache: SessionListCache & ChatMessageCache
 
     private constructor(type: SessionType, to: string) {
         this.LastMessage = "-"
@@ -160,6 +161,7 @@ class InternalSessionImpl implements InternalSession {
         this.Type = type;
         this.ID = this.getSID();
         this.Title = this.ID;
+        this.UpdateAt = Date.now()
 
         this.event.subscribe({
             next: (event) => {
@@ -200,7 +202,7 @@ class InternalSessionImpl implements InternalSession {
         return session;
     }
 
-    public setCache(cache: ChatMessageCache) {
+    public setCache(cache: SessionListCache & ChatMessageCache) {
         this.cache = cache;
     }
 
@@ -310,32 +312,7 @@ class InternalSessionImpl implements InternalSession {
             case MessageType.StreamText:
                 let streamMessage = this.messageMap.get(chatMessage.getId());
                 if (streamMessage === undefined || streamMessage === null) {
-
-                    chatMessage.events().subscribe({
-                        next: () => {
-                            this.event.next({
-                                type: SessionEventType.MessageUpdate,
-                                session: this,
-                                message: chatMessage
-                            })
-                        }
-                    })
-
-                    // 首次收到消息, 订阅消息更新
-                    chatMessage.events().pipe(
-                        timeout(10000),
-                        filter((event) => event.type === MessageUpdateType.UpdateStatus),
-                        filter((event) => event.message.Status !== MessageStatus.StreamSending),
-                        take(1),
-                        mergeMap((event) => this.cache.updateMessage(event.message)),
-                    ).subscribe({
-                        next: () => {
-                            Logger.log(this.tag, [chatMessage], "stream message complete, cache updated")
-                        },
-                        error: (err) => {
-                            Logger.error(this.tag, [chatMessage], "update stream message cache error", err)
-                        }
-                    })
+                    this.onReceiveStreamMessageSegment(chatMessage)
                     break
                 }
                 streamMessage.update(chatMessage)
@@ -348,7 +325,7 @@ class InternalSessionImpl implements InternalSession {
 
         this.cache.addMessage(chatMessage).subscribe({
             next: () => {
-                this.addMessageByOrder(chatMessage)
+                this.addMessage(chatMessage)
             },
             error: (err) => {
                 Logger.error(this.tag, [chatMessage], "add message error", err)
@@ -357,6 +334,43 @@ class InternalSessionImpl implements InternalSession {
         // Cache.cacheUserInfo(message.from).then(() => {
         //     this.addMessageByOrder(c);
         // })
+    }
+
+    private onReceiveStreamMessageSegment(chatMessage: ChatMessage) {
+        chatMessage.events().subscribe({
+            next: () => {
+                this.event.next({
+                    type: SessionEventType.MessageUpdate,
+                    session: this,
+                    message: chatMessage
+                })
+            }
+        })
+
+        // 首次收到消息, 订阅消息更新
+        chatMessage.events().pipe(
+            timeout(10000),
+            filter((event) => event.type === MessageUpdateType.UpdateStatus),
+            filter((event) => event.message.Status !== MessageStatus.StreamSending),
+            take(1),
+            mergeMap((event) => this.cache.updateMessage(event.message)),
+        ).subscribe({
+            next: () => {
+                const last = this.messageList[this.messageList.length - 1]
+                if (last?.getId() == chatMessage.getId()) {
+                    this.LastMessage = chatMessage.getDisplayContent()
+                }
+                this.event.next({
+                    type: SessionEventType.UpdateLastMessage,
+                    session: this,
+                    message: chatMessage
+                })
+                Logger.log(this.tag, [chatMessage], "stream message complete, cache updated")
+            },
+            error: (err) => {
+                Logger.error(this.tag, [chatMessage], "update stream message cache error", err)
+            }
+        })
     }
 
     public sendTextMessage(msg: string): Observable<ChatMessage> {
@@ -387,7 +401,7 @@ class InternalSessionImpl implements InternalSession {
         return this.messageList.slice(index, this.messageList.length - index);
     }
 
-    private addMessageByOrder(message: ChatMessage) {
+    private addMessage(message: ChatMessage) {
 
         const isNewMessage = !this.messageMap.has(message.getId());
 
@@ -423,7 +437,6 @@ class InternalSessionImpl implements InternalSession {
             if (!message.FromMe && !this.isSelected()) {
                 this.UnreadCount++;
             }
-
             this.LastMessage = message.getDisplayContent();
             this.LastMessageSender = message.getSenderName();
 
@@ -438,6 +451,8 @@ class InternalSessionImpl implements InternalSession {
                 message: message
             });
         }
+
+        this.sync2Cache()
     }
 
     private getSID(): string {
@@ -488,7 +503,7 @@ class InternalSessionImpl implements InternalSession {
         // add to cache
         this.cache.addMessage(chatMessage).subscribe({
             next: () => {
-                this.addMessageByOrder(chatMessage)
+                this.addMessage(chatMessage)
             },
             error: (err) => {
                 Logger.error(this.tag, [chatMessage], "add message error", err)
@@ -526,9 +541,24 @@ class InternalSessionImpl implements InternalSession {
             this.LastMessage = session.LastMessage;
             this.LastMessageSender = session.LastMessageSender;
             this.UnreadCount = session.UnreadCount;
+            this.Type = session.Type;
+            this.To = session.To;
+            this.ID = this.getSID();
+            this.sync2Cache();
         } else {
-
+            Logger.warn(this.tag, "update session with session bean not implement", [session])
         }
+    }
+
+    sync2Cache() {
+        this.cache.setSession(this).subscribe({
+            next: () => {
+                Logger.log(this.tag, "session updated", this.ID)
+            },
+            error: (err) => {
+                Logger.error(this.tag, "session update failed", err)
+            }
+        })
     }
 
     private isSessionBaseInfo(session: SessionBaseInfo | SessionBean): session is SessionBaseInfo {

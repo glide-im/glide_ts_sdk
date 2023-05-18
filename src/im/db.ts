@@ -110,7 +110,7 @@ export class SessionDbCache implements SessionListCache {
         return fromPromise(this._db.db.get('session', sid))
     }
 
-    setSession(sid: string, info: SessionBaseInfo): Observable<any> {
+    setSession(info: SessionBaseInfo): Observable<any> {
         const s: SessionBaseInfo = {
             Avatar: "",
             ID: "",
