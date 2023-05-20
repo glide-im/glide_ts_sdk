@@ -1,4 +1,4 @@
-import {catchError, concat, map, mergeMap, Observable, of, throwError, timeout} from "rxjs";
+import {catchError, concat, map, mergeMap, Observable, of, tap, throwError, timeout} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
@@ -9,7 +9,7 @@ import {Actions, CommonMessage} from "./message";
 import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
 import {IMWsClient} from "./im_ws_client";
 import {getCookie} from "../utils/Cookies";
-import {onError, onNext} from "../rx/next";
+import {onError} from "../rx/next";
 import {Logger} from "../utils/Logger";
 import {isResponse} from "../api/response";
 import {showSnack} from "../component/widget/SnackBar";
@@ -48,7 +48,7 @@ export class Account {
         return Api.login(account, password)
             .pipe(
                 mergeMap(res => this.initAccount(res)),
-                onNext(res => {
+                tap(res => {
                     Logger.log(this.tag, "Login", res)
                 }),
                 onError(err => {
@@ -62,7 +62,7 @@ export class Account {
         return Api.guest(nickname, avatar)
             .pipe(
                 mergeMap(res => this.initAccount(res)),
-                onNext(res => {
+                tap(res => {
                     Logger.log(this.tag, "GustLogin", res)
                 }),
                 onError(err => {
@@ -77,7 +77,7 @@ export class Account {
                 mergeMap(res => {
                     return this.initAccount(res)
                 }),
-                onNext(res => {
+                tap(res => {
                     Logger.log(this.tag, "TokenAuth", res)
                 }),
                 timeout(5000),
@@ -166,7 +166,7 @@ export class Account {
             IMWsClient.request<AuthBean>(Actions.ApiUserAuth, {Token: this.token})
                 .pipe(
                     map(() => "ws auth success"),
-                    onNext(() => {
+                    tap(() => {
                         this.startHandleMessage()
                     }),
                     catchError(err => {

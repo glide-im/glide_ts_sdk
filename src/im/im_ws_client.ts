@@ -1,8 +1,7 @@
-import {filter, interval, map, mergeMap, Observable, Observer, Subject, Subscription, take, timeout} from 'rxjs';
+import {filter, interval, map, mergeMap, Observable, Observer, Subject, Subscription, take, tap, timeout} from 'rxjs';
 import {AckMessage, AckRequest, Actions, CliCustomMessage, CommonMessage, Message} from './message';
 import {Logger} from "../utils/Logger";
 import {WebSockEvent, WsClient} from "./ws_client";
-import {onNext} from "../rx/next";
 
 const ackTimeout = 3000;
 const heartbeatInterval = 30000;
@@ -122,7 +121,7 @@ class IMWebSocketClient extends WsClient {
         const msg = JSON.stringify(data)
         return super.send(msg).pipe(
             map(() => data),
-            onNext(() => Logger.log(this.tag1, "send message >>", [data])),
+            tap(() => Logger.log(this.tag1, "send message >>", [data])),
         )
     }
 

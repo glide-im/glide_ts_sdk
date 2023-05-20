@@ -2,7 +2,6 @@ import {catchError, concat, filter, groupBy, map, mergeMap, Observable, of, Subj
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {Actions, CliCustomMessage, CommonMessage, Message} from "./message";
-import {onNext} from "../rx/next";
 import {
     createSession,
     fromBaseInfo,
@@ -135,7 +134,7 @@ export class InternalSessionListImpl implements InternalSessionList {
         }
         const newSession = createSession(id, SessionType.Single, this.cache)
         return this.add(newSession, true).pipe(
-            onNext((r) => {
+            tap((r) => {
                 // 不等待初始化完成
                 r.init().subscribe()
             })

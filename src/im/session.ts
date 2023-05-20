@@ -228,6 +228,7 @@ class InternalSessionImpl implements InternalSession {
                 this.LastMessage = ""
                 this.LastMessageSender = ""
                 this.UpdateAt = Date.now()
+                this.sync2Cache('clear history')
 
                 this.clearUnread()
                 this.event.next({
@@ -243,7 +244,11 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public clearUnread() {
+        if (this.UnreadCount == 0) {
+            return
+        }
         this.UnreadCount = 0;
+        this.sync2Cache('UnreadCount')
         this.event.next({
             type: SessionEventType.UpdateUnreadCount,
             session: this,
@@ -481,7 +486,7 @@ class InternalSessionImpl implements InternalSession {
             });
         }
 
-        this.sync2Cache()
+        this.sync2Cache('receive message')
     }
 
     private getSID(): string {
@@ -573,19 +578,19 @@ class InternalSessionImpl implements InternalSession {
             this.Type = session.Type;
             this.To = session.To;
             this.ID = this.getSID();
-            this.sync2Cache();
+            this.sync2Cache('update session');
         } else {
             Logger.warn(this.tag, "update session with session bean not implement", [session])
         }
     }
 
-    sync2Cache() {
+    sync2Cache(cause?: string) {
         this.cache.setSession(this).subscribe({
             next: () => {
-                Logger.log(this.tag, "session updated", this.ID)
+                Logger.log(this.tag, "session updated", this.ID, 'cause', cause)
             },
             error: (err) => {
-                Logger.error(this.tag, "session update failed", err)
+                Logger.error(this.tag, "session update failed", 'cause', cause, err)
             }
         })
     }
