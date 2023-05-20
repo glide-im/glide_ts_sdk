@@ -340,9 +340,10 @@ class InternalSessionImpl implements InternalSession {
             case MessageType.StreamText:
                 let streamMessage = this.messageMap.get(chatMessage.getId());
                 if (streamMessage === undefined || streamMessage === null) {
-                    this.onReceiveStreamMessageSegment(chatMessage)
+                    this.onReceiveStreamMessage(chatMessage)
                     break
                 }
+                // update stream message
                 streamMessage.update(chatMessage)
                 return;
         }
@@ -364,7 +365,7 @@ class InternalSessionImpl implements InternalSession {
         // })
     }
 
-    private onReceiveStreamMessageSegment(chatMessage: ChatMessage) {
+    private onReceiveStreamMessage(chatMessage: ChatMessage) {
         chatMessage.events().subscribe({
             next: () => {
                 this.event.next({

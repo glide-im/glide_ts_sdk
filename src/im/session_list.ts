@@ -1,4 +1,4 @@
-import {catchError, concat, filter, groupBy, map, mergeMap, Observable, of, Subject, toArray} from "rxjs";
+import {catchError, concat, filter, groupBy, map, mergeMap, Observable, of, Subject, tap, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {Account} from "./account";
 import {Actions, CliCustomMessage, CommonMessage, Message} from "./message";
@@ -206,10 +206,10 @@ export class InternalSessionListImpl implements InternalSessionList {
                 break;
         }
 
-        const s = this.get(getSID(sessionType, target))
+        const session = this.get(getSID(sessionType, target))
 
-        if (s !== null) {
-            s.onMessage(message.action, message.data as Message)
+        if (session !== null) {
+            session.onMessage(message.action, message.data as Message)
         } else {
             of(createSession(target, sessionType, this.cache)).pipe(
                 mergeMap((ses) => this.add(ses, true)),
@@ -225,20 +225,21 @@ export class InternalSessionListImpl implements InternalSessionList {
         if (this.sessionMap.has(session.ID)) {
             return of(this.sessionMap.get(session.ID))
         }
+
+        // 是否需要更新缓存成功后再添加到内存 ?
+        this.sessionMap.set(session.ID, session)
+        Logger.log(this.tag, "session added, update cache=", updateDb, session.ID)
+        this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
         if (!updateDb) {
-            this.sessionMap.set(session.ID, session)
-            Logger.log(this.tag, "session added: ", session.ID)
-            this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
             return of(session)
         }
         return this.cache.setSession(session as SessionBaseInfo).pipe(
-            onNext(() => {
-                    this.sessionMap.set(session.ID, session)
-                    Logger.log(this.tag, "session added: ", session.ID)
-                    this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
-                }
-            ),
-            map(() => session)
+            tap(() => Logger.log(this.tag, "session added to cache: ", session.ID)),
+            map(() => session),
+            catchError(err => {
+                Logger.error(this.tag, "session added to cache failed: ", session.ID, err)
+                return of(session)
+            })
         );
     }
 
