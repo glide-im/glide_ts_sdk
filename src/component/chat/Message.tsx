@@ -1,7 +1,26 @@
-import {Audiotrack, ErrorOutline, FileDownload, Map} from "@mui/icons-material";
-import {Avatar, Box, CircularProgress, Grid, IconButton, LinearProgress, Typography} from "@mui/material";
+import {
+    Audiotrack,
+    CheckOutlined,
+    DoneAllOutlined,
+    ErrorOutline,
+    FileDownload,
+    HelpOutlined,
+    Map
+} from "@mui/icons-material";
+import {
+    Avatar,
+    Box,
+    Button,
+    CircularProgress,
+    Grid,
+    IconButton,
+    LinearProgress,
+    Paper,
+    Tooltip,
+    Typography
+} from "@mui/material";
 import {grey} from "@mui/material/colors";
-import React, {CSSProperties, useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {Cache} from "../../im/cache";
@@ -13,17 +32,46 @@ import {Markdown} from "../widget/Markdown";
 import {ChatContext} from "./context/ChatContext";
 import {time2Str} from "../../utils/TimeUtils";
 import {filter} from "rxjs";
-import {Logger} from "../../utils/Logger";
+import {MessagePopup} from "./MessagePopup";
+import {SxProps} from "@mui/system";
+import {Theme} from "@mui/material/styles";
 
-const messageBoxStyle = function (): CSSProperties {
-    return {
-        maxWidth: "100%",
-        wordWrap: "break-word",
-        display: "inline-block",
-        padding: "8px 12px",
-        borderRadius: "6px"
+const messageBoxStyleLeft: SxProps<Theme> = {
+    overflow: 'visible',
+    borderRadius: '12px',
+    filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.32))',
+    '&:before': {
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        top: 10,
+        left: -4,
+        width: 12,
+        height: 8,
+        bgcolor: 'background.paper',
+        transform: 'translateY(-50%) rotate(70deg)',
+        zIndex: 0,
     }
 }
+
+const messageBoxStyleRight: SxProps<Theme> = {
+    overflow: 'visible',
+    borderRadius: '12px',
+    filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.32))',
+    '&:before': {
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        top: 10,
+        right: -4,
+        width: 12,
+        height: 8,
+        bgcolor: 'background.paper',
+        transform: 'translateY(-50%) rotate(-70deg)',
+        zIndex: 0,
+    }
+}
+
 
 export function ChatMessageItem(props: { msg: ChatMessage }) {
 
@@ -36,29 +84,30 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
     const [sender, setSender] = useState<GlideBaseInfo>(baseInfo)
 
     const [sending, setSending] = useState(msg.Sending)
+    const popAnchor = useRef<HTMLElement>()
 
     useEffect(() => {
         if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline) {
             return
         }
-        if (baseInfo.name !== props.msg.From) {
+        if (baseInfo.name !== msg.From) {
             return
         }
-        const sp = Cache.loadUserInfo1(props.msg.From).subscribe({
+        const sp = Cache.loadUserInfo1(msg.From).subscribe({
             next: (u) => {
                 setSender(u)
             }
         })
         return () => sp.unsubscribe()
-    }, [props.msg.From])
+    }, [msg.From, msg.Type, baseInfo])
 
     useEffect(() => {
         if (!msg.FromMe) {
             return;
         }
-        const sp = Account.session().get(props.msg.SID)?.event.pipe(
+        const sp = Account.session().get(msg.SID)?.event.pipe(
             filter((e) => e.message),
-            filter((c) => c.message.getId() === props.msg.getId())
+            filter((c) => c.message.getId() === msg.getId())
         ).subscribe({
             next: (c) => {
                 setSending(c.message.Sending)
@@ -80,46 +129,110 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     let direction: "row-reverse" | "row" = msg.FromMe ? "row-reverse" : "row"
 
-    let status = <></>
-
-    if (msg.FromMe && sending === SendingStatus.Sending) {
-        status = <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
-            <CircularProgress size={12}/>
-        </Box>
-    }
-
     return <Grid container direction={direction} px={0} py={1}>
 
         {/* Avatar */}
-        <Grid item xs={2} md={1}>
-            <UserAvatar ui={sender}/>
+        <Grid item>
+            <Box px={2} pt={1}>
+                <UserAvatar ui={sender}/>
+            </Box>
         </Grid>
 
         {/* Content */}
         <Grid item xs={9} md={10} color={'palette.primary.main'}>
-
-            {/* NickName */}
-            {msg.FromMe ? <></> : <Box>
-                <Typography className={'font-sans'} variant={'body1'} color={'textPrimary'} component={"span"}>
-                    {sender.name}
-                </Typography>
-                <Typography className={'font-sans'} variant={"caption"} ml={1} component={"span"} color={grey[500]}>
-                    {time2Str(msg.SendAt)}
-                </Typography>
-            </Box>}
-
+            <MessageHeader sender={sender} message={msg}/>
             {/* Message */}
-            <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 0 : 1}>
-
-                <Box bgcolor={"white"} style={messageBoxStyle()}>
-                    <MessageContent msg={msg}/>
+            <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 1 : 0} ref={popAnchor}>
+                <MessagePopup anchorEl={popAnchor.current} msg={msg}/>
+                <Paper elevation={0} sx={msg.FromMe ? messageBoxStyleRight : messageBoxStyleLeft}>
+                    <Box px={2} py={1}>
+                        <MessageContent msg={msg}/>
+                    </Box>
+                </Paper>
+                <Box>
+                    <MessageStatusView message={msg}/>
                 </Box>
-                {status}
             </Box>
         </Grid>
     </Grid>
 }
 
+const sendStatusHint = {
+    [SendingStatus.Unknown]: "未知状态",
+    [SendingStatus.Sending]: "发送中",
+    [SendingStatus.ServerAck]: "服务器已收到",
+    [SendingStatus.ClientAck]: "客户端已收到",
+    [SendingStatus.Failed]: "发送失败",
+}
+
+function MessageStatusView(props: { message: ChatMessage }) {
+
+    if (!props.message.FromMe) {
+        return <></>
+    }
+    if (props.message.IsGroup && props.message.Sending === SendingStatus.ServerAck) {
+        return <></>
+    }
+
+    let status = <></>
+    switch (props.message.Sending) {
+        case SendingStatus.Unknown:
+            status = <HelpOutlined fontSize={'small'} color={'disabled'}/>
+            break
+        case SendingStatus.Sending:
+            status = <CircularProgress size={12}/>
+            break
+        case SendingStatus.ServerAck:
+            status = <CheckOutlined fontSize={'small'} color={"success"}/>
+            break
+        case SendingStatus.ClientAck:
+            status = <DoneAllOutlined fontSize={'small'} color={"success"}/>
+            break
+        case SendingStatus.Failed:
+            status = <ErrorOutline fontSize={'small'} color={"error"}/>
+            break
+    }
+
+    if (props.message.FromMe && props.message.Sending === SendingStatus.Sending) {
+        return <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
+            <CircularProgress size={12}/>
+        </Box>
+    }
+    const hint = sendStatusHint[props.message.Sending]
+    return <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"} px={1}>
+        <Tooltip title={hint}>
+            {status}
+        </Tooltip>
+    </Box>
+}
+
+function MessageHeader(props: { sender: GlideBaseInfo, message: ChatMessage }) {
+
+    if (props.message.FromMe) {
+        return <></>
+    }
+
+    const sendAt = time2Str(props.message.SendAt)
+    const updateAt = time2Str(props.message.UpdateAt)
+
+    let update = <></>
+    if (sendAt !== updateAt && props.message.UpdateAt !== 0 && updateAt != "") {
+        update = <Typography className={'font-sans'} variant={"caption"} ml={1} component={"span"} color={grey[500]}>
+            更新于{updateAt}
+        </Typography>
+    }
+
+    return <Box>
+        <Typography className={'font-sans'} variant={'body2'} color={grey[700]} component={"span"}>
+            {props.sender.name}
+        </Typography>
+        <Typography className={'font-sans'} variant={"caption"} ml={1} component={"span"} color={grey[500]}>
+            {sendAt}
+        </Typography>
+        {update}
+    </Box>
+
+}
 
 interface Props extends RouteComponentProps {
     ui: GlideBaseInfo;
@@ -146,13 +259,25 @@ const UserAvatar = withRouter((props: Props) => {
     </>
 })
 
-// function AtUser(props: { uid: string }) {
-//     const ui = Cache.getUserInfo(props.uid)
-//     if (ui) {
-//         return <>{ui.name}</>
-//     }
-//     return <>{props.uid}</>
-// }
+const atUserRegex = /@[0-9A-Za-z_]{5,20}/g
+
+function At(props: { id: string }) {
+    const [name, setName] = useState(Cache.getUserInfo(props.id)?.name ?? props.id)
+    useEffect(() => {
+        if (name !== props.id) {
+            return
+        }
+        Cache.loadUserInfo1(props.id).subscribe((info) => {
+            setName(info.name)
+        })
+    })
+    return <Button sx={{borderRadius: '16px', textTransform: 'none', padding: '0px 4px'}}
+                   size={"small"}
+                   autoCapitalize={null}
+                   variant={"text"}>
+        @{name}
+    </Button>
+}
 
 function MessageContent(props: { msg: ChatMessage }) {
     const chatContext = React.useContext(ChatContext)
@@ -161,7 +286,6 @@ function MessageContent(props: { msg: ChatMessage }) {
     const [status, setStatus] = useState(props.msg.Status)
 
     useEffect(() => {
-        Logger.log("MessageContent", props.msg.Content, props.msg.getId())
         const sp = Account.session().get(props.msg.SID)?.event.pipe(
             filter((e) => e.message?.getId() === props.msg.getId()),
         ).subscribe({
@@ -175,8 +299,44 @@ function MessageContent(props: { msg: ChatMessage }) {
             }
         })
         return () => sp?.unsubscribe()
-    }, [props.msg])
+    }, [props.msg, chatContext])
 
+
+    let cnt: any = content
+
+    if (props.msg.Type === MessageType.Text) {
+        const result = []
+
+        const parts = content.split(atUserRegex)
+        atUserRegex[Symbol.match](content)?.forEach((match, i) => {
+            if (!match.startsWith('@')) {
+                return
+            }
+            result.push(<At id={match.replace('@', '')}/>)
+            result.push(parts[i + 1])
+
+            // content.split(match).forEach((v1, i1) => {
+            //     if (i1 !== 0) {
+            //         result.push(<a href={`#${v1}`}>{`@${v1}`}</a>)
+            //     } else {
+            //         result.push(v1)
+            //     }
+            // })
+        })
+        cnt = result.length > 0 ? result : content
+        // if (atUserRegex.test(content)) {
+        //     console.log('------------')
+        //     cnt = content.split(atUserRegex).map((v, i) => {
+        //         console.log('=========', v)
+        //         if (v.startsWith('@')) {
+        //             const uid = v.replace('@', '')
+        //             return <a href={`#${uid}`}>{`@${uid}`}</a>
+        //         } else {
+        //             return v
+        //         }
+        //     })
+        // }
+    }
 
     switch (props.msg.Type) {
         case MessageType.Image:
@@ -195,22 +355,24 @@ function MessageContent(props: { msg: ChatMessage }) {
                     return <CircularProgress/>
                 case MessageStatus.StreamSending:
                     return <Box width={'100%'}>
-                        <Markdown source={content}/>
+                        <Markdown source={cnt}/>
                         <LinearProgress/>
                     </Box>
                 case MessageStatus.StreamCancel:
                     return <Box display={"flex"} justifyContent={"center"} alignItems={"center"}>
-                        <ErrorOutline/><Typography ml={1} variant={"body2"}>{content}</Typography>
+                        <ErrorOutline/><Typography ml={1} variant={"body2"}>{cnt}</Typography>
                     </Box>
                 case MessageStatus.StreamFinish:
-                    return <Box width={'100%'}><Markdown source={content}/></Box>
+                    return <Box width={'100%'}><Markdown source={cnt}/></Box>
                 default:
-                    return <Markdown source={content}/>
+                    return <Markdown source={cnt}/>
             }
         case MessageType.Markdown:
-            return <Markdown source={content}/>
+            return <Markdown source={cnt}/>
         case MessageType.Text:
-            return <Typography variant={"body1"} className={'font-light'}>{content}</Typography>
+            return <Typography variant={"body1"} className={'font-light'}>
+                {cnt}
+            </Typography>
         case MessageType.Audio:
             return <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
                 <IconButton color={'info'} title={'语音消息'}><Audiotrack/></IconButton>
@@ -227,6 +389,6 @@ function MessageContent(props: { msg: ChatMessage }) {
                 <Typography variant={"body2"} color={'#5dccce'}>文件</Typography>
             </Box>
         default:
-            return <Typography variant={"body1"} color={'#444'}>{props.msg.Content}</Typography>
+            return <Typography variant={"body1"} color={'#444'}>{content}</Typography>
     }
 }

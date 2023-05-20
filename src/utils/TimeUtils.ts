@@ -13,7 +13,11 @@ export function timeStampSecToDateTime(timestamp: number) {
 // if is yesterday, show "yesterday" and am/pm
 // if is this week, show the day of week and am/pm
 // else show the date
-export function time2Str(timestamp: number) {
+export function time2Str(timestamp: number): string {
+    if (timestamp === undefined || timestamp === 0) {
+        return "";
+    }
+
     const isMilliSec = timestamp > 10000000000;
     if (!isMilliSec) {
         timestamp *= 1000;

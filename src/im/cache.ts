@@ -1,8 +1,7 @@
-import {catchError, from, groupBy, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {catchError, from, groupBy, map, mergeMap, Observable, of, tap, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {GlideBaseInfo} from "./def";
 import {UserInfoBean} from "../api/model";
-import {onNext} from "../rx/next";
 import {getCookie, setCookie} from "../utils/Cookies";
 import {SessionListCache} from "./session_list";
 import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
@@ -200,7 +199,7 @@ class BaseInfoCache {
                 }
             }),
             toArray(),
-            onNext(userInfo => {
+            tap(userInfo => {
                 userInfo.forEach(u => {
                     BaseInfoCache._writeObject(`ui_${id}`, u);
                     this.tempCache.set(u.id, u);

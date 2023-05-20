@@ -1,9 +1,8 @@
-import {filter, map, mergeMap, Observable, of, toArray} from "rxjs";
+import {filter, map, mergeMap, Observable, of, tap, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {ContactsBean} from "../api/model";
 import {Contacts} from "./contacts";
 import {Cache} from "./cache";
-import { onNext } from "../rx/next";
 
 export class ContactsList {
 
@@ -39,14 +38,14 @@ export class ContactsList {
             .pipe(
                 mergeMap(contacts => of(...contacts)),
                 map(contacts => Contacts.create(contacts)),
-                onNext(contacts => {
+                tap(contacts => {
                     this.contacts.set(contacts.id, contacts);
                 }),
                 filter(c => c.type === 1),
                 map(c => c.id),
                 toArray(),
                 mergeMap(ids => Cache.loadUserInfo(...ids)),
-                onNext(userInfo => {
+                tap(userInfo => {
                     userInfo.forEach(u => {
                         this.contacts.get(u.id)?.setInfo(u)
                     })

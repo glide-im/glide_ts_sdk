@@ -27,6 +27,7 @@ export interface MessageBaseInfo {
     readonly ReceiveAt: number;
     readonly IsGroup: boolean;
     readonly Target: string;
+    readonly UpdateAt: number;
 
     readonly FromMe: boolean;
     readonly OrderKey: number;
@@ -146,7 +147,7 @@ class ChatMessageImpl implements ChatMessage {
     public IsGroup: boolean;
     public Type: number;
     public Target: string;
-
+    public UpdateAt: number;
 
     public FromMe: boolean;
     public OrderKey: number;
@@ -154,6 +155,10 @@ class ChatMessageImpl implements ChatMessage {
 
     private streamMessageSource: Subject<StreamMessageSegment> = null
     private eventSubject = new Subject<ChatMessageUpdateEvent>();
+
+    constructor() {
+        this.UpdateAt = 0
+    }
 
     init() {
 
@@ -329,6 +334,7 @@ class ChatMessageImpl implements ChatMessage {
         Logger.log(this.tag, "update message", [this.Content], [m.Content])
 
         if (m.Type === MessageType.StreamMarkdown || m.Type === MessageType.StreamText) {
+            this.UpdateAt = Date.now()
             this.updateStreamMessage(m)
             return;
         }

@@ -244,7 +244,7 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public clearUnread() {
-        if (this.UnreadCount == 0) {
+        if (this.UnreadCount === 0) {
             return
         }
         this.UnreadCount = 0;
@@ -391,7 +391,7 @@ class InternalSessionImpl implements InternalSession {
         ).subscribe({
             next: () => {
                 const last = this.messageList[this.messageList.length - 1]
-                if (last?.getId() == chatMessage.getId()) {
+                if (last?.getId() === chatMessage.getId()) {
                     this.LastMessage = chatMessage.getDisplayContent()
                 }
                 this.event.next({
