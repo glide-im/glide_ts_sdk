@@ -15,13 +15,28 @@ import {
 import {Loading} from "../widget/Loading";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {SessionListEventType} from "../../im/session_list";
-import {filter, map} from "rxjs";
+import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
 import {grey} from "@mui/material/colors";
-import {ISession} from "../../im/session";
+import {Session} from "../../im/session";
 
-function SessionTitleBar(props: { session: ISession }) {
+
+function typingEvent(session: Session): Observable<boolean> {
+    return onErrorResumeNext(
+        session.inputEvent.pipe(
+            map((v) => true),
+            timeout(1500),
+            catchError((e) => of(false)),
+        ),
+        of(false).pipe(
+            mergeMap((v) => typingEvent(session))
+        )
+    )
+}
+
+function SessionTitleBar(props: { session: Session }) {
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [typing, setTyping] = React.useState(false);
 
     const handleCleanMessage = () => {
         props.session.clearMessageHistory().subscribe({
@@ -34,6 +49,15 @@ function SessionTitleBar(props: { session: ISession }) {
         })
         setAnchorEl(null);
     }
+
+    useEffect(() => {
+        const subscribe = typingEvent(props.session).subscribe({
+            next: (v) => {
+                setTyping(v)
+            }
+        });
+        return () => subscribe.unsubscribe()
+    }, [props.session])
 
     const handleExit = () => {
         setAnchorEl(null);
@@ -54,9 +78,16 @@ function SessionTitleBar(props: { session: ISession }) {
     return <>
         <AppBar position="static" color={'transparent'} style={{boxShadow: 'none'}}>
             <Toolbar>
-                <Typography variant="h6" sx={{flexGrow: 1}}>
-                    {props.session?.Title ?? "-"}
-                </Typography>
+                <Box sx={{flexGrow: 1}}>
+                    <Typography variant="h6" component={'span'}>
+                        {props.session?.Title ?? "-"}
+                    </Typography>
+                    {
+                        typing ? <Typography variant="caption" color={'grey'} ml={2}>
+                            输入中...
+                        </Typography> : <></>
+                    }
+                </Box>
                 <IconButton edge={'end'} size="large"
                             aria-label="account of current user"
                             aria-controls="menu-appbar"

@@ -18,6 +18,7 @@ export enum MessageType {
     StreamMarkdown = 1011,
     StreamText = 1001,
 
+    // todo move to ClientCustomType
     WebRtcHi = 2000,
     WebRtcHello = 2001,
     WebRtcDialing = 2002,
@@ -30,6 +31,10 @@ export enum MessageType {
     WebRtcIce = 2009,
     WebRtcClose = 2010,
     WebRtcCandidate = 2011,
+}
+
+export enum ClientCustomType {
+    CliMessageTypeTyping = 1,
 }
 
 export enum MessageStatus {
@@ -131,7 +136,7 @@ export interface Recall {
 export interface CliCustomMessage {
     from: string;
     to: string;
-    type: number;
+    type: ClientCustomType;
     id: number;
     content: string | null;
 }

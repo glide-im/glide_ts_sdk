@@ -29,6 +29,7 @@ import {
 } from "@mui/icons-material";
 import {grey} from "@mui/material/colors";
 import VideoChat from "../webrtc/VideoChatDialog";
+import {Account} from "../../im/account";
 
 
 export function MessageInput(props: { onSend: (msg: string, type: number) => void }) {
@@ -138,18 +139,17 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
 
     }
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && e.shiftKey) {
-            e.preventDefault();
-            return;
-        }
+
+        Account.session().get(props.session)?.sendUserTypingEvent()
 
         if (e.key === "Enter") {
+            e.preventDefault();
             handleSendClick()
         }
     }
     return <Grid container>
         <Grid item md={11} sm={10} xs={9}>
-            <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%', borderRadius: '100px'}}>
+            <Paper sx={{display: 'flex', alignItems: 'center', width: '100%', borderRadius: '100px'}}>
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'right',
@@ -181,7 +181,7 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
         </Grid>
         <Grid item md={1} sm={2} xs={3} justifyContent="center" alignItems="center" display={"flex"}>
             <Box sx={{bgcolor: grey[50], borderRadius: '100px'}}>
-                <IconButton color={'primary'}  sx={{p: '10px'}} size={"large"} onClick={handleSendClick}>
+                <IconButton color={'primary'} sx={{p: '10px'}} size={"large"} onClick={handleSendClick}>
                     <SendRounded/>
                 </IconButton>
             </Box>

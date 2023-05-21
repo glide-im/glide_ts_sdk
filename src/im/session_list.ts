@@ -8,7 +8,7 @@ import {
     fromSessionBean,
     getSID,
     InternalSession,
-    ISession,
+    Session,
     SessionBaseInfo,
     SessionId,
     SessionType
@@ -26,23 +26,23 @@ export enum SessionListEventType {
 
 export interface SessionListEvent {
     event: SessionListEventType
-    session?: ISession
+    session?: Session
 }
 
 export interface SessionList {
-    get(sid: SessionId): ISession | null
+    get(sid: SessionId): Session | null
 
-    getSessions(): Observable<ISession[]>
+    getSessions(): Observable<Session[]>
 
     setSelectedSession(sid: SessionId)
 
-    getCurrentSession(): ISession | null
+    getCurrentSession(): Session | null
 
-    createSession(id: SessionId): Observable<ISession>
+    createSession(id: SessionId): Observable<Session>
 
     event(): Observable<SessionListEvent>
 
-    getSessionsTemped(): ISession[]
+    getSessionsTemped(): Session[]
 }
 
 // @Internal 仅供 glide 内部使用

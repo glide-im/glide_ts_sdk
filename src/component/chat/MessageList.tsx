@@ -3,7 +3,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {ChatMessageItem} from "./Message";
 import {ChatMessage} from "../../im/chat_message";
 import {useParams} from "react-router-dom";
-import {ISession, SessionEventType, SessionType} from "../../im/session";
+import {Session, SessionEventType, SessionType} from "../../im/session";
 import {Account} from "../../im/account";
 import {ChatContext} from "./context/ChatContext";
 import {filter} from "rxjs";
@@ -11,7 +11,7 @@ import {filter} from "rxjs";
 export function SessionMessageList() {
 
     const {sid} = useParams<{ sid: string }>();
-    const [session, setSession] = React.useState<ISession | null>(null);
+    const [session, setSession] = React.useState<Session | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>(session?.getMessages() ?? []);
 
     useEffect(() => {

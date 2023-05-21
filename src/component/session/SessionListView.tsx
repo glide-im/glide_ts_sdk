@@ -2,7 +2,7 @@ import {Box, CircularProgress, List, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
-import {ISession} from "../../im/session";
+import {Session} from "../../im/session";
 import {SessionListEventType} from "../../im/session_list";
 import {SessionListItem} from "./SessionListItem";
 
@@ -43,7 +43,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
     useEffect(() => {
         sessionList.getSessions()
             .subscribe({
-                next: (res: ISession[]) => {
+                next: (res: Session[]) => {
                     setSessions(res)
                 },
                 error: (err) => {
@@ -56,7 +56,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
             })
     }, [sessionList])
 
-    const onSelect = (s: ISession) => {
+    const onSelect = (s: Session) => {
         s.clearUnread()
         sessionList.setSelectedSession(s.ID)
         props.history.push(`/im/session/${s.ID}`)
@@ -72,7 +72,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
         content = <Progress showProgress={false} msg={"Empty..."}/>
     } else {
         content = <List style={{overflow: "auto", height: "100%"}} disablePadding>
-            {sessions?.map((value: ISession) =>
+            {sessions?.map((value: Session) =>
                 <SessionListItem key={value.ID} chat={value} onSelect={onSelect}/>
             )}
         </List>

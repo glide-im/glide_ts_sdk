@@ -31,10 +31,11 @@ import {ImageViewer} from "../widget/ImageViewer";
 import {Markdown} from "../widget/Markdown";
 import {ChatContext} from "./context/ChatContext";
 import {time2Str} from "../../utils/TimeUtils";
-import {filter} from "rxjs";
+import {filter, Observable} from "rxjs";
 import {MessagePopup} from "./MessagePopup";
 import {SxProps} from "@mui/system";
 import {Theme} from "@mui/material/styles";
+import {Logger} from "../../utils/Logger";
 
 const messageBoxStyleLeft: SxProps<Theme> = {
     overflow: 'visible',
@@ -143,10 +144,10 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         <Grid item xs={9} md={10} color={'palette.primary.main'}>
             <MessageHeader sender={sender} message={msg}/>
             {/* Message */}
-            <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 1 : 0} ref={popAnchor}>
+            <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 1 : 0}>
                 <MessagePopup anchorEl={popAnchor.current} msg={msg}/>
                 <Paper elevation={0} sx={msg.FromMe ? messageBoxStyleRight : messageBoxStyleLeft}>
-                    <Box px={2} py={1}>
+                    <Box px={2} py={1} ref={popAnchor}>
                         <MessageContent msg={msg}/>
                     </Box>
                 </Paper>
@@ -162,7 +163,7 @@ const sendStatusHint = {
     [SendingStatus.Unknown]: "未知状态",
     [SendingStatus.Sending]: "发送中",
     [SendingStatus.ServerAck]: "服务器已收到",
-    [SendingStatus.ClientAck]: "接受者已收到",
+    [SendingStatus.ClientAck]: "接收者已收到",
     [SendingStatus.Failed]: "发送失败",
 }
 
@@ -279,10 +280,12 @@ function At(props: { id: string }) {
 }
 
 function MessageContent(props: { msg: ChatMessage }) {
+
     const chatContext = React.useContext(ChatContext)
     const [open, setOpen] = useState(false);
     const [content, setContent] = useState(props.msg.getDisplayContent())
     const [status, setStatus] = useState(props.msg.Status)
+    const [cnt, setCnt] = useState<Array<string | JSX.Element>>([content])
 
     useEffect(() => {
         const sp = Account.session().get(props.msg.SID)?.event.pipe(
@@ -300,22 +303,34 @@ function MessageContent(props: { msg: ChatMessage }) {
         return () => sp?.unsubscribe()
     }, [props.msg, chatContext])
 
-
-    let cnt: any = content
-
-    if (props.msg.Type === MessageType.Text) {
-        const result = []
-
-        const parts = content.split(atUserRegex)
-        atUserRegex[Symbol.match](content)?.forEach((match, i) => {
-            if (!match.startsWith('@')) {
-                return
+    useEffect(() => {
+        if (props.msg.Type !== MessageType.Text) {
+            return
+        }
+        const sp = new Observable<Array<string | JSX.Element>>((subscriber) => {
+            const result = new Array<string | JSX.Element>()
+            const parts = content.split(atUserRegex)
+            atUserRegex[Symbol.match](content)?.forEach((match, i) => {
+                if (!match.startsWith('@')) {
+                    return
+                }
+                const node = <At key={match} id={match.replace('@', '')}/>
+                result.push(node)
+                result.push(parts[i + 1])
+            })
+            subscriber.next(result.length > 0 ? result : [content])
+            subscriber.complete()
+        }).subscribe({
+            next: (n) => {
+                setCnt(n)
+            },
+            error: (e) => {
+                Logger.error("MessageContent", "error on resolve `@`", e)
             }
-            result.push(<At key={match} id={match.replace('@', '')}/>)
-            result.push(parts[i + 1])
         })
-        cnt = result.length > 0 ? result : content
-    }
+        return () => sp.unsubscribe()
+    }, [content, props.msg.Type])
+
 
     switch (props.msg.Type) {
         case MessageType.Image:
@@ -334,20 +349,20 @@ function MessageContent(props: { msg: ChatMessage }) {
                     return <CircularProgress/>
                 case MessageStatus.StreamSending:
                     return <Box width={'100%'}>
-                        <Markdown source={cnt}/>
+                        <Markdown source={content}/>
                         <LinearProgress/>
                     </Box>
                 case MessageStatus.StreamCancel:
                     return <Box display={"flex"} justifyContent={"center"} alignItems={"center"}>
-                        <ErrorOutline/><Typography ml={1} variant={"body2"}>{cnt}</Typography>
+                        <ErrorOutline/><Typography ml={1} variant={"body2"}>{content}</Typography>
                     </Box>
                 case MessageStatus.StreamFinish:
-                    return <Box width={'100%'}><Markdown source={cnt}/></Box>
+                    return <Box width={'100%'}><Markdown source={content}/></Box>
                 default:
-                    return <Markdown source={cnt}/>
+                    return <Markdown source={content}/>
             }
         case MessageType.Markdown:
-            return <Markdown source={cnt}/>
+            return <Markdown source={content}/>
         case MessageType.Text:
             return <Typography variant={"body1"} className={'font-light'}>
                 {cnt}

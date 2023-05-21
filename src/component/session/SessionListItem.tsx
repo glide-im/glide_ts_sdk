@@ -3,11 +3,11 @@ import {green} from "@mui/material/colors";
 import {useEffect, useState} from "react";
 import {showSnack} from "../widget/SnackBar";
 import {useParams} from "react-router-dom";
-import {ISession, SessionBaseInfo, SessionType} from "../../im/session";
+import {Session, SessionBaseInfo, SessionType} from "../../im/session";
 import {Logger} from "../../utils/Logger";
 import {time2Str} from "../../utils/TimeUtils";
 
-export function SessionListItem(props: { chat: ISession, onSelect: (c: ISession) => void }) {
+export function SessionListItem(props: { chat: Session, onSelect: (c: Session) => void }) {
 
     const {sid} = useParams<{ sid: string }>();
 

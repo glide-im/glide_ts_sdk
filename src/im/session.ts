@@ -1,6 +1,7 @@
 import {
     catchError,
     concat,
+    debounce,
     delay,
     filter,
     interval,
@@ -26,7 +27,7 @@ import {
     SendingStatus
 } from "./chat_message";
 import {Cache} from "./cache";
-import {Actions, Message, MessageStatus, MessageType} from "./message";
+import {Actions, CliCustomMessage, ClientCustomType, Message, MessageStatus, MessageType} from "./message";
 import {IMWsClient, MessageSendResult} from "./im_ws_client";
 import {Logger} from "../utils/Logger";
 import {SessionListCache} from "./session_list";
@@ -80,14 +81,15 @@ export enum SessionEventType {
 
 export interface SessionEvent {
     readonly type: SessionEventType;
-    readonly session: ISession;
+    readonly session: Session;
     readonly message?: any;
 }
 
-export interface ISession extends SessionBaseInfo {
+export interface Session extends SessionBaseInfo {
 
-    readonly messageSubject: Subject<ChatMessage>;
-    readonly event: Subject<SessionEvent>;
+    readonly messageSubject: Subject<ChatMessage>
+    readonly event: Subject<SessionEvent>
+    readonly inputEvent: Observable<Array<string>>
 
     waitInit(): Observable<InternalSession>;
 
@@ -96,6 +98,8 @@ export interface ISession extends SessionBaseInfo {
     sendTextMessage(content: string): Observable<ChatMessage>;
 
     sendImageMessage(url: string): Observable<ChatMessage>;
+
+    sendUserTypingEvent()
 
     send(content: string, type: number): Observable<ChatMessage>;
 
@@ -106,8 +110,8 @@ export interface ISession extends SessionBaseInfo {
     clearMessageHistory(): Observable<any>
 }
 
-export interface InternalSession extends ISession {
-    onMessage(action: Actions, message: Message)
+export interface InternalSession extends Session {
+    onMessage(action: Actions, message: Message | CliCustomMessage)
 
     update(session: SessionBean | SessionBaseInfo)
 
@@ -153,6 +157,8 @@ class InternalSessionImpl implements InternalSession {
 
     private readonly _messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
     private readonly _updateSubject: Subject<SessionEvent> = new Subject<SessionEvent>();
+    private readonly _inputEventReceive: Subject<Array<string>> = new Subject<Array<string>>();
+    private readonly _typingEventEmitter: Subject<any> = new Subject<any>();
 
     private initialized = false;
     private cache: SessionListCache & ChatMessageCache
@@ -171,6 +177,27 @@ class InternalSessionImpl implements InternalSession {
         this.event.subscribe({
             next: (event) => {
                 Logger.log(this.tag, "event", event.session.ID, event.type, event.message?.Status, event.message?.getDisplayContent())
+            }
+        })
+
+        // send typing event
+        this._typingEventEmitter.pipe(
+            debounce(() => interval(100)),
+        ).subscribe({
+            next: () => {
+                const myUid = Account.getInstance().getUID();
+                const m = {
+                    content: JSON.stringify(Account.getInstance().getUserInfo()),
+                    from: myUid,
+                    id: 0,
+                    to: this.To,
+                    type: ClientCustomType.CliMessageTypeTyping
+                } as CliCustomMessage;
+                IMWsClient.sendCliCustomMessage(m).subscribe({
+                    error: (e) => {
+                        Logger.error(this.tag, "send typing event error", e)
+                    }
+                })
             }
         })
     }
@@ -211,7 +238,11 @@ class InternalSessionImpl implements InternalSession {
         this.cache = cache;
     }
 
-    waitInit(): Observable<InternalSession> {
+    get inputEvent(): Observable<Array<string>> {
+        return this._inputEventReceive.asObservable();
+    }
+
+    public waitInit(): Observable<InternalSession> {
         return interval(100).pipe(
             filter(() => this.initialized),
             take(1),
@@ -335,13 +366,22 @@ class InternalSessionImpl implements InternalSession {
         // }
     }
 
+    public onMessage(action: Actions, message: Message | CliCustomMessage) {
+        if (action === Actions.MessageCli) {
+            const m = message as CliCustomMessage
+            switch (message.type) {
+                case ClientCustomType.CliMessageTypeTyping:
+                    this._inputEventReceive.next(JSON.parse(m.content))
+                    break
+            }
+            return
+        }
 
-    public onMessage(action: Actions, message: Message) {
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
         const isChannel = action === Actions.MessageGroup || action === Actions.MessageGroupRecall || action === Actions.NotifyGroup
-        const chatMessage = createChatMessage2(this.ID, message, isChannel)
+        const chatMessage = createChatMessage2(this.ID, message as Message, isChannel)
 
         switch (chatMessage.Type) {
             case MessageType.StreamMarkdown:
@@ -357,7 +397,7 @@ class InternalSessionImpl implements InternalSession {
         }
         // todo filter none-display message
 
-        Logger.log(this.tag, "onMessage", this.ID, message.mid, message.type, [chatMessage.getId(), chatMessage.getDisplayContent()]);
+        Logger.log(this.tag, "onMessage", this.ID, message.type, [chatMessage.getId(), chatMessage.getDisplayContent()]);
         // TODO 优化
 
         this.cache.addMessage(chatMessage).subscribe({
@@ -420,6 +460,14 @@ class InternalSessionImpl implements InternalSession {
 
     public getMessages(): ChatMessage[] {
         return Array.from(this.messageMap.values());
+    }
+
+    public sendUserTypingEvent() {
+        if (this.isGroup()) {
+            // TODO send typing event to group
+            return
+        }
+        this._typingEventEmitter.next("typing")
     }
 
     private getMessageBeforeMid(mid: number): ChatMessage[] {
