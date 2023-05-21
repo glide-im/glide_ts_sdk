@@ -11,7 +11,7 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
     let u = Account.getInstance().getUserInfo()
     if (u === null) {
         u = {
-            avatar: "-", name: "-", id: "-"
+            avatar: "-", name: "-", id: "-", isChannel: false
         }
     }
 

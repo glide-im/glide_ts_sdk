@@ -53,11 +53,12 @@ export function time2Str(timestamp: number): string {
         const minute = date.getMinutes();
         const hourStr = hour < 10 ? "0" + hour : hour.toString();
         const minuteStr = minute < 10 ? "0" + minute : minute.toString();
-        return dayOfWeek2Str(day) + " " + hourStr + ":" + minuteStr;
+        const isThisWeek = date.getDate() / 7 === now.getDate() / 7;
+        return (isThisWeek ? "" : "上") + dayOfWeek2Str(day) + " " + hourStr + ":" + minuteStr;
     } else {
         const date = new Date(timestamp);
         const m = date.getMonth();
-        const d = date.getDay();
+        const d = date.getDate()
         return (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d);
     }
 }

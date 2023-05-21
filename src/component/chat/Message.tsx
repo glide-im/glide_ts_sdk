@@ -79,7 +79,8 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
     const baseInfo = Cache.getUserInfo(msg.From) ?? {
         name: msg.From,
         id: msg.From,
-        avatar: ""
+        avatar: "",
+        isChannel: false
     }
     const [sender, setSender] = useState<GlideBaseInfo>(baseInfo)
 
@@ -161,7 +162,7 @@ const sendStatusHint = {
     [SendingStatus.Unknown]: "未知状态",
     [SendingStatus.Sending]: "发送中",
     [SendingStatus.ServerAck]: "服务器已收到",
-    [SendingStatus.ClientAck]: "客户端已收到",
+    [SendingStatus.ClientAck]: "接受者已收到",
     [SendingStatus.Failed]: "发送失败",
 }
 
@@ -175,6 +176,8 @@ function MessageStatusView(props: { message: ChatMessage }) {
     }
 
     let status = <></>
+    let hint = sendStatusHint[props.message.Sending]
+
     switch (props.message.Sending) {
         case SendingStatus.Unknown:
             status = <HelpOutlined fontSize={'small'} color={'disabled'}/>
@@ -189,16 +192,11 @@ function MessageStatusView(props: { message: ChatMessage }) {
             status = <DoneAllOutlined fontSize={'small'} color={"success"}/>
             break
         case SendingStatus.Failed:
+            hint += `(${props.message.FailedReason ?? ""})`
             status = <ErrorOutline fontSize={'small'} color={"error"}/>
             break
     }
 
-    if (props.message.FromMe && props.message.Sending === SendingStatus.Sending) {
-        return <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"}>
-            <CircularProgress size={12}/>
-        </Box>
-    }
-    const hint = sendStatusHint[props.message.Sending]
     return <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"} px={1}>
         <Tooltip title={hint}>
             {status}
@@ -216,7 +214,7 @@ function MessageHeader(props: { sender: GlideBaseInfo, message: ChatMessage }) {
     const updateAt = time2Str(props.message.UpdateAt)
 
     let update = <></>
-    if (sendAt !== updateAt && props.message.UpdateAt !== 0 && updateAt != "") {
+    if (sendAt !== updateAt && props.message.UpdateAt !== 0 && updateAt !== "") {
         update = <Typography className={'font-sans'} variant={"caption"} ml={1} component={"span"} color={grey[500]}>
             更新于{updateAt}
         </Typography>
@@ -267,9 +265,10 @@ function At(props: { id: string }) {
         if (name !== props.id) {
             return
         }
-        Cache.loadUserInfo1(props.id).subscribe((info) => {
+        const sp = Cache.loadUserInfo1(props.id).subscribe((info) => {
             setName(info.name)
         })
+        return () => sp.unsubscribe()
     })
     return <Button sx={{borderRadius: '16px', textTransform: 'none', padding: '0px 4px'}}
                    size={"small"}
@@ -312,30 +311,10 @@ function MessageContent(props: { msg: ChatMessage }) {
             if (!match.startsWith('@')) {
                 return
             }
-            result.push(<At id={match.replace('@', '')}/>)
+            result.push(<At key={match} id={match.replace('@', '')}/>)
             result.push(parts[i + 1])
-
-            // content.split(match).forEach((v1, i1) => {
-            //     if (i1 !== 0) {
-            //         result.push(<a href={`#${v1}`}>{`@${v1}`}</a>)
-            //     } else {
-            //         result.push(v1)
-            //     }
-            // })
         })
         cnt = result.length > 0 ? result : content
-        // if (atUserRegex.test(content)) {
-        //     console.log('------------')
-        //     cnt = content.split(atUserRegex).map((v, i) => {
-        //         console.log('=========', v)
-        //         if (v.startsWith('@')) {
-        //             const uid = v.replace('@', '')
-        //             return <a href={`#${uid}`}>{`@${uid}`}</a>
-        //         } else {
-        //             return v
-        //         }
-        //     })
-        // }
     }
 
     switch (props.msg.Type) {

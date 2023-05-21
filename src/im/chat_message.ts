@@ -32,7 +32,7 @@ export interface MessageBaseInfo {
     readonly FromMe: boolean;
     readonly OrderKey: number;
     readonly Sending: SendingStatus;
-
+    readonly FailedReason?: string;
 }
 
 export enum MessageUpdateType {
@@ -67,6 +67,8 @@ export interface ChatMessage extends MessageBaseInfo {
     setStatus(status: MessageStatus)
 
     setSendingStatus(sending: SendingStatus)
+
+    setFailedReason(reason: string)
 }
 
 export interface ChatMessageCache {
@@ -107,11 +109,12 @@ export function createChatMessage(info: MessageBaseInfo): ChatMessageImpl {
             ret[key] = info[key]
         }
     }
+    ret.IsGroup = info.IsGroup
     ret.init()
     return ret;
 }
 
-export function createChatMessage2(sid: string, m: Message): ChatMessageImpl {
+export function createChatMessage2(sid: string, m: Message, isChannel?: boolean): ChatMessageImpl {
     const ret = new ChatMessageImpl();
     ret.SID = sid
     ret.From = m.from;
@@ -124,6 +127,7 @@ export function createChatMessage2(sid: string, m: Message): ChatMessageImpl {
     ret.CliMid = m.cliMid
     ret.OrderKey = m.sendAt
     ret.Seq = m.seq
+    ret.IsGroup = isChannel ?? false
     ret.init()
     return ret;
 }
@@ -152,6 +156,7 @@ class ChatMessageImpl implements ChatMessage {
     public FromMe: boolean;
     public OrderKey: number;
     public Sending: SendingStatus = SendingStatus.Unknown;
+    public FailedReason?: string;
 
     private streamMessageSource: Subject<StreamMessageSegment> = null
     private eventSubject = new Subject<ChatMessageUpdateEvent>();
@@ -215,7 +220,7 @@ class ChatMessageImpl implements ChatMessage {
 
     public getId(): string {
         // TODO fixme
-        return this.CliMid;
+        return this.CliMid ?? this.Mid.toString();
     }
 
     public getUserInfo(): Observable<GlideBaseInfo> {
@@ -305,20 +310,16 @@ class ChatMessageImpl implements ChatMessage {
         }
     }
 
+    public setFailedReason(reason: string) {
+        this.FailedReason = reason
+    }
+
     public setSendingStatus(sending: SendingStatus) {
         this.Sending = sending
-        this.eventSubject.next({
-            message: this,
-            type: MessageUpdateType.UpdateSending
-        })
     }
 
     public setMid(mid: number) {
         this.Mid = mid
-        this.eventSubject.next({
-            message: this,
-            type: MessageUpdateType.UpdateContent
-        })
     }
 
     public setStatus(status: MessageStatus) {
@@ -342,18 +343,13 @@ class ChatMessageImpl implements ChatMessage {
         // this.From = m.From;
         // this.To = m.To;
         this.Content = m.Content;
-        this.Mid = m.Mid;
-        this.SendAt = m.SendAt;
+        // this.Mid = m.Mid;
+        // this.SendAt = m.SendAt;
         this.Status = m.Status;
-        this.Type = m.Type;
-        this.OrderKey = m.SendAt
-        this.Sending = m.Sending
-        this.Seq = m.Seq
-        this.ReceiveAt = m.ReceiveAt
-
-        this.eventSubject.next({
-            message: this,
-            type: MessageUpdateType.UpdateStatus
-        })
+        // this.Type = m.Type;
+        // this.OrderKey = m.SendAt
+        // this.Sending = m.Sending
+        // this.Seq = m.Seq
+        // this.ReceiveAt = m.ReceiveAt
     }
 }

@@ -1,5 +1,23 @@
-import {filter, interval, map, mergeMap, Observable, Observer, Subject, Subscription, take, tap, timeout} from 'rxjs';
-import {AckMessage, AckRequest, Actions, CliCustomMessage, CommonMessage, Message} from './message';
+import {
+    catchError,
+    concat,
+    delay,
+    filter,
+    interval,
+    map,
+    mergeMap,
+    Observable,
+    of,
+    onErrorResumeNext,
+    Subject,
+    Subscription,
+    take,
+    tap,
+    throwError,
+    timeout,
+    TimeoutError
+} from 'rxjs';
+import {AckMessage, AckNotify, AckRequest, Actions, CliCustomMessage, CommonMessage, Message} from './message';
 import {Logger} from "../utils/Logger";
 import {WebSockEvent, WsClient} from "./ws_client";
 
@@ -7,6 +25,13 @@ const ackTimeout = 3000;
 const heartbeatInterval = 30000;
 const connectionTimeout = 3000;
 const requestTimeout = 3000;
+
+export interface MessageSendResult {
+    mid: number;
+    cliId: string;
+    seq: number;
+    action: Actions.AckMessage | Actions.AckNotify | null;
+}
 
 class IMWebSocketClient extends WsClient {
 
@@ -75,18 +100,27 @@ class IMWebSocketClient extends WsClient {
         return super.event()
     }
 
-    public sendChannelMessage(m: Message): Observable<Message> {
-        return this.createCommonMessage(m.to, Actions.MessageGroup, m).pipe(
-            mergeMap(msg => this.sendProtocolMessage(msg)),
-            mergeMap(msg => this.getAckObservable(msg.data))
-        );
+    public sendChannelMessage(m: Message): Observable<MessageSendResult> {
+        return concat(
+            this.createCommonMessage(m.to, Actions.MessageGroup, m).pipe(
+                mergeMap(msg => this.sendProtocolMessage(msg)),
+                map(() => <MessageSendResult>{mid: 0, cliId: m.cliMid, seq: m.seq})
+            ),
+            this.getAckObservable(m)
+        )
     }
 
-    public sendChatMessage(m: Message): Observable<Message> {
-        return this.createCommonMessage(m.to, Actions.MessageChat, m).pipe(
-            mergeMap(msg => this.sendProtocolMessage(msg)),
-            mergeMap(msg => this.getAckObservable(msg.data))
-        );
+    public sendChatMessage(m: Message): Observable<MessageSendResult> {
+        return concat(
+            this.createCommonMessage(m.to, Actions.MessageChat, m).pipe(
+                mergeMap(msg => this.sendProtocolMessage(msg)),
+                map(() => <MessageSendResult>{mid: 0, cliId: m.cliMid, seq: m.seq})
+            ),
+            this.getAckObservable(m),
+            onErrorResumeNext(
+                this.getAckNotifyObservable(m)
+            ),
+        )
     }
 
     public sendCliCustomMessage(m: CliCustomMessage): Observable<CliCustomMessage> {
@@ -104,17 +138,14 @@ class IMWebSocketClient extends WsClient {
     }
 
     private createCommonMessage<T>(to: string | null, action: Actions, data: T): Observable<CommonMessage<T>> {
-        return new Observable((observer: Observer<CommonMessage<T>>) => {
-            const msg: CommonMessage<T> = {
-                action: action,
-                data: data,
-                seq: this.seq++,
-                to: to,
-                extra: null,
-            };
-            observer.next(msg);
-            observer.complete();
-        });
+        const msg: CommonMessage<T> = {
+            action: action,
+            data: data,
+            seq: this.seq++,
+            to: to,
+            extra: null,
+        };
+        return of(msg)
     }
 
     private sendProtocolMessage<T>(data: CommonMessage<T>): Observable<CommonMessage<T>> {
@@ -153,8 +184,16 @@ class IMWebSocketClient extends WsClient {
             })
     }
 
+    private getAckObservableFail(msg: Message): Observable<MessageSendResult> {
+        return of(1).pipe(
+            delay(ackTimeout),
+            map(() => <MessageSendResult>{}),
+            mergeMap(() => throwError(new Error("ack timeout")))
+        )
+    }
+
     // 服务器回执消息, 用于确认消息发送成功, 服务器会返回该消息的 mid
-    private getAckObservable(msg: Message): Observable<Message> {
+    private getAckObservable(msg: Message): Observable<MessageSendResult> {
         return this.messages().pipe(
             filter(m => m.action === Actions.AckMessage),
             map(m => m.data as AckMessage),
@@ -164,8 +203,28 @@ class IMWebSocketClient extends WsClient {
             map(ack => {
                 // 服务器回执包含该消息 id
                 msg.mid = ack.mid
-                return msg
+                return <MessageSendResult>{
+                    mid: ack.mid, cliId: ack.cliMid, seq: msg.seq, action: Actions.AckMessage
+                }
+            }),
+            catchError((e) => {
+                e = e instanceof TimeoutError ? new Error("ack timeout") : e
+                return throwError(e)
             })
+        )
+    }
+
+    // 接收者回执消息, 用于确认消息发送成功
+    private getAckNotifyObservable(msg: Message): Observable<MessageSendResult> {
+        return this.messages().pipe(
+            filter(m => m.action === Actions.AckNotify),
+            map(m => m.data as AckNotify),
+            filter(ack => ack.mid === msg.mid),
+            take(1),
+            timeout(ackTimeout),
+            map((res) => <MessageSendResult>{
+                mid: res.mid, cliId: "", seq: 0, action: Actions.AckNotify
+            }),
         )
     }
 

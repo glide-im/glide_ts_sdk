@@ -105,11 +105,13 @@ class BaseInfoCache {
         this.tempCache.set('system', {
             avatar: "https://im.dengzii.com/system.png",
             name: "系统",
+            isChannel: false,
             id: "system",
         })
         this.tempCache.set('the_world_channel', {
             avatar: "https://im.dengzii.com/world_channel.png",
             id: 'the_world_channel',
+            isChannel: true,
             name: "世界频道"
         })
     }
@@ -138,9 +140,12 @@ class BaseInfoCache {
 
     public getChannelInfo(id: string): GlideBaseInfo | null {
         if (id === 'the_world_channel') {
-            return {avatar: "https://im.dengzii.com/world_channel.png", id: id, name: "世界频道",}
+            return {
+                avatar: "https://im.dengzii.com/world_channel.png", id: id,
+                isChannel: true, name: "世界频道",
+            }
         }
-        return {avatar: "", id: id, name: id}
+        return {avatar: "", id: id, isChannel: true, name: id}
     }
 
     public loadUserInfo1(id: string): Observable<GlideBaseInfo> {
@@ -152,6 +157,13 @@ class BaseInfoCache {
         return from(Api.getUserInfo(id)).pipe(
             map(r => r[0]),
             map<UserInfoBean, GlideBaseInfo>((us, i) => {
+                if (!us) {
+                    return {
+                        avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=" + id,
+                        name: id,
+                        id: id,
+                    } as GlideBaseInfo
+                }
                 const m = {
                     avatar: us.avatar,
                     name: us.nick_name,
@@ -193,7 +205,8 @@ class BaseInfoCache {
                         map<UserInfoBean, GlideBaseInfo>(u => ({
                             avatar: u.avatar,
                             name: u.nick_name,
-                            id: u.uid.toString()
+                            id: u.uid.toString(),
+                            isChannel: false,
                         })),
                     )
                 }

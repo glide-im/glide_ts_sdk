@@ -1,4 +1,5 @@
 import {
+    catchError,
     concat,
     delay,
     filter,
@@ -26,7 +27,7 @@ import {
 } from "./chat_message";
 import {Cache} from "./cache";
 import {Actions, Message, MessageStatus, MessageType} from "./message";
-import {IMWsClient} from "./im_ws_client";
+import {IMWsClient, MessageSendResult} from "./im_ws_client";
 import {Logger} from "../utils/Logger";
 import {SessionListCache} from "./session_list";
 
@@ -262,6 +263,7 @@ class InternalSessionImpl implements InternalSession {
             of("Hi, 我来了").pipe(
                 delay(2000),
                 mergeMap(msg => this.sendTextMessage(msg)),
+                toArray(),
             ).subscribe({
                 next: (msg) => Logger.log(this.tag, 'hello message sent'),
                 error: (err) => Logger.error(this.tag, 'hello message send failed', err)
@@ -338,7 +340,8 @@ class InternalSessionImpl implements InternalSession {
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
-        const chatMessage = createChatMessage2(this.ID, message)
+        const isChannel = action === Actions.MessageGroup || action === Actions.MessageGroupRecall || action === Actions.NotifyGroup
+        const chatMessage = createChatMessage2(this.ID, message, isChannel)
 
         switch (chatMessage.Type) {
             case MessageType.StreamMarkdown:
@@ -519,10 +522,10 @@ class InternalSessionImpl implements InternalSession {
             type: type,
             status: 0,
         };
-        const chatMessage: ChatMessage = createChatMessage2(this.ID, m);
+        const chatMessage: ChatMessage = createChatMessage2(this.ID, m, true);
         chatMessage.setSendingStatus(SendingStatus.Sending);
 
-        let sendObservable: Observable<Message>
+        let sendObservable: Observable<MessageSendResult>
         switch (this.Type) {
             case SessionType.Single:
                 sendObservable = IMWsClient.sendChatMessage(m)
@@ -545,16 +548,36 @@ class InternalSessionImpl implements InternalSession {
         })
 
         return sendObservable.pipe(
-            map(resp => {
-                chatMessage.setSendingStatus(SendingStatus.ServerAck)
-                chatMessage.setMid(resp.mid);
+            delay(1000), // for test only
+            timeout(10000),
+            catchError(err => {
+                Logger.error(this.tag, [chatMessage], "send message error", err)
+                chatMessage.setSendingStatus(SendingStatus.Failed)
+                chatMessage.setFailedReason(err.message || err.toString())
+                this.event.next({
+                    type: SessionEventType.MessageUpdate,
+                    session: this,
+                    message: chatMessage
+                });
+                this.syncMessage2Cache(chatMessage)
+
+                return throwError(() => err)
+            }),
+            tap(resp => {
+                switch (resp.action) {
+                    case Actions.AckMessage:
+                        chatMessage.setMid(resp.mid);
+                        chatMessage.setSendingStatus(SendingStatus.ServerAck)
+                        break;
+                    case Actions.AckNotify:
+                        chatMessage.setSendingStatus(SendingStatus.ClientAck)
+                        break;
+                    default:
+                        return
+                }
 
                 // update cache after send success
-                this.cache.updateMessage(chatMessage).subscribe({
-                    next: () => {
-                        Logger.log(this.tag, "message updated", chatMessage.CliMid)
-                    }
-                })
+                this.syncMessage2Cache(chatMessage)
 
                 this.event.next({
                     type: SessionEventType.MessageUpdate,
@@ -562,7 +585,8 @@ class InternalSessionImpl implements InternalSession {
                     message: chatMessage
                 });
                 return chatMessage;
-            })
+            }),
+            map(resp => chatMessage),
         );
     }
 
@@ -582,6 +606,14 @@ class InternalSessionImpl implements InternalSession {
         } else {
             Logger.warn(this.tag, "update session with session bean not implement", [session])
         }
+    }
+
+    syncMessage2Cache(chatMessage: ChatMessage) {
+        this.cache.updateMessage(chatMessage).subscribe({
+            next: () => {
+                Logger.log(this.tag, "message updated", chatMessage.CliMid)
+            }
+        })
     }
 
     sync2Cache(cause?: string) {

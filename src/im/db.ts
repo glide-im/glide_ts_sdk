@@ -187,7 +187,8 @@ export class ChatMessageDbCache implements ChatMessageCache {
             Target: "",
             To: "",
             Type: 0,
-            UpdateAt: 0
+            UpdateAt: 0,
+            FailedReason: null
         }
 
         // copy all properties to m
