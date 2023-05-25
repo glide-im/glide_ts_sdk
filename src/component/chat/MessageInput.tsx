@@ -142,7 +142,7 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
 
         Account.session().get(props.session)?.sendUserTypingEvent()
 
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             e.preventDefault();
             handleSendClick()
         }
