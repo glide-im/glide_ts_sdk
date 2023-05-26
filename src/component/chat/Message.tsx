@@ -20,7 +20,7 @@ import {
     Typography
 } from "@mui/material";
 import {grey} from "@mui/material/colors";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import {Cache} from "../../im/cache";
@@ -77,16 +77,17 @@ const messageBoxStyleRight: SxProps<Theme> = {
 export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     const msg = props.msg
-    const baseInfo = Cache.getUserInfo(msg.From) ?? {
-        name: msg.From,
-        id: msg.From,
-        avatar: "",
-        isChannel: false
-    }
-    const [sender, setSender] = useState<GlideBaseInfo>(baseInfo)
 
-    const [sending, setSending] = useState(msg.Sending)
-    const popAnchor = useRef<HTMLElement>()
+    const baseInfo: GlideBaseInfo = useMemo(() => {
+        return Cache.getUserInfo(msg.From) ?? {
+            name: msg.From,
+            id: msg.From,
+            avatar: "",
+            isChannel: false
+        } as GlideBaseInfo
+    }, [msg.From])
+
+    const [sender, setSender] = useState<GlideBaseInfo>(baseInfo)
 
     useEffect(() => {
         if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline) {
@@ -103,21 +104,6 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         return () => sp.unsubscribe()
     }, [msg.From, msg.Type, baseInfo])
 
-    useEffect(() => {
-        if (!msg.FromMe) {
-            return;
-        }
-        const sp = Account.session().get(msg.SID)?.event.pipe(
-            filter((e) => e.message),
-            filter((c) => c.message.getId() === msg.getId())
-        ).subscribe({
-            next: (c) => {
-                setSending(c.message.Sending)
-            }
-        })
-        return () => sp?.unsubscribe()
-    }, [msg])
-
     if (msg.Type === MessageType.UserOffline || msg.Type === MessageType.UserOnline) {
         return <Grid container padding={"4px 8px"}>
             <Box width={"100%"} display={"flex"} justifyContent={"center"}>
@@ -131,32 +117,32 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
 
     let direction: "row-reverse" | "row" = msg.FromMe ? "row-reverse" : "row"
 
-    return <Grid container direction={direction} px={0} py={1}>
-
-        {/* Avatar */}
-        <Grid item>
-            <Box px={2} pt={1}>
-                <UserAvatar ui={sender}/>
-            </Box>
-        </Grid>
-
-        {/* Content */}
-        <Grid item xs={9} md={10} color={'palette.primary.main'}>
-            <MessageHeader sender={sender} message={msg}/>
-            {/* Message */}
-            <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 1 : 0}>
-                <MessagePopup anchorEl={popAnchor.current} msg={msg}/>
-                <Paper elevation={0} sx={msg.FromMe ? messageBoxStyleRight : messageBoxStyleLeft}>
-                    <Box px={2} py={1} ref={popAnchor}>
-                        <MessageContent msg={msg}/>
-                    </Box>
-                </Paper>
-                <Box>
-                    <MessageStatusView message={msg}/>
+    return <MessagePopup msg={msg}>
+        <Grid container direction={direction} px={0} py={1}>
+            {/* Avatar */}
+            <Grid item>
+                <Box px={2} pt={1}>
+                    <UserAvatar ui={sender}/>
                 </Box>
-            </Box>
+            </Grid>
+
+            {/* Content */}
+            <Grid item xs={9} md={10} color={'palette.primary.main'}>
+                <MessageHeader sender={sender} message={msg}/>
+                {/* Message */}
+                <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 1 : 0}>
+                    <Paper elevation={0} sx={msg.FromMe ? messageBoxStyleRight : messageBoxStyleLeft}>
+                        <Box px={2} py={1}>
+                            <MessageContent msg={msg}/>
+                        </Box>
+                    </Paper>
+                    <Box>
+                        <MessageStatusView message={msg}/>
+                    </Box>
+                </Box>
+            </Grid>
         </Grid>
-    </Grid>
+    </MessagePopup>
 }
 
 const sendStatusHint = {
