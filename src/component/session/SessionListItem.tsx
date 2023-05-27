@@ -47,7 +47,7 @@ export function SessionListItem(props: { chat: Session, onSelect: (c: Session) =
     }
 
     let lastMessage = `${sessionInfo.LastMessageSender}: ${sessionInfo.LastMessage}`
-    if (sessionInfo.LastMessageSender === "" || sessionInfo.LastMessage == "") {
+    if (sessionInfo.LastMessageSender === "" || sessionInfo.LastMessage === "") {
         lastMessage = "[还没有消息]"
     }
 

@@ -63,9 +63,9 @@ function App() {
 
 
     return (
-        <div className="App">
+        <div>
             <SnackBar/>
-            <Box sx={{width: '100%', position: 'relative'}}>
+            <Box className={'h-screen w-screen my-auto mx-auto relative flex items-center'}>
                 <Box sx={{
                     position: 'absolute',
                     backgroundImage: "url('/app_bg.jpg')",
@@ -75,7 +75,7 @@ function App() {
                     filter: 'saturate(0.6)',
                 }}/>
                 <Router>
-                    <Grid container style={{height: "100vh"}} alignItems={"center"}>
+                    <Box className={'mx-auto my-auto items-center flex'}>
                         {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>
@@ -98,7 +98,7 @@ function App() {
                                 </Route>
                             </Switch>
                         }
-                    </Grid>
+                    </Box>
                 </Router>
             </Box>
         </div>

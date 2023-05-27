@@ -1,5 +1,4 @@
 import {Box, Menu, MenuItem} from "@mui/material";
-import {DescriptionOutlined} from "@mui/icons-material";
 import React, {useRef} from "react";
 import {ChatMessage} from "../../im/chat_message";
 
@@ -9,6 +8,7 @@ export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage })
         mouseX: number;
         mouseY: number;
     } | null>(null);
+
     const anchorEl = useRef<HTMLElement>()
     const menuRef = useRef<HTMLDivElement>()
 
@@ -16,12 +16,18 @@ export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage })
         setLocation(null);
     }
 
-    const handleContextMenu = (e: React.MouseEvent)=>{
+    const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault()
         setLocation(location === null ? {
             mouseX: e.clientX - 2,
             mouseY: e.clientY - 4,
         } : null)
+    }
+
+    const handleReply = () => {
+
+
+        handleClose()
     }
 
     menuRef?.current?.addEventListener("contextmenu", (e) => {
@@ -42,13 +48,12 @@ export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage })
             open={Boolean(anchorEl) && location !== null}
             onClose={handleClose}
         >
-            <MenuItem disabled><Box >撤回</Box>
+            {props.msg.FromMe ? <MenuItem disabled><Box mx={1}>撤回</Box></MenuItem> : null}
+            <MenuItem disabled><Box mx={1}>转发</Box>
             </MenuItem>
-            <MenuItem disabled><Box >转发</Box>
+            <MenuItem onClick={handleReply}><Box mx={1}>回复</Box>
             </MenuItem>
-            <MenuItem disabled><Box >回复</Box>
-            </MenuItem>
-            <MenuItem disabled><Box >删除</Box>
+            <MenuItem disabled><Box mx={1}>删除</Box>
             </MenuItem>
         </Menu>
         <Box onContextMenu={handleContextMenu} bgcolor={location !== null ? "rgba(65,65,65,0.15)" : ""} width={"100%"}>

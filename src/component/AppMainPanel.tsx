@@ -34,30 +34,28 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
     const match = useRouteMatch();
 
     return (
-        <div className={'container bg-white lg:h-[100vh] xl:h-[95vh] md:w-10/12 sm:w-full md:mx-auto sm:mx-0 rounded-md'}>
+        <div className={'h-full bg-white md:w-10/12 sm:w-full md:mx-auto sm:mx-0 rounded-md'}>
             <VideoChat session={''} showIcon={false}/>
             <Hidden mdDown>
-                <Box width={'100%'}>
+                <div className={'h-full w-full'}>
                     <Switch>
                         <Route path={`${match.url}/session/:sid`}>
-                            <Grid alignItems={"center"} container style={{height: "100%"}}>
-                                <Grid item xs={4} className={'flex flex-col w-full'}>
-                                    <div className={'h-[95vh] w-full'}>
-                                        <Box className={'flex-auto'}>
-                                            <UserInfoHeader/>
-                                        </Box>
-                                        <Divider/>
-                                        <Box overflow={"hidden"} className="BeautyScrollBar flex-1">
-                                            <SessionListView/>
-                                        </Box>
-                                    </div>
-                                </Grid>
+                            <Box className={'h-full flex flex-row'}>
+                                <Box className={'flex flex-col w-4/12'}>
+                                    <Box className={'h-24'}>
+                                        <UserInfoHeader/>
+                                    </Box>
+                                    <Divider/>
+                                    <Box overflow={"hidden"} className="BeautyScrollBar flex-1">
+                                        <SessionListView/>
+                                    </Box>
+                                </Box>
 
-                                <Grid item xs={8} style={{height: "100%"}}>
+                                <Box className={"h-full flex-1"}>
                                     <Divider orientation={"vertical"} style={{float: "left"}}/>
                                     <ChatRoomContainer/>
-                                </Grid>
-                            </Grid>
+                                </Box>
+                            </Box>
                         </Route>
                         <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
                         <Route path={`${match.url}/square`} children={<Square/>}/>
@@ -69,7 +67,7 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
                             <Redirect to={`${match.url}/session/`}/>
                         </Route>
                     </Switch>
-                </Box>
+                </div>
             </Hidden>
             <Hidden mdUp>
                 <MobileMain/>

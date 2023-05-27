@@ -95,16 +95,15 @@ function MessageListView(props: { messages: ChatMessage[], isGroup: boolean }) {
         return <ListItem key={value.getId()} sx={{padding: "0"}}><ChatMessageItem msg={value}/></ListItem>
     })
 
-    return <ChatContext.Provider value={{scrollToBottom}}>
-        <Box height={"calc(95vh - 64px - 64px)"} ref={scrollRef}
-             className={'BeautyScrollBar overflow-y-auto flex w-full'}
-             display={"flex"}
-             alignContent={"flex-end"}>
-            <List disablePadding ref={messageListEle} className={'w-full'}>
-                {list}
-            </List>
-        </Box>
-    </ChatContext.Provider>
+    return <div className={'h-full'}>
+        <ChatContext.Provider value={{scrollToBottom}}>
+            <Box ref={scrollRef} className={'BeautyScrollBar flex w-full max-h-full overflow-y-scroll flex-col-reverse'}>
+                <List disablePadding ref={messageListEle} className={'w-full'}>
+                    {list}
+                </List>
+            </Box>
+        </ChatContext.Provider>
+    </div>
 }
 
 

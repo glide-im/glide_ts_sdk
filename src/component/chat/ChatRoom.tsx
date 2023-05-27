@@ -151,7 +151,7 @@ export function ChatRoomContainer() {
 
     if (session === null) {
         return <Box mt={"0%"} bgcolor={grey[50]}
-                    className={'xl:h-[95vh] lg:h-[100vh] flex flex-col rounded-br-md rounded-tr-md'}>
+                    className={'h-full flex flex-col rounded-br-md rounded-tr-md'}>
             <Typography variant="h6" textAlign={"center"} mt={'40%'}>
                 选择一个会话开始聊天
             </Typography>
@@ -165,32 +165,18 @@ export function ChatRoomContainer() {
     }
 
     return (
-        <Box className={'xl:h-[95vh] lg:h-[100vh] flex flex-col rounded-br-md rounded-tr-md'} style={{
+        <Box className={'h-full max-h-full flex flex-col rounded-br-md rounded-tr-md'} style={{
             backgroundImage: `url(/chat_bg.jpg)`,
             backgroundRepeat: 'repeat',
         }}>
-            {/*<Box className={'h-14 pl-6 rounded-tr-md'} color={'black'} bgcolor={"white"}>*/}
-            {/*    <Typography variant={"h6"} style={{lineHeight: "60px"}}>*/}
-            {/*        {session.Title}*/}
-            {/*    </Typography>*/}
-            {/*</Box>*/}
-
-            <Box className={'rounded-tr-md'} color={'black'} bgcolor={"white"}>
+            <Box className={'flex-none w-full rounded-tr-md'} color={'black'} bgcolor={"white"}>
                 <SessionTitleBar session={session}/>
             </Box>
-
-            <Divider/>
-            <Box className={'w-full flex-auto'}>
-                <div className={'flex flex-col h-full'}>
-                    <Box>
-                        <SessionMessageList/>
-                    </Box>
-
-                    <Box className={'h-16 px-5'}>
-                        <MessageInputV2 session={sid} onSend={sendMessage}/>
-                    </Box>
-                </div>
-
+            <Box className={'grow w-full h-full'} height={'calc(95vh - 64px - 64px)'}>
+                <SessionMessageList/>
+            </Box>
+            <Box className={'flex-none mx-4 pb-4 pt-1'}>
+                <MessageInputV2 session={sid} onSend={sendMessage}/>
             </Box>
         </Box>)
 }

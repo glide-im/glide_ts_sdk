@@ -15,7 +15,7 @@ import {
     MenuItem,
     Paper,
     Popover,
-    Select,
+    Select, Typography,
 } from "@mui/material";
 import {
     AttachFileRounded,
@@ -147,9 +147,9 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
             handleSendClick()
         }
     }
-    return <Grid container>
-        <Grid item md={11} sm={10} xs={9}>
-            <Paper sx={{display: 'flex', alignItems: 'center', width: '100%', borderRadius: '100px'}}>
+    return <Box className={'flex flex-row w-full'}>
+        <Box className={'grow'}>
+            <Box className={'rounded-full mr-2 items-center flex flex-wrap bg-white'}>
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'right',
@@ -177,16 +177,16 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
                 <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onAttachFileClick}>
                     <AttachFileRounded/>
                 </IconButton>
-            </Paper>
-        </Grid>
-        <Grid item md={1} sm={2} xs={3} justifyContent="center" alignItems="center" display={"flex"}>
+            </Box>
+        </Box>
+        <Box className={'flex-none'}>
             <Box sx={{bgcolor: grey[50], borderRadius: '100px'}}>
                 <IconButton color={'primary'} sx={{p: '10px'}} size={"large"} onClick={handleSendClick}>
                     <SendRounded/>
                 </IconButton>
             </Box>
-        </Grid>
-    </Grid>
+        </Box>
+    </Box>
 }
 
 function SendImageDialog(props: { open: boolean, callback: (url: string) => void }) {
