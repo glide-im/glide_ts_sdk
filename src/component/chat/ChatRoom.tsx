@@ -1,5 +1,5 @@
-import {AppBar, Box, Divider, IconButton, Menu, MenuItem, Toolbar, Typography} from "@mui/material";
-import React, {useEffect} from "react";
+import {AppBar, Box, IconButton, Menu, MenuItem, Toolbar, Typography} from "@mui/material";
+import React, {useEffect, useRef} from "react";
 import {Account} from "../../im/account";
 import {SessionMessageList} from "./MessageList";
 import {showSnack} from "../widget/SnackBar";
@@ -16,7 +16,6 @@ import {Loading} from "../widget/Loading";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {SessionListEventType} from "../../im/session_list";
 import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
-import {grey} from "@mui/material/colors";
 import {Session} from "../../im/session";
 
 
@@ -135,6 +134,17 @@ export function ChatRoomContainer() {
     const {sid} = useParams<{ sid: string }>();
     const [session, setSession] = React.useState(null);
 
+    const input = useRef<HTMLElement>(null);
+
+    const [inputHeight, setInputHeight] = React.useState(64);
+
+    useEffect(() => {
+        if (input.current === null) {
+            return
+        }
+        setInputHeight(input.current.clientHeight)
+    }, [])
+
     useEffect(() => {
         setSession(Account.session().get(sid))
     }, [sid])
@@ -150,33 +160,34 @@ export function ChatRoomContainer() {
     }, [session, sid])
 
     if (session === null) {
-        return <Box mt={"0%"} bgcolor={grey[50]}
-                    className={'h-full flex flex-col rounded-br-md rounded-tr-md'}>
+        return <Box className={'rounded-br-md rounded-tr-md'}>
             <Typography variant="h6" textAlign={"center"} mt={'40%'}>
                 选择一个会话开始聊天
             </Typography>
         </Box>
     }
 
-    const sendMessage = (msg: string, type: number) => {
-        if (session != null) {
-            session.send(msg, type).subscribe({error: (err) => showSnack(err.toString())})
+    const onInputChange = () => {
+        if (input.current === null) {
+            return
         }
+        setInputHeight(input.current.clientHeight)
     }
 
     return (
-        <Box className={'h-full max-h-full flex flex-col rounded-br-md rounded-tr-md'} style={{
-            backgroundImage: `url(/chat_bg.jpg)`,
-            backgroundRepeat: 'repeat',
-        }}>
-            <Box className={'flex-none w-full rounded-tr-md'} color={'black'} bgcolor={"white"}>
+        <Box className={'h-full max-h-full flex flex-col rounded-br-md rounded-tr-md'}
+             style={{
+                 backgroundImage: `url(/chat_bg.jpg)`,
+                 backgroundRepeat: 'repeat',
+             }}>
+            <Box className={'flex-none grow-0 w-full rounded-tr-md'} color={'black'} bgcolor={"white"} >
                 <SessionTitleBar session={session}/>
             </Box>
-            <Box className={'grow w-full h-full'} height={'calc(95vh - 64px - 64px)'}>
+            <Box className={'w-full flex-1 flex-shrink'} height={`calc(100% - 64px - ${inputHeight}px)`}>
                 <SessionMessageList/>
             </Box>
-            <Box className={'flex-none mx-4 pb-4 pt-1'}>
-                <MessageInputV2 session={sid} onSend={sendMessage}/>
+            <Box className={'flex-none grow-0 mx-4 pb-4 pt-1'} ref={input}>
+                <MessageInputV2 sid={sid} onLayoutChange={onInputChange}/>
             </Box>
         </Box>)
 }

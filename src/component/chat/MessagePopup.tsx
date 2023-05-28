@@ -1,6 +1,7 @@
 import {Box, Menu, MenuItem} from "@mui/material";
 import React, {useRef} from "react";
 import {ChatMessage} from "../../im/chat_message";
+import {Event, EventBus} from "../EventBus";
 
 export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage }) {
 
@@ -25,8 +26,7 @@ export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage })
     }
 
     const handleReply = () => {
-
-
+        EventBus.post(Event.ReplyMessage, props.msg)
         handleClose()
     }
 

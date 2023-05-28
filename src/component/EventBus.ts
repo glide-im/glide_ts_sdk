@@ -18,7 +18,7 @@ export class EventBus {
         });
     }
 
-    public static subscribe<T>(event: Event): Observable<T> {
+    public static event<T>(event: Event): Observable<T> {
         return this.instance._subject.pipe(
             filter((e) => e.event === event),
             map((e) => e.data)

@@ -75,7 +75,7 @@ function App() {
                     filter: 'saturate(0.6)',
                 }}/>
                 <Router>
-                    <Box className={'mx-auto my-auto items-center flex'}>
+                    <Box className={'mx-auto my-auto items-center flex  w-full h-full'}>
                         {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>

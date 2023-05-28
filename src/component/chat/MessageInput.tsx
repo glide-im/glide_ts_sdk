@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {MessageType} from "../../im/message";
 import {
     Box,
@@ -13,9 +13,9 @@ import {
     InputBase,
     InputLabel,
     MenuItem,
-    Paper,
     Popover,
-    Select, Typography,
+    Select,
+    Typography,
 } from "@mui/material";
 import {
     AttachFileRounded,
@@ -30,7 +30,10 @@ import {
 import {grey} from "@mui/material/colors";
 import VideoChat from "../webrtc/VideoChatDialog";
 import {Account} from "../../im/account";
-
+import {showSnack} from "../widget/SnackBar";
+import {Event, EventBus} from "../EventBus";
+import {ChatMessage} from "../../im/chat_message";
+import {filter} from "rxjs";
 
 export function MessageInput(props: { onSend: (msg: string, type: number) => void }) {
 
@@ -110,20 +113,38 @@ export function MessageInput(props: { onSend: (msg: string, type: number) => voi
 
 }
 
-export function MessageInputV2(props: { session: string, onSend: (msg: string, type: number) => void }) {
+export function MessageInputV2(props: { sid: string, onLayoutChange: () => void }) {
 
     const input = useRef<HTMLInputElement>(null)
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
     const [open, setOpen] = React.useState(false);
+    const [reply, setReply] = React.useState<ChatMessage | null>(null);
 
     const onSend = (msg: string) => {
         const m = msg.trim();
         if (m.length === 0) {
             return
         }
-        props.onSend(m, MessageType.Text)
+        const session = Account.session().get(this.props.sid)
+        if (session != null) {
+            session.send(msg, MessageType.Text).subscribe({error: (err) => showSnack(err.toString())})
+        }
     }
+
+    useEffect(() => {
+        props.onLayoutChange()
+    })
+
+    useEffect(() => {
+        EventBus.event<ChatMessage>(Event.ReplyMessage).pipe(
+            filter((e) => e.SID === props.sid)
+        ).subscribe({
+            next: (e) => {
+                setReply(e)
+            }
+        })
+    }, [])
 
     const onEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -140,16 +161,17 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
     }
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 
-        Account.session().get(props.session)?.sendUserTypingEvent()
+        Account.session().get(props.sid)?.sendUserTypingEvent()
 
         if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             e.preventDefault();
             handleSendClick()
         }
     }
-    return <Box className={'flex flex-row w-full'}>
+
+    return <Box className={'flex flex-row w-full flex-wrap'}>
         <Box className={'grow'}>
-            <Box className={'rounded-full mr-2 items-center flex flex-wrap bg-white'}>
+            <Box className={'rounded mr-2 items-center flex flex-wrap bg-white'}>
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'right',
@@ -162,6 +184,11 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
                         setOpen(false)
                     }}/>
                 </Popover>
+                {reply != null && <Box className={'w-full px-3 py-2'}>
+                    <Typography variant={'body2'} onClick={() => {
+                        setReply(null)
+                    }}>{reply.getSenderName()}: {reply.getDisplayContent()}</Typography>
+                </Box>}
                 <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onEmojiClick}>
                     <EmojiEmotionsRounded/>
                 </IconButton>
@@ -173,7 +200,7 @@ export function MessageInputV2(props: { session: string, onSend: (msg: string, t
                            placeholder="说点什么"
                            onKeyDown={handleKeyDown}
                            inputProps={{'aria-label': 'search google maps'}}/>
-                <VideoChat session={props.session} showIcon={true}/>
+                <VideoChat session={props.sid} showIcon={true}/>
                 <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onAttachFileClick}>
                     <AttachFileRounded/>
                 </IconButton>
