@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {MessageType} from "../../im/message";
+import {MessageType, Reply} from "../../im/message";
 import {
     Box,
     Button,
@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import {
     AttachFileRounded,
+    Close,
     EmojiEmotionsOutlined,
     EmojiEmotionsRounded,
     FolderOutlined,
@@ -31,9 +32,9 @@ import {grey} from "@mui/material/colors";
 import VideoChat from "../webrtc/VideoChatDialog";
 import {Account} from "../../im/account";
 import {showSnack} from "../widget/SnackBar";
-import {Event, EventBus} from "../EventBus";
 import {ChatMessage} from "../../im/chat_message";
-import {filter} from "rxjs";
+import {Event, EventBus} from "../EventBus";
+import {filter, Observable} from "rxjs";
 
 export function MessageInput(props: { onSend: (msg: string, type: number) => void }) {
 
@@ -121,30 +122,43 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
     const [open, setOpen] = React.useState(false);
     const [reply, setReply] = React.useState<ChatMessage | null>(null);
 
-    const onSend = (msg: string) => {
-        const m = msg.trim();
-        if (m.length === 0) {
-            return
-        }
-        const session = Account.session().get(this.props.sid)
-        if (session != null) {
-            session.send(msg, MessageType.Text).subscribe({error: (err) => showSnack(err.toString())})
-        }
-    }
-
     useEffect(() => {
-        props.onLayoutChange()
-    })
-
-    useEffect(() => {
-        EventBus.event<ChatMessage>(Event.ReplyMessage).pipe(
+        const sp = EventBus.event<ChatMessage>(Event.ReplyMessage).pipe(
             filter((e) => e.SID === props.sid)
         ).subscribe({
             next: (e) => {
                 setReply(e)
             }
         })
-    }, [])
+        return () => sp.unsubscribe()
+    }, [props.sid])
+
+    const onSend = (msg: string) => {
+        const m = msg.trim();
+        if (m.length === 0) {
+            return
+        }
+        const session = Account.session().get(props.sid)
+        if (session != null) {
+            let observable: Observable<ChatMessage>
+            if (reply != null) {
+                const replyMessage: Reply = {
+                    content: m, replyTo: reply.toMessage()
+                }
+                observable = session.send(JSON.stringify(replyMessage), MessageType.Reply)
+            } else {
+                observable = session.send(m, MessageType.Text)
+            }
+            observable.subscribe({
+                error: (err) => showSnack(err.toString())
+            })
+        }
+        setReply(null)
+    }
+
+    useEffect(() => {
+        props.onLayoutChange()
+    })
 
     const onEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -169,9 +183,31 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
         }
     }
 
-    return <Box className={'flex flex-row w-full flex-wrap'}>
-        <Box className={'grow'}>
-            <Box className={'rounded mr-2 items-center flex flex-wrap bg-white'}>
+    const handleReplyClick = () => {
+
+    }
+
+    const replyE = reply && <Grid container className={'mt-2 mx-2 max-w-lg'}>
+        <Grid item xs={10} className={'px-2 align-middle  hover:rounded-md cursor-pointer hover:bg-gray-100'}>
+            <Typography variant={'body2'}
+                        sx={{maxLines: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: "nowrap"}}
+                        lineHeight={"2.1rem"}
+                        onClick={handleReplyClick}>
+                <span className={'pr-2 text-cyan-500'}>{reply.getSenderName()}</span>
+                {reply.getDisplayContent()}
+            </Typography>
+        </Grid>
+        <Grid item xs={1}>
+            <IconButton size={"small"} onClick={() => setReply(null)}>
+                <Close/>
+            </IconButton>
+        </Grid>
+    </Grid>
+
+    return <Box className={'flex flex-row w-full flex-wrap items-end'}>
+        <Box className={'grow rounded mr-1 bg-white'}>
+            {replyE}
+            <Box className={'items-center flex flex-wrap'}>
                 <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'right',
@@ -184,11 +220,6 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
                         setOpen(false)
                     }}/>
                 </Popover>
-                {reply != null && <Box className={'w-full px-3 py-2'}>
-                    <Typography variant={'body2'} onClick={() => {
-                        setReply(null)
-                    }}>{reply.getSenderName()}: {reply.getDisplayContent()}</Typography>
-                </Box>}
                 <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onEmojiClick}>
                     <EmojiEmotionsRounded/>
                 </IconButton>

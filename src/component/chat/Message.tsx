@@ -5,7 +5,7 @@ import {
     ErrorOutline,
     FileDownload,
     HelpOutlined,
-    Map
+    Map, Message, Reply
 } from "@mui/icons-material";
 import {
     Avatar,
@@ -319,6 +319,19 @@ function MessageContent(props: { msg: ChatMessage }) {
 
 
     switch (props.msg.Type) {
+        case MessageType.Reply:
+            return <Box display={"flex"} flexDirection={"column"} alignItems={"flex-start"}>
+                <Box display={"flex"} alignItems={"center"} className={'rounded-md bg-gray-100 py-2 cursor-pointer hover:bg-amber-50'}>
+                    <Typography variant={"caption"} ml={1} component={"span"} color={grey[500]}>
+                        {props.msg.getReplyMessage()?.getDisplayContent()}
+                    </Typography>
+                </Box>
+                <Box className={'mt-2'}>
+                    <Typography>
+                        {props.msg.Content}
+                    </Typography>
+                </Box>
+            </Box>
         case MessageType.Image:
             return <>
                 <ImageViewer imageUrl={props.msg.Content} onClose={() => {

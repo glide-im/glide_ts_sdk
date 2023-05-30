@@ -17,6 +17,8 @@ import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {SessionListEventType} from "../../im/session_list";
 import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
 import {Session} from "../../im/session";
+import {Event, EventBus} from "../EventBus";
+import {ChatMessage} from "../../im/chat_message";
 
 
 function typingEvent(session: Session): Observable<boolean> {
@@ -180,7 +182,7 @@ export function ChatRoomContainer() {
                  backgroundImage: `url(/chat_bg.jpg)`,
                  backgroundRepeat: 'repeat',
              }}>
-            <Box className={'flex-none grow-0 w-full rounded-tr-md'} color={'black'} bgcolor={"white"} >
+            <Box className={'flex-none grow-0 w-full rounded-tr-md'} color={'black'} bgcolor={"white"}>
                 <SessionTitleBar session={session}/>
             </Box>
             <Box className={'w-full flex-1 flex-shrink'} height={`calc(100% - 64px - ${inputHeight}px)`}>

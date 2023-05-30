@@ -82,6 +82,8 @@ export class Account {
                 }),
                 timeout(5000),
                 catchError(err => {
+                    this.clearAuth()
+
                     if (isResponse(err)) {
                         this.clearAuth()
                     }

@@ -1,5 +1,5 @@
 import {Account} from "./account";
-import {Message, MessageStatus, MessageType} from "./message";
+import {Message, MessageStatus, MessageType, Reply} from "./message";
 import {Cache} from "./cache";
 import {map, Observable, scan, Subject} from "rxjs";
 import {GlideBaseInfo} from "./def";
@@ -50,6 +50,8 @@ export interface ChatMessageUpdateEvent {
 
 export interface ChatMessage extends MessageBaseInfo {
 
+    getReplyMessage(): ChatMessage | null
+
     getSenderName(): string
 
     getId(): string
@@ -59,6 +61,8 @@ export interface ChatMessage extends MessageBaseInfo {
     getDisplayContent(): string
 
     update(message: Message | MessageBaseInfo)
+
+    toMessage(): Message
 
     events(): Observable<ChatMessageUpdateEvent>
 
@@ -158,6 +162,8 @@ class ChatMessageImpl implements ChatMessage {
     public Sending: SendingStatus = SendingStatus.Unknown;
     public FailedReason?: string;
 
+    private replyMessage: Reply = null
+
     private streamMessageSource: Subject<StreamMessageSegment> = null
     private eventSubject = new Subject<ChatMessageUpdateEvent>();
 
@@ -172,6 +178,11 @@ class ChatMessageImpl implements ChatMessage {
         this.Target = this.FromMe ? this.To : this.From
         this.FromMe = this.From === Account.getInstance().getUID();
         this.SendAt = this.SendAt > 10000000000 ? this.SendAt : this.SendAt * 1000
+
+        if (this.Type === MessageType.Reply) {
+            this.replyMessage = JSON.parse(this.Content)
+            this.Content = this.replyMessage.content
+        }
 
         if (this.Type === MessageType.StreamMarkdown || this.Type === MessageType.StreamText) {
             if (this.Status === MessageStatus.StreamFinish || this.Status === MessageStatus.StreamCancel) {
@@ -264,6 +275,8 @@ class ChatMessageImpl implements ChatMessage {
                 return '[位置]'
             case MessageType.File:
                 return '[文件]'
+            case MessageType.Reply:
+                return "[回复消息]" + this.Content
             default:
                 return this.Content === undefined ? '-' : this.Content;
         }
@@ -351,5 +364,26 @@ class ChatMessageImpl implements ChatMessage {
         // this.Sending = m.Sending
         // this.Seq = m.Seq
         // this.ReceiveAt = m.ReceiveAt
+    }
+
+    public getReplyMessage(): ChatMessage | null {
+        if (this.Type !== MessageType.Reply) {
+            return null
+        }
+        return createChatMessage2(this.SID, this.replyMessage.replyTo, false)
+    }
+
+    public toMessage(): Message {
+        return {
+            cliMid: this.CliMid,
+            mid: this.Mid,
+            from: this.From,
+            to: this.To,
+            content: this.Content,
+            sendAt: this.SendAt,
+            status: this.Status,
+            type: this.Type,
+            seq: this.Seq
+        }
     }
 }

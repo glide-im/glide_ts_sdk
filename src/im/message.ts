@@ -1,4 +1,6 @@
 // 聊天消息类型, 可以自定义, 但是需要客户端之间约定好
+import {ChatMessage} from "./chat_message";
+
 export enum MessageType {
     Text = 1,
     Image = 2,
@@ -133,6 +135,11 @@ export interface AckMessage {
 export interface Recall {
     mid: number;
     recallBy: string;
+}
+
+export interface Reply {
+    replyTo: Message;
+    content: string;
 }
 
 // 客户端自定义控制类型消息
