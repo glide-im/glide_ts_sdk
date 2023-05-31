@@ -26,6 +26,11 @@ const heartbeatInterval = 30000;
 const connectionTimeout = 3000;
 const requestTimeout = 3000;
 
+// 测试用, 模拟接收端网络延迟
+const ackRequestDelayForDebug = 1600;
+// 测试用, 模拟发送端网络延迟
+const ackMessageDelayForDebug = 800;
+
 export interface MessageSendResult {
     mid: number;
     cliId: string;
@@ -50,6 +55,7 @@ class IMWebSocketClient extends WsClient {
         })
         this.messages().subscribe({
             next: (m) => {
+                // TODO 群消息ack策略更新, 聊天中, 积累一定数量的消息后, 或群聊冷却后ack
                 Logger.log(this.tag1, "receive message >>", [m])
                 if (m.action === Actions.MessageChat || m.action === Actions.MessageChatRecall) {
                     const msg: Message = m.data as Message;
@@ -104,7 +110,7 @@ class IMWebSocketClient extends WsClient {
         return concat(
             this.createCommonMessage(m.to, Actions.MessageGroup, m).pipe(
                 mergeMap(msg => this.sendProtocolMessage(msg)),
-                map(() => <MessageSendResult>{mid: 0, cliId: m.cliMid, seq: m.seq})
+                map(() => ({mid: 0, cliId: m.cliMid, seq: m.seq} as MessageSendResult))
             ),
             this.getAckObservable(m)
         )
@@ -112,14 +118,17 @@ class IMWebSocketClient extends WsClient {
 
     public sendChatMessage(m: Message): Observable<MessageSendResult> {
         return concat(
+            // 发送消息
             this.createCommonMessage(m.to, Actions.MessageChat, m).pipe(
                 mergeMap(msg => this.sendProtocolMessage(msg)),
-                map(() => <MessageSendResult>{mid: 0, cliId: m.cliMid, seq: m.seq})
+                map(() => ({mid: 0, cliId: m.cliMid, seq: m.seq} as MessageSendResult))
             ),
+            // 等待服务器 ack
             this.getAckObservable(m),
-            onErrorResumeNext(
-                this.getAckNotifyObservable(m)
-            ),
+            // 等待接收者 ack
+            this.getAckNotifyObservable(m)
+        ).pipe(
+            filter(r => r.action !== null),
         )
     }
 
@@ -187,7 +196,8 @@ class IMWebSocketClient extends WsClient {
     private getAckObservableFail(msg: Message): Observable<MessageSendResult> {
         return of(1).pipe(
             delay(ackTimeout),
-            map(() => <MessageSendResult>{}),
+            map(() => {
+            }),
             mergeMap(() => throwError(new Error("ack timeout")))
         )
     }
@@ -199,14 +209,15 @@ class IMWebSocketClient extends WsClient {
             map(m => m.data as AckMessage),
             filter(ack => ack.cliMid === msg.cliMid),
             take(1),
-            timeout(ackTimeout),
             map(ack => {
                 // 服务器回执包含该消息 id
                 msg.mid = ack.mid
-                return <MessageSendResult>{
+                return ({
                     mid: ack.mid, cliId: ack.cliMid, seq: msg.seq, action: Actions.AckMessage
-                }
+                } as MessageSendResult)
             }),
+            timeout(ackTimeout),
+            delay(ackMessageDelayForDebug),
             catchError((e) => {
                 e = e instanceof TimeoutError ? new Error("ack timeout") : e
                 return throwError(e)
@@ -222,9 +233,10 @@ class IMWebSocketClient extends WsClient {
             filter(ack => ack.mid === msg.mid),
             take(1),
             timeout(ackTimeout),
-            map((res) => <MessageSendResult>{
+            map((res) => ({
                 mid: res.mid, cliId: "", seq: 0, action: Actions.AckNotify
-            }),
+            } as MessageSendResult)),
+            catchError((e) => of({action: null} as MessageSendResult)),
         )
     }
 
@@ -236,6 +248,7 @@ class IMWebSocketClient extends WsClient {
         )
     }
 
+    // 发送 `收到消息` 回执, 表示接收者已经收到消息
     private ackRequestMessage(from: string, mid: number) {
         const ackR: AckRequest = {
             mid: mid,
@@ -243,7 +256,10 @@ class IMWebSocketClient extends WsClient {
         };
 
         this.createCommonMessage(from, Actions.AckRequest, ackR)
-            .pipe(mergeMap(msg => this.sendProtocolMessage(msg)))
+            .pipe(
+                delay(ackRequestDelayForDebug),
+                mergeMap(msg => this.sendProtocolMessage(msg))
+            )
             .subscribe({
                 next: () => {
                 },

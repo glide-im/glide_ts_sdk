@@ -123,6 +123,7 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
     const [reply, setReply] = React.useState<ChatMessage | null>(null);
 
     useEffect(() => {
+        setReply(null)
         const sp = EventBus.event<ChatMessage>(Event.ReplyMessage).pipe(
             filter((e) => e.SID === props.sid)
         ).subscribe({
@@ -150,7 +151,10 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
                 observable = session.send(m, MessageType.Text)
             }
             observable.subscribe({
-                error: (err) => showSnack(err.toString())
+                error: (err) => showSnack(err.toString()),
+                next: (e) => {
+                    console.log(e)
+                }
             })
         }
         setReply(null)
@@ -194,7 +198,7 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
                         lineHeight={"2.1rem"}
                         onClick={handleReplyClick}>
                 <span className={'pr-2 text-cyan-500'}>{reply.getSenderName()}</span>
-                {reply.getDisplayContent()}
+                {reply.getDisplayContent(false)}
             </Typography>
         </Grid>
         <Grid item xs={1}>

@@ -58,7 +58,7 @@ export interface ChatMessage extends MessageBaseInfo {
 
     getUserInfo(): Observable<GlideBaseInfo>
 
-    getDisplayContent(): string
+    getDisplayContent(detail: boolean): string
 
     update(message: Message | MessageBaseInfo)
 
@@ -181,7 +181,7 @@ class ChatMessageImpl implements ChatMessage {
 
         if (this.Type === MessageType.Reply) {
             this.replyMessage = JSON.parse(this.Content)
-            this.Content = this.replyMessage.content
+            // this.Content = this.replyMessage.content
         }
 
         if (this.Type === MessageType.StreamMarkdown || this.Type === MessageType.StreamText) {
@@ -253,7 +253,7 @@ class ChatMessageImpl implements ChatMessage {
         return userInfo.name;
     }
 
-    public getDisplayContent(): string {
+    public getDisplayContent(detail: boolean = false): string {
         switch (this.Type) {
             case 100:
             case 101:
@@ -276,7 +276,10 @@ class ChatMessageImpl implements ChatMessage {
             case MessageType.File:
                 return '[文件]'
             case MessageType.Reply:
-                return "[回复消息]" + this.Content
+                if (detail) {
+                    return this.replyMessage.content
+                }
+                return "[回复消息]" + this.replyMessage.content
             default:
                 return this.Content === undefined ? '-' : this.Content;
         }

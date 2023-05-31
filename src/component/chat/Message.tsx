@@ -5,7 +5,7 @@ import {
     ErrorOutline,
     FileDownload,
     HelpOutlined,
-    Map, Message, Reply
+    Map
 } from "@mui/icons-material";
 import {
     Avatar,
@@ -36,6 +36,7 @@ import {MessagePopup} from "./MessagePopup";
 import {SxProps} from "@mui/system";
 import {Theme} from "@mui/material/styles";
 import {Logger} from "../../utils/Logger";
+import {SessionEventType} from "../../im/session";
 
 const messageBoxStyleLeft: SxProps<Theme> = {
     overflow: 'visible',
@@ -109,7 +110,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
             <Box width={"100%"} display={"flex"} justifyContent={"center"}>
                 <Typography variant={"body2"} textAlign={"center"} px={1}
                             sx={{background: grey[100], borderRadius: "50px"}}>
-                    {msg.getDisplayContent()}
+                    {msg.getDisplayContent(true)}
                 </Typography>
             </Box>
         </Grid>
@@ -132,7 +133,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
                 {/* Message */}
                 <Box display={"flex"} flexDirection={direction} mt={msg.FromMe ? 1 : 0}>
                     <Paper elevation={0} sx={msg.FromMe ? messageBoxStyleRight : messageBoxStyleLeft}>
-                        <Box px={2} py={1}>
+                        <Box px={2} py={1} className={'break-all'}>
                             <MessageContent msg={msg}/>
                         </Box>
                     </Paper>
@@ -144,16 +145,23 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         </Grid>
     </MessagePopup>
 }
-
-const sendStatusHint = {
-    [SendingStatus.Unknown]: "未知状态",
-    [SendingStatus.Sending]: "发送中",
-    [SendingStatus.ServerAck]: "服务器已收到",
-    [SendingStatus.ClientAck]: "接收者已收到",
-    [SendingStatus.Failed]: "发送失败",
-}
-
 function MessageStatusView(props: { message: ChatMessage }) {
+
+    const [status, setStatus] = useState<SendingStatus>(props.message.Sending)
+
+    useEffect(() => {
+        const sp = Account.session().get(props.message.SID)?.event?.pipe(
+            filter((e) =>
+                e.type === SessionEventType.MessageUpdate
+                && e.message?.getId() === props.message.getId()
+            )
+        )?.subscribe({
+            next: (event) => {
+                setStatus(event.message.Sending)
+            }
+        })
+        return () => sp?.unsubscribe()
+    }, [props.message])
 
     if (!props.message.FromMe) {
         return <></>
@@ -162,31 +170,36 @@ function MessageStatusView(props: { message: ChatMessage }) {
         return <></>
     }
 
-    let status = <></>
-    let hint = sendStatusHint[props.message.Sending]
+    let statusEle = <></>
+    let hint = ''
 
-    switch (props.message.Sending) {
+    switch (status) {
         case SendingStatus.Unknown:
-            status = <HelpOutlined fontSize={'small'} color={'disabled'}/>
+            hint = '未知状态'
+            statusEle = <HelpOutlined fontSize={'small'} color={'disabled'}/>
             break
         case SendingStatus.Sending:
-            status = <CircularProgress size={12}/>
-            break
-        case SendingStatus.ServerAck:
-            status = <CheckOutlined fontSize={'small'} color={"success"}/>
+            hint = '发送中'
+            statusEle = <CircularProgress size={12}/>
             break
         case SendingStatus.ClientAck:
-            status = <DoneAllOutlined fontSize={'small'} color={"success"}/>
+            hint = '已发送(未送达)'
+            statusEle = <CheckOutlined fontSize={'small'} color={"success"}/>
+            break
+        case SendingStatus.ServerAck:
+            hint = '已送达'
+            statusEle = <DoneAllOutlined fontSize={'small'} color={"success"}/>
             break
         case SendingStatus.Failed:
+            hint = '发送失败'
             hint += `(${props.message.FailedReason ?? ""})`
-            status = <ErrorOutline fontSize={'small'} color={"error"}/>
+            statusEle = <ErrorOutline fontSize={'small'} color={"error"}/>
             break
     }
 
     return <Box display={"flex"} flexDirection={"column-reverse"} height={"100%"} px={1}>
         <Tooltip title={hint}>
-            {status}
+            {statusEle}
         </Tooltip>
     </Box>
 }
@@ -269,7 +282,7 @@ function MessageContent(props: { msg: ChatMessage }) {
 
     const chatContext = React.useContext(ChatContext)
     const [open, setOpen] = useState(false);
-    const [content, setContent] = useState(props.msg.getDisplayContent())
+    const [content, setContent] = useState(props.msg.getDisplayContent(true))
     const [status, setStatus] = useState(props.msg.Status)
     const [cnt, setCnt] = useState<Array<string | JSX.Element>>([content])
 
@@ -279,7 +292,7 @@ function MessageContent(props: { msg: ChatMessage }) {
         ).subscribe({
             next: (c) => {
                 const msg = c.message as ChatMessage
-                setContent(msg.getDisplayContent())
+                setContent(msg.getDisplayContent(true))
                 setStatus(msg.Status)
                 setTimeout(() => {
                     chatContext.scrollToBottom()
@@ -321,14 +334,15 @@ function MessageContent(props: { msg: ChatMessage }) {
     switch (props.msg.Type) {
         case MessageType.Reply:
             return <Box display={"flex"} flexDirection={"column"} alignItems={"flex-start"}>
-                <Box display={"flex"} alignItems={"center"} className={'rounded-md bg-gray-100 py-2 cursor-pointer hover:bg-amber-50'}>
-                    <Typography variant={"caption"} ml={1} component={"span"} color={grey[500]}>
-                        {props.msg.getReplyMessage()?.getDisplayContent()}
+                <Box display={"flex"} alignItems={"center"}
+                     className={'rounded-md bg-gray-100 py-2 cursor-pointer hover:bg-amber-50'}>
+                    <Typography variant={"caption"} mx={1} component={"span"} color={grey[500]}>
+                        {props.msg.getReplyMessage()?.getDisplayContent(false)}
                     </Typography>
                 </Box>
                 <Box className={'mt-2'}>
                     <Typography>
-                        {props.msg.Content}
+                        {props.msg.getDisplayContent(true)}
                     </Typography>
                 </Box>
             </Box>

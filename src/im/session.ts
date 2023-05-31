@@ -176,7 +176,7 @@ class InternalSessionImpl implements InternalSession {
 
         this.event.subscribe({
             next: (event) => {
-                Logger.log(this.tag, "event", event.session.ID, event.type, event.message?.Status, event.message?.getDisplayContent())
+                Logger.log(this.tag, "event", event.session.ID, event.type, event.message?.Sending, event.message?.getDisplayContent())
             }
         })
 
@@ -397,7 +397,7 @@ class InternalSessionImpl implements InternalSession {
         }
         // todo filter none-display message
 
-        Logger.log(this.tag, "onMessage", this.ID, message.type, [chatMessage.getId(), chatMessage.getDisplayContent()]);
+        Logger.log(this.tag, "onMessage", this.ID, message.type, [chatMessage.getId(), chatMessage.getDisplayContent(false)]);
         // TODO 优化
 
         this.cache.addMessage(chatMessage).subscribe({
@@ -435,7 +435,7 @@ class InternalSessionImpl implements InternalSession {
             next: () => {
                 const last = this.messageList[this.messageList.length - 1]
                 if (last?.getId() === chatMessage.getId()) {
-                    this.LastMessage = chatMessage.getDisplayContent()
+                    this.LastMessage = chatMessage.getDisplayContent(false)
                 }
                 this.event.next({
                     type: SessionEventType.UpdateLastMessage,
@@ -522,7 +522,7 @@ class InternalSessionImpl implements InternalSession {
             if (!message.FromMe && !this.isSelected()) {
                 this.UnreadCount++;
             }
-            this.LastMessage = message.getDisplayContent();
+            this.LastMessage = message.getDisplayContent(false);
             this.LastMessageSender = message.getSenderName();
 
             this.UpdateAt = message.SendAt;
@@ -570,7 +570,7 @@ class InternalSessionImpl implements InternalSession {
             type: type,
             status: 0,
         };
-        const chatMessage: ChatMessage = createChatMessage2(this.ID, m, true);
+        const chatMessage: ChatMessage = createChatMessage2(this.ID, m, this.isGroup());
         chatMessage.setSendingStatus(SendingStatus.Sending);
 
         let sendObservable: Observable<MessageSendResult>
@@ -596,7 +596,6 @@ class InternalSessionImpl implements InternalSession {
         })
 
         return sendObservable.pipe(
-            delay(1000), // for test only
             timeout(10000),
             catchError(err => {
                 Logger.error(this.tag, [chatMessage], "send message error", err)
@@ -612,18 +611,19 @@ class InternalSessionImpl implements InternalSession {
                 return throwError(() => err)
             }),
             tap(resp => {
+                Logger.log(this.tag, "message send state changed", [resp])
                 switch (resp.action) {
                     case Actions.AckMessage:
                         chatMessage.setMid(resp.mid);
-                        chatMessage.setSendingStatus(SendingStatus.ServerAck)
-                        break;
-                    case Actions.AckNotify:
                         chatMessage.setSendingStatus(SendingStatus.ClientAck)
                         break;
+                    case Actions.AckNotify:
+                        chatMessage.setSendingStatus(SendingStatus.ServerAck)
+                        break;
                     default:
+                        Logger.warn(this.tag, "unknown action", [resp], resp.action)
                         return
                 }
-
                 // update cache after send success
                 this.syncMessage2Cache(chatMessage)
 
