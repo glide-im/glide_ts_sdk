@@ -30,6 +30,18 @@ export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage })
         handleClose()
     }
 
+    const handleForward = () => {
+        // todo forward message
+    }
+
+    const handleDelete = () => {
+        // todo delete local message
+    }
+
+    const handleRevoke = () => {
+        // todo revoke message
+    }
+
     menuRef?.current?.addEventListener("contextmenu", (e) => {
         setLocation(null)
         e.preventDefault()
@@ -48,12 +60,12 @@ export function MessagePopup(props: { children: JSX.Element, msg: ChatMessage })
             open={Boolean(anchorEl) && location !== null}
             onClose={handleClose}
         >
-            {props.msg.FromMe ? <MenuItem disabled><Box mx={1}>撤回</Box></MenuItem> : null}
-            <MenuItem disabled><Box mx={1}>转发</Box>
+            {props.msg.FromMe ? <MenuItem disabled onClick={handleRevoke}><Box mx={1}>撤回</Box></MenuItem> : null}
+            <MenuItem disabled onClick={handleForward}><Box mx={1}>转发</Box>
             </MenuItem>
             <MenuItem onClick={handleReply}><Box mx={1}>回复</Box>
             </MenuItem>
-            <MenuItem disabled><Box mx={1}>删除</Box>
+            <MenuItem disabled onClick={handleDelete}><Box mx={1}>删除</Box>
             </MenuItem>
         </Menu>
         <Box onContextMenu={handleContextMenu} bgcolor={location !== null ? "rgba(65,65,65,0.15)" : ""} width={"100%"}>

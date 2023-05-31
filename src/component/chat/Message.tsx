@@ -166,7 +166,7 @@ function MessageStatusView(props: { message: ChatMessage }) {
     if (!props.message.FromMe) {
         return <></>
     }
-    if (props.message.IsGroup && props.message.Sending === SendingStatus.ServerAck) {
+    if (props.message.IsGroup && props.message.Sending === SendingStatus.ClientAck) {
         return <></>
     }
 
@@ -337,7 +337,7 @@ function MessageContent(props: { msg: ChatMessage }) {
                 <Box display={"flex"} alignItems={"center"}
                      className={'rounded-md bg-gray-100 py-2 cursor-pointer hover:bg-amber-50'}>
                     <Typography variant={"caption"} mx={1} component={"span"} color={grey[500]}>
-                        {props.msg.getReplyMessage()?.getDisplayContent(false)}
+                        {props.msg.getReplyMessage()?.getSenderName()}: {props.msg.getReplyMessage()?.getDisplayContent(false)}
                     </Typography>
                 </Box>
                 <Box className={'mt-2'}>

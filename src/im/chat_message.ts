@@ -1,7 +1,7 @@
 import {Account} from "./account";
 import {Message, MessageStatus, MessageType, Reply} from "./message";
 import {Cache} from "./cache";
-import {map, Observable, scan, Subject} from "rxjs";
+import {map, Observable, of, scan, Subject, throwError} from "rxjs";
 import {GlideBaseInfo} from "./def";
 import {Logger} from "../utils/Logger";
 
@@ -50,6 +50,7 @@ export interface ChatMessageUpdateEvent {
 
 export interface ChatMessage extends MessageBaseInfo {
 
+    // 回复消息时不为空, 返回回复的消息
     getReplyMessage(): ChatMessage | null
 
     getSenderName(): string
@@ -58,13 +59,18 @@ export interface ChatMessage extends MessageBaseInfo {
 
     getUserInfo(): Observable<GlideBaseInfo>
 
+    // 返回消息的显示内容, detail为true时返回完整内容, 否则返回简略内容, 如图片消息返回[图片]
     getDisplayContent(detail: boolean): string
-
-    update(message: Message | MessageBaseInfo)
 
     toMessage(): Message
 
+    // 撤回消息
+    revoke(): Observable<void>
+
     events(): Observable<ChatMessageUpdateEvent>
+}
+
+export interface ChatMessageInternal extends ChatMessage {
 
     setMid(mid: number)
 
@@ -73,6 +79,8 @@ export interface ChatMessage extends MessageBaseInfo {
     setSendingStatus(sending: SendingStatus)
 
     setFailedReason(reason: string)
+
+    update(message: Message | MessageBaseInfo)
 }
 
 export interface ChatMessageCache {
@@ -106,7 +114,7 @@ interface StreamMessageSegment {
 }
 
 
-export function createChatMessage(info: MessageBaseInfo): ChatMessageImpl {
+export function createChatMessage(info: MessageBaseInfo): ChatMessageInternal {
     const ret = new ChatMessageImpl();
     for (const key in ret) {
         if (info.hasOwnProperty(key)) {
@@ -118,7 +126,7 @@ export function createChatMessage(info: MessageBaseInfo): ChatMessageImpl {
     return ret;
 }
 
-export function createChatMessage2(sid: string, m: Message, isChannel?: boolean): ChatMessageImpl {
+export function createChatMessage2(sid: string, m: Message, isChannel?: boolean): ChatMessageInternal {
     const ret = new ChatMessageImpl();
     ret.SID = sid
     ret.From = m.from;
@@ -136,7 +144,7 @@ export function createChatMessage2(sid: string, m: Message, isChannel?: boolean)
     return ret;
 }
 
-class ChatMessageImpl implements ChatMessage {
+class ChatMessageImpl implements ChatMessageInternal {
 
     private tag = "ChatMessageImpl"
 
@@ -324,6 +332,11 @@ class ChatMessageImpl implements ChatMessage {
                 break;
             default:
         }
+    }
+
+    public revoke(): Observable<void> {
+        // TODO 先获取消息所属会话, 然后通过会发送撤回消息
+        return throwError(() => new Error("not implemented"))
     }
 
     public setFailedReason(reason: string) {

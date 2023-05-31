@@ -21,6 +21,7 @@ import {Account} from "./account";
 import {
     ChatMessage,
     ChatMessageCache,
+    ChatMessageInternal,
     createChatMessage,
     createChatMessage2,
     MessageUpdateType,
@@ -152,10 +153,10 @@ class InternalSessionImpl implements InternalSession {
     public Type: SessionType;
     public To: string;
 
-    private messageList = new Array<ChatMessage>();
-    private messageMap = new Map<string, ChatMessage>();
+    private messageList = new Array<ChatMessageInternal>();
+    private messageMap = new Map<string, ChatMessageInternal>();
 
-    private readonly _messageSubject: Subject<ChatMessage> = new Subject<ChatMessage>();
+    private readonly _messageSubject: Subject<ChatMessageInternal> = new Subject<ChatMessageInternal>();
     private readonly _updateSubject: Subject<SessionEvent> = new Subject<SessionEvent>();
     private readonly _inputEventReceive: Subject<Array<string>> = new Subject<Array<string>>();
     private readonly _typingEventEmitter: Subject<any> = new Subject<any>();
@@ -486,7 +487,7 @@ class InternalSessionImpl implements InternalSession {
         return this.messageList.slice(index, this.messageList.length - index);
     }
 
-    private addMessage(message: ChatMessage) {
+    private addMessage(message: ChatMessageInternal) {
 
         const isNewMessage = !this.messageMap.has(message.getId());
 
@@ -557,6 +558,8 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public send(content: string, type: number): Observable<ChatMessage> {
+        // TODO 检查好友关系
+
         const time = Date.now();
         const from = Account.getInstance().getUID();
         const m: Message = {
@@ -570,7 +573,7 @@ class InternalSessionImpl implements InternalSession {
             type: type,
             status: 0,
         };
-        const chatMessage: ChatMessage = createChatMessage2(this.ID, m, this.isGroup());
+        const chatMessage: ChatMessageInternal = createChatMessage2(this.ID, m, this.isGroup());
         chatMessage.setSendingStatus(SendingStatus.Sending);
 
         let sendObservable: Observable<MessageSendResult>
