@@ -1,11 +1,11 @@
-import {catchError, concat, map, mergeMap, Observable, of, tap, throwError, timeout} from "rxjs";
+import {catchError, concat, map, mergeMap, Observable, of, tap, throwError, timeout, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
 import {ContactsList} from "./contacts_list";
 import {GlideBaseInfo} from "./def";
 import {Cache, GlideCache} from "./cache";
-import {Actions, CommonMessage} from "./message";
+import {Actions, AuthenticateData, CommonMessage} from "./message";
 import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
 import {IMWsClient} from "./im_ws_client";
 import {getCookie} from "../utils/Cookies";
@@ -51,9 +51,12 @@ export class Account {
                 tap(res => {
                     Logger.log(this.tag, "Login", res)
                 }),
+                toArray(),
+                map(res => "login success"),
                 onError(err => {
                     Logger.error(this.tag, "Login", "auth failed", err)
                 }),
+                catchError(err => throwError(() => new Error(err)))
             )
     }
 
@@ -67,7 +70,8 @@ export class Account {
                 }),
                 onError(err => {
                     Logger.error(this.tag, "GustLogin", "auth failed", err)
-                })
+                }),
+                catchError(err => throwError(() => new Error(err)))
             )
     }
 
@@ -80,7 +84,7 @@ export class Account {
                 tap(res => {
                     Logger.log(this.tag, "TokenAuth", res)
                 }),
-                timeout(5000),
+                timeout(3000),
                 catchError(err => {
                     this.clearAuth()
 
@@ -88,7 +92,8 @@ export class Account {
                         this.clearAuth()
                     }
                     return throwError(err)
-                })
+                }),
+                catchError(err => throwError(() => new Error(err)))
             )
     }
 
@@ -147,7 +152,7 @@ export class Account {
             initUserInfo,
             this.sessions.init(this.cache),
             IMWsClient.connect(this.server),
-            this.authWs(),
+            this.authWs(false),
         )
     }
 
@@ -162,23 +167,35 @@ export class Account {
         )
     }
 
-    private authWs(): Observable<string> {
+    private authWs(v2: boolean): Observable<string> {
+
+        let request: Observable<CommonMessage<any>>
+
+        if (v2) {
+            const credentials: AuthenticateData = {
+                credential: "",
+                version: 1
+            }
+            request = IMWsClient.request(Actions.Authenticate, credentials)
+        } else {
+            request = IMWsClient.request(Actions.ApiUserAuth, {Token: this.token})
+        }
+
         return concat(
             of("ws auth start"),
-            IMWsClient.request<AuthBean>(Actions.ApiUserAuth, {Token: this.token})
-                .pipe(
-                    map(() => "ws auth success"),
-                    tap(() => {
-                        this.startHandleMessage()
-                    }),
-                    catchError(err => {
-                        if (err.hasOwnProperty("name") && err.name === "TimeoutError") {
-                            return throwError(() => "ws auth timeout");
-                        } else {
-                            return throwError(() => "ws auth failed");
-                        }
-                    }),
-                )
+            request.pipe(
+                map(() => "ws auth success"),
+                tap(() => {
+                    this.startHandleMessage()
+                }),
+                catchError(err => {
+                    if (err.hasOwnProperty("name") && err.name === "TimeoutError") {
+                        return throwError(() => "ws auth timeout");
+                    } else {
+                        return throwError(() => err.message ?? "");
+                    }
+                }),
+            )
         )
     }
 

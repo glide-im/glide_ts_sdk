@@ -7,8 +7,7 @@ import {
     map,
     mergeMap,
     Observable,
-    of,
-    onErrorResumeNext,
+    of, race,
     Subject,
     Subscription,
     take,
@@ -88,6 +87,12 @@ class IMWebSocketClient extends WsClient {
 
         return this.sendProtocolMessage(message).pipe(
             mergeMap(() => this.getApiRespObservable<T>(seq)),
+            map((m: CommonMessage<any>) => {
+                if (m.action === Actions.NotifyError || m.action === Actions.ApiFailed) {
+                    throw new Error(m.data);
+                }
+                return m;
+            }),
             timeout(requestTimeout),
         );
     }
@@ -107,24 +112,35 @@ class IMWebSocketClient extends WsClient {
     }
 
     public sendChannelMessage(m: Message): Observable<MessageSendResult> {
+        const msg = this.createCommonMessage(m.to, Actions.MessageGroup, m)
+        msg.ticket = ""
+        // TODO 添加会话 ticket
         return concat(
-            this.createCommonMessage(m.to, Actions.MessageGroup, m).pipe(
+            of(msg).pipe(
                 mergeMap(msg => this.sendProtocolMessage(msg)),
                 map(() => ({mid: 0, cliId: m.cliMid, seq: m.seq} as MessageSendResult))
             ),
-            this.getAckObservable(m)
+            race(
+                this.getAckObservable(m),
+                this.getSendFailedObservable(msg)
+            )
         )
     }
 
     public sendChatMessage(m: Message): Observable<MessageSendResult> {
+        const msg = this.createCommonMessage(m.to, Actions.MessageChat, m)
+        // TODO 添加会话 ticket
         return concat(
             // 发送消息
-            this.createCommonMessage(m.to, Actions.MessageChat, m).pipe(
+            of(msg).pipe(
                 mergeMap(msg => this.sendProtocolMessage(msg)),
                 map(() => ({mid: 0, cliId: m.cliMid, seq: m.seq} as MessageSendResult))
             ),
             // 等待服务器 ack
-            this.getAckObservable(m),
+            race(
+                this.getAckObservable(m),
+                this.getSendFailedObservable(msg)
+            ),
             // 等待接收者 ack
             this.getAckNotifyObservable(m)
         ).pipe(
@@ -133,28 +149,27 @@ class IMWebSocketClient extends WsClient {
     }
 
     public sendCliCustomMessage(m: CliCustomMessage): Observable<CliCustomMessage> {
-        return this.createCommonMessage(m.to, Actions.MessageCli, m).pipe(
+        return of(this.createCommonMessage(m.to, Actions.MessageCli, m)).pipe(
             mergeMap(msg => this.sendProtocolMessage(msg)),
             map(() => m)
         );
     }
 
     public sendRecallMessage(m: Message) {
-        return this.createCommonMessage(m.to, Actions.MessageChatRecall, m).pipe(
+        return of(this.createCommonMessage(m.to, Actions.MessageChatRecall, m)).pipe(
             mergeMap(msg => this.sendProtocolMessage(msg)),
             mergeMap(msg => this.getAckObservable(msg.data))
         );
     }
 
-    private createCommonMessage<T>(to: string | null, action: Actions, data: T): Observable<CommonMessage<T>> {
-        const msg: CommonMessage<T> = {
+    private createCommonMessage<T>(to: string | null, action: Actions, data: T): CommonMessage<T> {
+        return {
             action: action,
             data: data,
             seq: this.seq++,
             to: to,
             extra: null,
-        };
-        return of(msg)
+        }
     }
 
     private sendProtocolMessage<T>(data: CommonMessage<T>): Observable<CommonMessage<T>> {
@@ -202,6 +217,17 @@ class IMWebSocketClient extends WsClient {
         )
     }
 
+    private getSendFailedObservable(msg: CommonMessage<any>): Observable<MessageSendResult> {
+        return this.messages().pipe(
+            filter(m => msg.seq === m.seq),
+            filter(m => m.action === Actions.NotifyError || m.action === Actions.NotifyForbidden),
+            take(1),
+            map(m => {
+                throw new Error(m.data)
+            })
+        )
+    }
+
     // 服务器回执消息, 用于确认消息发送成功, 服务器会返回该消息的 mid
     private getAckObservable(msg: Message): Observable<MessageSendResult> {
         return this.messages().pipe(
@@ -243,7 +269,8 @@ class IMWebSocketClient extends WsClient {
     private getApiRespObservable<T>(seq: number): Observable<CommonMessage<T>> {
         return this.messages().pipe(
             filter(m => m.seq === seq),
-            filter(m => m.action === Actions.ApiSuccess || m.action === Actions.ApiFailed),
+            filter(m => m.action === Actions.ApiSuccess || m.action === Actions.ApiFailed
+                || m.action === Actions.NotifySuccess || m.action === Actions.NotifyError),
             take(1),
         )
     }
@@ -255,7 +282,7 @@ class IMWebSocketClient extends WsClient {
             from: from,
         };
 
-        this.createCommonMessage(from, Actions.AckRequest, ackR)
+        of(this.createCommonMessage(from, Actions.AckRequest, ackR))
             .pipe(
                 delay(ackRequestDelayForDebug),
                 mergeMap(msg => this.sendProtocolMessage(msg))

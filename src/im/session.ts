@@ -576,6 +576,7 @@ class InternalSessionImpl implements InternalSession {
         const chatMessage: ChatMessageInternal = createChatMessage2(this.ID, m, this.isGroup());
         chatMessage.setSendingStatus(SendingStatus.Sending);
 
+        // TODO 检查 ticket
         let sendObservable: Observable<MessageSendResult>
         switch (this.Type) {
             case SessionType.Single:

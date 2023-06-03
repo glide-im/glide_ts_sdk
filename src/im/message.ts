@@ -78,10 +78,15 @@ export enum Actions {
     NotifyKickOut = 'notify.kickout',
     // 新的联系人
     NotifyNewContact = 'notify.contact',
+    NotifySuccess = 'notify.success',
+    NotifyError = 'notify.error',
+    NotifyForbidden = 'notify.forbidden',
 
     AckMessage = 'ack.message',
     AckRequest = 'ack.request',
     AckNotify = 'ack.notify',
+
+    Authenticate = "authenticate",
 
     Api = 'api',
     ApiFailed = 'api.failed',
@@ -99,6 +104,7 @@ export interface CommonMessage<T> {
     to?: string | null;
     from?: string | null;
     extra?: Map<string, string> | null;
+    ticket?: string | null;
 }
 
 // 聊天消息
@@ -149,4 +155,10 @@ export interface CliCustomMessage {
     type: ClientCustomType;
     id: number;
     content: string | null;
+}
+
+// 登录 ws 服务的凭据, 从业务接口获取, 用于 ws 连接时的认证, 有效期 30 秒
+export interface AuthenticateData {
+    version: number,
+    credential: string;
 }
