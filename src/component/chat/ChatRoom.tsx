@@ -16,9 +16,7 @@ import {Loading} from "../widget/Loading";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {SessionListEventType} from "../../im/session_list";
 import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
-import {Session} from "../../im/session";
-import {Event, EventBus} from "../EventBus";
-import {ChatMessage} from "../../im/chat_message";
+import {Session, SessionType} from "../../im/session";
 
 
 function typingEvent(session: Session): Observable<boolean> {
@@ -38,6 +36,8 @@ function SessionTitleBar(props: { session: Session }) {
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [typing, setTyping] = React.useState(false);
+
+    const channel = props.session.Type === SessionType.Channel
 
     const handleCleanMessage = () => {
         props.session.clearMessageHistory().subscribe({
@@ -113,18 +113,34 @@ function SessionTitleBar(props: { session: Session }) {
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
                 >
-                    <MenuItem disabled>
-                        <DescriptionOutlined/><Box m={1}>频道详细信息</Box>
-                    </MenuItem>
+                    {!channel ? "" :
+                        <MenuItem disabled>
+                            <DescriptionOutlined/><Box m={1}>频道详细信息</Box>
+                        </MenuItem>
+                    }
+                    {channel ? "" :
+                        <MenuItem>
+                            <DeleteOutlined/><Box m={1}>添加好友</Box>
+                        </MenuItem>
+                    }
+                    {channel ? "" :
+                        <MenuItem>
+                            <DeleteOutlined/><Box m={1}>加入黑名单</Box>
+                        </MenuItem>
+                    }
                     <MenuItem onClick={handleCleanMessage}>
                         <DeleteOutlined/><Box m={1}>清理消息</Box>
                     </MenuItem>
-                    <MenuItem disabled onClick={handleMute}>
-                        <NotificationsOffOutlined/><Box m={1}>关闭通知</Box>
-                    </MenuItem>
-                    <MenuItem disabled onClick={handleExit}>
-                        <ExitToAppOutlined/><Box m={1}>退出频道</Box>
-                    </MenuItem>
+                    {!channel ? "" :
+                        <MenuItem disabled onClick={handleMute}>
+                            <NotificationsOffOutlined/><Box m={1}>关闭通知</Box>
+                        </MenuItem>
+                    }
+                    {!channel ? "" :
+                        <MenuItem disabled onClick={handleExit}>
+                            <ExitToAppOutlined/><Box m={1}>退出频道</Box>
+                        </MenuItem>
+                    }
                 </Menu>
             </Toolbar>
         </AppBar>
