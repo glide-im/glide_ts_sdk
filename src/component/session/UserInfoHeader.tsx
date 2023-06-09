@@ -2,8 +2,19 @@ import {RouteComponentProps, withRouter} from "react-router-dom";
 import {Account} from "../../im/account";
 import React, {useEffect, useRef, useState} from "react";
 import {IMWsClient} from "../../im/im_ws_client";
-import {Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton, Menu, MenuItem, MenuList,
+    TextField
+} from "@mui/material";
 import {grey} from "@mui/material/colors";
+import {ChatOutlined, DeleteOutlined, ExitToAppOutlined, MenuOutlined, SettingsOutlined} from "@mui/icons-material";
 
 
 export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
@@ -14,10 +25,10 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
             avatar: "-", name: "-", id: "-", isChannel: false
         }
     }
-
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [online, setOnline] = useState(IMWsClient.isReady())
 
-    useEffect(()=>{
+    useEffect(() => {
 
     })
 
@@ -40,51 +51,53 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
         Account.getInstance().auth().subscribe()
     }
 
-    return <Box>
-        <div className={'flex justify-between items-center py-5 pr-10 pl-4'}>
-            <div className={'flex items-center'}>
-                <Avatar src={u.avatar} sx={{width: 40, height: 40, bgcolor: grey[400]}}/>
-                <div className={'text-left flex flex-col ml-5'}>
-                    <span className={'text-base'}>{u.name}</span>
-                    <span className={'text-sm'}>UID: {u.id}</span>
-                </div>
-            </div>
-
-            <div>
-                <Button size={'small'} onClick={onExitClick}>
-                    退出登录
-                </Button>
-                {online ? <></> :
-                    <Button onClick={reconnect} size={'small'} color={'warning'}>
-                        重新连接
-                    </Button>
-                }
-                <CreateSessionButton/>
+    return <div className={'flex justify-between items-center p-4'}>
+        <div className={'flex items-center'}>
+            <Avatar src={u.avatar} sx={{width: 40, height: 40, bgcolor: grey[400]}}/>
+            <div className={'text-left flex flex-col ml-5'}>
+                <span className={'text-base'}>{u.name}</span>
+                <span className={'text-sm'}>UID: {u.id}</span>
             </div>
         </div>
-    </Box>
+
+        <div>
+            <IconButton size={"large"} onClick={(e) => setAnchorEl(e.currentTarget)}>
+                <MenuOutlined fontSize={"medium"}/>
+            </IconButton>
+
+            <CreateSessionDialog open={false} callback={(uid) => {
+                if (uid.length > 2) {
+                    Account.getInstance().getSessionList().createSession(uid).subscribe()
+                }
+            }}/>
+            <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+            >
+                <MenuItem disabled>
+                    <SettingsOutlined/><Box m={1}>设置</Box>
+                </MenuItem>
+                <MenuItem onClick={onExitClick}>
+                    <ExitToAppOutlined/><Box m={1}>退出登录</Box>
+                </MenuItem>
+                <MenuItem disabled>
+                    <ChatOutlined/><Box m={1}>创建会话</Box>
+                </MenuItem>
+            </Menu>
+        </div>
+    </div>
 })
-
-
-function CreateSessionButton() {
-
-    const [show, setShow] = useState(false)
-    const onCreateSessionClick = () => {
-        setShow(true)
-    }
-
-    return <>
-        <CreateSessionDialog open={show} callback={(uid) => {
-            if (uid.length > 2) {
-                Account.getInstance().getSessionList().createSession(uid).subscribe()
-            }
-            setShow(false)
-        }}/>
-        <Button size={'small'} onClick={onCreateSessionClick}>
-            创建会话
-        </Button>
-    </>
-}
 
 function CreateSessionDialog(props: { open: boolean, callback: (uid: string) => void }) {
 

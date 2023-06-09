@@ -65,7 +65,7 @@ function App() {
     return (
         <div>
             <SnackBar/>
-            <Box className={'h-screen w-screen my-auto mx-auto relative flex items-center'}>
+            <Box className={'h-screen w-screen my-auto mx-auto relative flex items-center bg-gray-100'}>
                 <Box sx={{
                     position: 'absolute',
                     backgroundImage: "url('/app_bg.jpg')",

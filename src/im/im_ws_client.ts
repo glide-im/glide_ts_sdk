@@ -65,7 +65,7 @@ class IMWebSocketClient extends WsClient {
     }
 
     public connect(ws: string): Observable<string> {
-        return super.connect({url: ws, timeout: connectionTimeout})
+        return super.connect({url: ws, timeout: connectionTimeout, ignoreError: true})
     }
 
     /**

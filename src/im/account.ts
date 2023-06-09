@@ -1,4 +1,4 @@
-import {catchError, concat, map, mergeMap, Observable, of, tap, throwError, timeout, toArray} from "rxjs";
+import {catchError, concat, flatMap, map, mergeMap, Observable, of, tap, throwError, timeout, toArray} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
@@ -152,7 +152,11 @@ export class Account {
             initUserInfo,
             this.sessions.init(this.cache),
             IMWsClient.connect(this.server),
-            this.authWs(false),
+            of("ws not ready, skip auth").pipe(
+                mergeMap((s) =>
+                    IMWsClient.isReady() ? this.authWs(false) : of(s),
+                )
+            )
         )
     }
 

@@ -1,9 +1,10 @@
-import {concat, filter, interval, map, Observable, Subject, take, throwError, timeout} from "rxjs";
+import {catchError, concat, filter, interval, map, Observable, of, Subject, take, throwError, timeout} from "rxjs";
 import {Logger} from "../utils/Logger";
 
 export interface ConnectConfig {
     url: string
     timeout?: number
+    ignoreError?: boolean
 }
 
 export interface WebSockEvent {
@@ -19,6 +20,7 @@ export class WsClient {
 
     private websocket: WebSocket | null;
     private readyState: number
+    private error: any
 
     private eventSubject = new Subject<WebSockEvent>();
     private messageSubject = new Subject<MessageEvent>();
@@ -30,12 +32,18 @@ export class WsClient {
 
     public connect(url: string | ConnectConfig): Observable<string> {
         if (typeof url == "string") {
-            return this.connectWithComplete(url).pipe(
-
-            )
+            return this.connectWithComplete(url)
         } else {
             return this.connectWithComplete(url.url).pipe(
-                timeout(url.timeout || DEFAULT_TIMEOUT)
+                timeout(url.timeout || DEFAULT_TIMEOUT),
+                map(() => this.readyState === WebSocket.OPEN ? "ws connecting complete" : `${this.error}`),
+                catchError((e) => {
+                    if (url.ignoreError) {
+                        return of("ws connecting skip error, " + e)
+                    } else {
+                        return throwError(() => e)
+                    }
+                })
             )
         }
     }
@@ -46,7 +54,7 @@ export class WsClient {
             interval(100).pipe(
                 filter(() => this.readyState !== WebSocket.CONNECTING),
                 take(1),
-                map(() => "ws connect success")
+                map(() => "ws connecting complete, state: " + this.readyState),
             )
         )
     }
@@ -60,12 +68,18 @@ export class WsClient {
             this.readyState = WebSocket.CONNECTING
             subscriber.next("ws connecting")
 
-            this.websocket = new WebSocket(url);
+            try {
+                this.websocket = new WebSocket(url);
+            } catch (e) {
+                subscriber.error(e)
+                return
+            }
 
             this.websocket.onclose = (ev: CloseEvent) => {
                 this.closeInternal(ev);
             }
             this.websocket.onerror = (ev: Event) => {
+                this.error = ev.type
                 this.closeInternal(ev);
             }
             this.websocket.onmessage = (ev: MessageEvent) => {
