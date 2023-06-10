@@ -5,18 +5,19 @@ import {SessionMessageList} from "./MessageList";
 import {showSnack} from "../widget/SnackBar";
 import {MessageInput, MessageInputV2} from "./MessageInput";
 import {
-    ArrowBack,
+    ArrowBack, BlockOutlined,
     DeleteOutlined,
     DescriptionOutlined,
     ExitToAppOutlined,
     MoreVertRounded,
-    NotificationsOffOutlined
+    NotificationsOffOutlined, PersonAddOutlined
 } from "@mui/icons-material";
 import {Loading} from "../widget/Loading";
 import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
 import {SessionListEventType} from "../../im/session_list";
 import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
 import {Session, SessionType} from "../../im/session";
+import {OnlineStatus} from "../widget/OnlineStatus";
 
 
 function typingEvent(session: Session): Observable<boolean> {
@@ -57,6 +58,7 @@ function SessionTitleBar(props: { session: Session }) {
                 setTyping(v)
             }
         });
+        props.session.event.pipe()
         return () => subscribe.unsubscribe()
     }, [props.session])
 
@@ -83,6 +85,7 @@ function SessionTitleBar(props: { session: Session }) {
                     <Typography variant="h6" component={'span'}>
                         {props.session?.Title ?? "-"}
                     </Typography>
+                    <OnlineStatus sid={props.session.ID}/>
                     {
                         typing ? <Typography variant="caption" color={'grey'} ml={2}>
                             输入中...
@@ -120,12 +123,12 @@ function SessionTitleBar(props: { session: Session }) {
                     }
                     {channel ? "" :
                         <MenuItem>
-                            <DeleteOutlined/><Box m={1}>添加好友</Box>
+                            <PersonAddOutlined/><Box m={1}>添加好友</Box>
                         </MenuItem>
                     }
                     {channel ? "" :
                         <MenuItem>
-                            <DeleteOutlined/><Box m={1}>加入黑名单</Box>
+                            <BlockOutlined/><Box m={1}>加入黑名单</Box>
                         </MenuItem>
                     }
                     <MenuItem onClick={handleCleanMessage}>
@@ -195,7 +198,7 @@ export function ChatRoomContainer() {
     return (
         <Box className={'h-full max-h-full flex flex-col rounded-br-md rounded-tr-md'}
              style={{
-                 backgroundImage: `url(/chat_bg.jpg)`,
+                 backgroundImage: `url(https://im.dengzii.com/chat_bg.jpg)`,
                  backgroundRepeat: 'repeat',
              }}>
             <Box className={'flex-none grow-0 w-full rounded-tr-md'} color={'black'} bgcolor={"white"}>

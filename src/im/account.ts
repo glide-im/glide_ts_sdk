@@ -1,11 +1,25 @@
-import {catchError, concat, flatMap, map, mergeMap, Observable, of, tap, throwError, timeout, toArray} from "rxjs";
+import {
+    catchError,
+    concat,
+    filter,
+    map,
+    mergeMap,
+    Observable,
+    of,
+    onErrorResumeNext,
+    Subject,
+    tap,
+    throwError,
+    timeout,
+    toArray
+} from "rxjs";
 import {Api} from "../api/api";
 import {setApiToken} from "../api/axios";
 import {AuthBean} from "../api/model";
 import {ContactsList} from "./contacts_list";
 import {GlideBaseInfo} from "./def";
 import {Cache, GlideCache} from "./cache";
-import {Actions, AuthenticateData, CommonMessage} from "./message";
+import {Actions, AuthenticateData, CommonMessage, UserStatusData} from "./message";
 import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
 import {IMWsClient} from "./im_ws_client";
 import {getCookie} from "../utils/Cookies";
@@ -237,5 +251,72 @@ export class Account {
         });
 
 
+    }
+}
+
+// 用户状态
+export interface UserState {
+    uid: string
+    online: boolean     // 是否在线
+    onlineAt: number    // 上次在线时间
+}
+
+// 关注的用户状态管理
+export class UserStatusManager {
+
+    private states = new Map<string, UserState>()
+    private events = new Subject<UserState>()
+
+    private static instance = new UserStatusManager()
+
+    constructor() {
+        // 监听用户上下线事件
+        IMWsClient.messages().pipe(
+            filter(message =>
+                message.action === Actions.EventUserOnline
+                || message.action === Actions.EventUserOffline),
+        ).subscribe({
+            next: message => {
+                const sd = message.data as UserStatusData
+                const state = this.states.get(sd.uid)
+                if (state) {
+                    state.online = sd.online
+                    state.onlineAt = sd.onlineAt
+                    this.events.next(state)
+                } else {
+                    const status = {
+                        uid: sd.uid,
+                        online: sd.online,
+                        onlineAt: sd.onlineAt
+                    };
+                    this.states.set(sd.uid, status)
+                    this.events.next(status)
+                }
+            }
+        })
+    }
+
+    //
+    public static getObservable(uid: string, emitImmediately?: boolean): Observable<UserState> {
+        const ob = UserStatusManager.instance.events.pipe(
+            filter(event => event.uid === uid)
+        )
+        // 如果需要立即发射一次状态
+        if (emitImmediately) {
+            const state = UserStatusManager.instance.states.get(uid)
+            if (state) {
+                return concat(of(state), ob)
+            } else {
+                const request = IMWsClient.request(Actions.ApiUserState, {uid: uid}).pipe(
+                    map(res => res.data as UserStatusData),
+                )
+                return onErrorResumeNext(concat(request, ob), ob)
+            }
+        }
+        return ob
+    }
+
+    public static get(uid: string): UserState | null {
+        return UserStatusManager.instance.states.get(uid) || null
     }
 }

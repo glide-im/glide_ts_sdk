@@ -6,15 +6,23 @@ import {
     Avatar,
     Box,
     Button,
-    Dialog,
-    DialogActions,
+    Dialog, DialogActions,
     DialogContent,
     DialogTitle,
-    IconButton, Menu, MenuItem, MenuList,
+    IconButton,
+    Menu,
+    MenuItem,
     TextField
 } from "@mui/material";
 import {grey} from "@mui/material/colors";
-import {ChatOutlined, DeleteOutlined, ExitToAppOutlined, MenuOutlined, SettingsOutlined} from "@mui/icons-material";
+import {
+    AddCommentOutlined,
+    ChatOutlined,
+    ExitToAppOutlined,
+    MenuOutlined,
+    RefreshOutlined,
+    SettingsOutlined
+} from "@mui/icons-material";
 
 
 export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
@@ -64,6 +72,7 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
             <IconButton size={"large"} onClick={(e) => setAnchorEl(e.currentTarget)}>
                 <MenuOutlined fontSize={"medium"}/>
             </IconButton>
+            {online ? "" : <IconButton size={"large"} onClick={reconnect}><RefreshOutlined/></IconButton>}
 
             <CreateSessionDialog open={false} callback={(uid) => {
                 if (uid.length > 2) {
@@ -92,7 +101,7 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
                     <ExitToAppOutlined/><Box m={1}>退出登录</Box>
                 </MenuItem>
                 <MenuItem disabled>
-                    <ChatOutlined/><Box m={1}>创建会话</Box>
+                    <AddCommentOutlined/><Box m={1}>创建会话</Box>
                 </MenuItem>
             </Menu>
         </div>

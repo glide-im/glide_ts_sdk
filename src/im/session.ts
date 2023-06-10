@@ -40,6 +40,13 @@ export enum SessionType {
     Channel = 2
 }
 
+export enum SessionStatus {
+    Default = 0,
+    Muted = 1,
+    Pinned = 2,
+    Deleted = 3,
+}
+
 export function getSID(type: number, to: string): string {
     if (type === 2) {
         return to;
@@ -68,6 +75,7 @@ export interface SessionBaseInfo {
     readonly UnreadCount: number;
     readonly Type: SessionType;
     readonly To: string;
+    readonly Status: SessionStatus;
 }
 
 export enum SessionEventType {
@@ -78,6 +86,7 @@ export enum SessionEventType {
     NewMessage = "new_message",
     MessageUpdate = "message_update",
     ReloadMessageHistory = "message_history",
+    OnlineStatusUpdate = "online_status_update",
 }
 
 export interface SessionEvent {
@@ -152,6 +161,7 @@ class InternalSessionImpl implements InternalSession {
     public UnreadCount: number = 0;
     public Type: SessionType;
     public To: string;
+    public Status: SessionStatus;
 
     private messageList = new Array<ChatMessageInternal>();
     private messageMap = new Map<string, ChatMessageInternal>();

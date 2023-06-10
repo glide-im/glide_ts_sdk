@@ -68,14 +68,15 @@ function App() {
             <Box className={'h-screen w-screen my-auto mx-auto relative flex items-center bg-gray-100'}>
                 <Box sx={{
                     position: 'absolute',
-                    backgroundImage: "url('/app_bg.jpg')",
-                    zIndex: -1,
+                    backgroundImage: `url(https://im.dengzii.com/app_bg.jpg)`,
+                    backgroundRepeat: 'repeat',
+                    zIndex: 0,
                     width: '100%',
                     height: '100vh',
                     filter: 'saturate(0.6)',
                 }}/>
                 <Router>
-                    <Box className={'mx-auto my-auto items-center flex  w-full h-full'}>
+                    <Box className={'mx-auto my-auto items-center flex  w-full h-full '} zIndex={1}>
                         {state.isLoading ? <Loading/> :
                             <Switch>
                                 <Route path={"/auth/signin"} exact={true}>

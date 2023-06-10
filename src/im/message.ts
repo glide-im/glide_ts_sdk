@@ -1,5 +1,4 @@
 // 聊天消息类型, 可以自定义, 但是需要客户端之间约定好
-import {ChatMessage} from "./chat_message";
 
 export enum MessageType {
     Text = 1,
@@ -82,6 +81,10 @@ export enum Actions {
     NotifyError = 'notify.error',
     NotifyForbidden = 'notify.forbidden',
 
+    EventUserOnline = 'event.user.online',
+    EventUserOffline = 'event.user.offline',
+    EventTicketUpdate = 'event.ticket.update',
+
     AckMessage = 'ack.message',
     AckRequest = 'ack.request',
     AckNotify = 'ack.notify',
@@ -91,6 +94,7 @@ export enum Actions {
     Api = 'api',
     ApiFailed = 'api.failed',
     ApiSuccess = 'api.success',
+    ApiUserState = 'api.user.state',
     ApiUserAuth = 'api.auth',
     ApiUserLogout = 'api.user.logout',
     Heartbeat = 'heartbeat',
@@ -161,4 +165,11 @@ export interface CliCustomMessage {
 export interface AuthenticateData {
     version: number,
     credential: string;
+}
+
+export interface UserStatusData {
+    uid: string;
+    device: string;
+    online: boolean;
+    onlineAt: number;
 }
