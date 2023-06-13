@@ -34,7 +34,6 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 
 export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
-
     const blackListDrawerRef = useRef<any>()
     let u = Account.getInstance().getUserInfo()
     if (u === null) {

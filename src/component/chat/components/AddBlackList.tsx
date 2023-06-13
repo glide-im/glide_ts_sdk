@@ -52,6 +52,10 @@ const AddBlackList = (props) => {
         }
     }
 
+    useEffect(() => {
+        props.updateIsBlackList(isBlackList)
+    }, [isBlackList])
+
     return <MenuItem onClick={() => toggleBlackList()}>
         {
             isBlackList ?

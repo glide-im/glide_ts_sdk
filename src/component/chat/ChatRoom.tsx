@@ -35,6 +35,8 @@ function typingEvent(session: Session): Observable<boolean> {
 }
 
 function SessionTitleBar(props: { session: Session }) {
+
+    const [isBlackList, setIsBlackList] = React.useState(false)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [typing, setTyping] = React.useState(false);
     const relativeList = Account.getInstance().getRelativeList();
@@ -84,6 +86,12 @@ function SessionTitleBar(props: { session: Session }) {
                 <Box sx={{flexGrow: 1}}>
                     <Typography variant="h6" component={'span'}>
                         {props.session?.Title ?? "-"}
+
+                        {
+                            isBlackList ?
+                                <span className={'text-sm text-gray-400 mx-2'}>已拉黑</span>
+                                : <></>
+                        }
                     </Typography>
                     <OnlineStatus sid={props.session.ID}/>
                     {
@@ -127,7 +135,9 @@ function SessionTitleBar(props: { session: Session }) {
                         </MenuItem>
                     }
                     {channel ? "" :
-                        <AddBlackList relativeList={relativeList} uid={props.session.To}/>
+                        <AddBlackList updateIsBlackList={(v: boolean) => setIsBlackList(v)}
+                                      relativeList={relativeList}
+                                      uid={props.session.To}/>
                     }
                     <MenuItem onClick={handleCleanMessage}>
                         <DeleteOutlined/><Box m={1}>清理消息</Box>
