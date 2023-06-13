@@ -20,7 +20,6 @@ import {
     MenuItem,
     TextField
 } from "@mui/material";
-import LoadingButton from '@mui/lab/LoadingButton';
 import {grey} from "@mui/material/colors";
 import {
     AddCommentOutlined,
@@ -170,11 +169,11 @@ const BlackListDrawer = forwardRef((props, ref) => {
                                   }}>
                                       取消
                                   </Button>
-                                  <LoadingButton loading={permitOperateLoading} color={'success'} size="small"
+                                  <Button color={'success'} size="small"
                                                  variant="contained" disabled={checked.length === 0}
                                                  onClick={() => setPermitOperate(true)}>
                                       完成 ({checked.length})
-                                  </LoadingButton>
+                                  </Button>
                               </div>
                       }
                   </div>

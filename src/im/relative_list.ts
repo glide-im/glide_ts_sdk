@@ -1,4 +1,4 @@
-import {concat, Observable, tap, of} from "rxjs";
+import {catchError, concat, map, Observable, of, tap} from "rxjs";
 import {Api} from "../api/api";
 
 interface RelativeUser {
@@ -33,7 +33,10 @@ export class RelativeListImpl implements RelativeList {
     public init(): Observable<string> {
         return concat(
             of("start load relative list"),
-            this.getOrInitContactList(),
+            this.getOrInitContactList().pipe(
+                map(() => "relative list sync from server success"),
+                catchError(err => of("relative list sync from server failed, " + err))
+            ),
             of("complete load relative list"),
         )
     }

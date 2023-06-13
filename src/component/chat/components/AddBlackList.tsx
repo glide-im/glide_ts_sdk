@@ -4,6 +4,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import React, {useEffect, useState} from "react";
 import {showSnack} from "../../widget/SnackBar";
 import {RelativeList} from "../../../im/relative_list";
+import {Logger} from "../../../utils/Logger";
 
 const AddBlackList = (props) => {
     const relativeList: RelativeList = props.relativeList
@@ -20,6 +21,9 @@ const AddBlackList = (props) => {
             .subscribe({
                 error: (e) => {
                     showSnack(e.toString())
+                },
+                next: (e) => {
+                  Logger.log("AddBlackList:", e)
                 },
                 complete: () => {
                     showSnack("添加成功")
