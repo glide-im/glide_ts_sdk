@@ -18,6 +18,7 @@ import {SessionListEventType} from "../../im/session_list";
 import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
 import {Session, SessionType} from "../../im/session";
 import {OnlineStatus} from "../widget/OnlineStatus";
+import AddBlackList from './components/AddBlackList'
 
 
 function typingEvent(session: Session): Observable<boolean> {
@@ -34,10 +35,9 @@ function typingEvent(session: Session): Observable<boolean> {
 }
 
 function SessionTitleBar(props: { session: Session }) {
-
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [typing, setTyping] = React.useState(false);
-
+    const relativeList = Account.getInstance().getRelativeList();
     const channel = props.session.Type === SessionType.Channel
 
     const handleCleanMessage = () => {
@@ -127,9 +127,7 @@ function SessionTitleBar(props: { session: Session }) {
                         </MenuItem>
                     }
                     {channel ? "" :
-                        <MenuItem>
-                            <BlockOutlined/><Box m={1}>加入黑名单</Box>
-                        </MenuItem>
+                        <AddBlackList relativeList={relativeList} uid={props.session.To}/>
                     }
                     <MenuItem onClick={handleCleanMessage}>
                         <DeleteOutlined/><Box m={1}>清理消息</Box>

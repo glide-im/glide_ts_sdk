@@ -42,12 +42,13 @@ function resolve<T>(axiosPromise: AxiosPromise): Promise<T> {
             const data = r.data as Response<T>;
 
             if (data.Code !== 100) {
-                reject(`${data.Code}, ${data.Msg}`);
+                console.log(`${data.Code}, ${data.Msg}`)
                 return
             }
             resolve(data.Data)
         }).catch((reason) => {
-            reject(reason)
+            reject("Server Error")
+            // reject(reason)
         })
     };
     return new Promise<T>(exec);

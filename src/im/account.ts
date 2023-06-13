@@ -27,6 +27,7 @@ import {onError} from "../rx/next";
 import {Logger} from "../utils/Logger";
 import {isResponse} from "../api/response";
 import {showSnack} from "../component/widget/SnackBar";
+import {RelativeList, RelativeListImpl} from "./relative_list";
 
 export class Account {
 
@@ -34,6 +35,7 @@ export class Account {
 
     private uid: string;
     private sessions: InternalSessionList
+    private relatives: RelativeList;
     private contacts: ContactsList
     private readonly cache: GlideCache
     server: string = process.env.REACT_APP_WS_URL;
@@ -46,6 +48,7 @@ export class Account {
         this.cache = new GlideCache()
         this.contacts = new ContactsList()
         this.sessions = new InternalSessionListImpl(this, this.cache)
+        this.relatives = new RelativeListImpl();
     }
 
     private userInfo: GlideBaseInfo | null = null;
@@ -130,6 +133,10 @@ export class Account {
         return this.sessions;
     }
 
+    public getRelativeList(): RelativeList {
+        return this.relatives;
+    }
+
     public getContactList(): ContactsList {
         return this.contacts;
     }
@@ -165,6 +172,7 @@ export class Account {
             this.initCache(),
             initUserInfo,
             this.sessions.init(this.cache),
+            this.relatives.init(),
             IMWsClient.connect(this.server),
             of("ws not ready, skip auth").pipe(
                 mergeMap((s) =>

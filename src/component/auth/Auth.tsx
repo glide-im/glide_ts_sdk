@@ -28,6 +28,7 @@ export const Auth = withRouter((props: RouteComponentProps) => {
             .login(account, password)
             .subscribe({
                 error: (e) => {
+                    console.log(e);
                     showSnack("登录失败：" + e.message ?? e)
                 },
                 complete: () => {

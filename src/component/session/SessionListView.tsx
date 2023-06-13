@@ -11,9 +11,8 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
 
     const {sid} = useParams<{ sid: string }>();
     const sessionList = Account.getInstance().getSessionList();
-
+    const relativeList = Account.getInstance().getRelativeList();
     const [sessions, setSessions] = useState(sessionList.getSessionsTemped());
-
     const [loadSate, setLoadSate] = useState(true)
     const [loadError, setLoadError] = useState("")
 
@@ -54,6 +53,7 @@ export const SessionListView = withRouter((props: RouteComponentProps) => {
                     setLoadSate(false)
                 },
             })
+
     }, [sessionList])
 
     const onSelect = (s: Session) => {

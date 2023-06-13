@@ -89,6 +89,22 @@ function updateProfile(avatar: string, nickname: string): Observable<any> {
     })
 }
 
+function addToBlackList(ids: Array<string>): Observable<any> {
+    return rxios.post('session/blacklist/add', {
+        relative_ids: ids.map(id => id),
+    })
+}
+
+function getBlacklistList(): Observable<any> {
+    return rxios.get('session/blacklist')
+}
+
+function removeFromBlackList(ids: Array<string>): Observable<any> {
+    return rxios.post('session/blacklist/remove', {
+        relative_ids: ids.map(id => id),
+    })
+}
+
 export const Api = {
     setBaseUrl,
     getBaseUrl,
@@ -107,4 +123,7 @@ export const Api = {
     getMessageHistry,
     getServerInfo,
     guest,
+    addToBlackList,
+    removeFromBlackList,
+    getBlacklistList
 } as const;
