@@ -1,7 +1,6 @@
 import {Box, MenuItem} from "@mui/material";
-import {PersonAddOutlined} from "@mui/icons-material";
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import GroupRemoveIcon from '@mui/icons-material/GroupRemove';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import React, {useEffect, useState} from "react";
 import {showSnack} from "../../widget/SnackBar";
 import {RelativeList} from "../../../im/relative_list";
@@ -59,8 +58,8 @@ const AddBlackList = (props) => {
     return <MenuItem onClick={() => toggleBlackList()}>
         {
             isBlackList ?
-                <><PersonAddIcon/><Box m={1}>移出黑名单</Box></> :
-                <><PersonAddOutlined/><Box m={1}>加入黑名单</Box></>
+                <><GroupRemoveIcon/><Box m={1}>移出黑名单</Box></> :
+                <><GroupAddIcon/><Box m={1}>加入黑名单</Box></>
         }
     </MenuItem>
 }
