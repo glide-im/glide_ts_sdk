@@ -221,6 +221,10 @@ class InternalSessionImpl implements InternalSession {
         return this._updateSubject;
     }
 
+    private getTicket(): string {
+        return ''
+    }
+
     private isSelected(): boolean {
         return this.ID === Account.session().getCurrentSession()?.ID;
     }

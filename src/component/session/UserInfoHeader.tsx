@@ -30,6 +30,10 @@ import {
     SettingsOutlined,
 } from "@mui/icons-material";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import {RelativeUser} from "../../im/relative_list";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
+import {showSnack} from "../widget/SnackBar";
 
 
 export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
@@ -48,7 +52,6 @@ export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
     })
 
     useEffect(() => {
-
         const sp = IMWsClient.events().subscribe({
             next: (e) => {
                 e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
@@ -125,13 +128,14 @@ const BlackListDrawer = forwardRef((props, ref) => {
     const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
         setIsShow(open)
     }
-
-    const [checked, setChecked] = React.useState([1]);
+    const relativeList = Account.getInstance().getRelativeList();
+    const [checked, setChecked] = React.useState([]);
     const [permitOperate, setPermitOperate] = useState<boolean>(false);
     const [permitOperateLoading, setPermitOperateLoading] = useState<boolean>(false);
+    const [blackList, setBlackList] = useState<RelativeUser[]>(relativeList.getBlackRelativeList())
 
-    const handleToggle = (value: number) => () => {
-        const currentIndex = checked.indexOf(value);
+    const handleToggle = (value: string) => () => {
+        const currentIndex = checked.findIndex(v => v === value);
         const newChecked = [...checked];
 
         if (currentIndex === -1) {
@@ -143,11 +147,91 @@ const BlackListDrawer = forwardRef((props, ref) => {
         setChecked(newChecked);
     };
 
+    const updateBlackList = () => {
+        setPermitOperateLoading(true)
+        relativeList.removeBlackRelativeLists(checked.map(v => v.toString())).subscribe({
+            error: (e) => {
+                showSnack(e.toString())
+                setPermitOperateLoading(false)
+            },
+            complete: () => {
+                console.log('blackList', blackList)
+                setBlackList(blackList => blackList.filter(v => checked.includes(v.Uid.toString())))
+                setChecked([])
+                showSnack(`移出成功: ${checked.length} 人`)
+                setPermitOperateLoading(false)
+            }
+        })
+    }
+
     useImperativeHandle(ref, () => ({
         show: () => {
+            setBlackList(relativeList.getBlackRelativeList())
             setIsShow(true)
         }
     }))
+
+    const OperateBar = () => {
+        if(blackList.length === 0) {
+            return <></>
+        }
+
+        if(permitOperate) {
+            return <div>
+                <Button size="small" variant={'text'} onClick={() => {
+                    setPermitOperate(false);
+                    setChecked([])
+                }}>
+                    取消
+                </Button>
+                <Button color={'success'} size="small"
+                        variant="contained"
+                        disabled={checked.length === 0 || permitOperateLoading == true}
+                        onClick={() => updateBlackList()}>
+                    完成 ({checked.length})
+                </Button>
+            </div>
+        }
+
+        return <Button variant="text" size="small" onClick={() => setPermitOperate(true)}>移出</Button>
+    }
+
+    const ListContent = () => {
+        if(blackList.length === 0) {
+            return <p className={'mx-5 text-xs py-10 text-gray-500 text-center'}>暂无数据</p>
+        }
+
+        return <>
+            {blackList.map((relativeUser: RelativeUser) => {
+                const labelId = `checkbox-list-secondary-label-${relativeUser.Uid}`;
+                return (
+                    <ListItem
+                        key={relativeUser.Uid}
+                        secondaryAction={
+                            permitOperate ?
+                                <Checkbox
+                                    edge="end"
+                                    onChange={handleToggle(relativeUser.Uid)}
+                                    checked={checked.includes(relativeUser.Uid)}
+                                    inputProps={{'aria-labelledby': labelId}}
+                                /> : <></>
+                        }
+                        disablePadding
+                    >
+                        <ListItemButton>
+                            <ListItemAvatar>
+                                <Avatar
+                                    alt={relativeUser.Uid}
+                                    src={relativeUser.Avatar}
+                                />
+                            </ListItemAvatar>
+                            <ListItemText id={labelId} primary={relativeUser.Nickname}/>
+                        </ListItemButton>
+                    </ListItem>
+                );
+            })}
+        </>
+    }
 
     return <Drawer
         classes={{paper: 'min-w-[500px]'}}
@@ -160,53 +244,11 @@ const BlackListDrawer = forwardRef((props, ref) => {
                   <div style={{lineHeight: 0.2}}
                        className={'my-2 mx-5 text-gray-500 text-sm flex justify-between leading-none'}>
                       <p>黑名单管理</p>
-                      {
-                          !permitOperate ?
-                              <Button variant="text" size="small" onClick={() => setPermitOperate(true)}>移出</Button> :
-                              <div>
-                                  <Button size="small" variant={'text'} onClick={() => {
-                                      setPermitOperate(false); setChecked([])
-                                  }}>
-                                      取消
-                                  </Button>
-                                  <Button color={'success'} size="small"
-                                                 variant="contained" disabled={checked.length === 0}
-                                                 onClick={() => setPermitOperate(true)}>
-                                      完成 ({checked.length})
-                                  </Button>
-                              </div>
-                      }
+                      <OperateBar />
                   </div>
               </div>}
         >
-            {[0, 1, 2, 3].map((value) => {
-                const labelId = `checkbox-list-secondary-label-${value}`;
-                return (
-                    <ListItem
-                        key={value}
-                        secondaryAction={
-                            permitOperate ?
-                                <Checkbox
-                                    edge="end"
-                                    onChange={handleToggle(value)}
-                                    checked={checked.indexOf(value) !== -1}
-                                    inputProps={{'aria-labelledby': labelId}}
-                                /> : <></>
-                        }
-                        disablePadding
-                    >
-                        <ListItemButton>
-                            <ListItemAvatar>
-                                <Avatar
-                                    alt={`Avatar n°${value + 1}`}
-                                    src={`/static/images/avatar/${value + 1}.jpg`}
-                                />
-                            </ListItemAvatar>
-                            <ListItemText id={labelId} primary={`Line item ${value + 1}`}/>
-                        </ListItemButton>
-                    </ListItem>
-                );
-            })}
+            <ListContent />
         </List>
     </Drawer>
 });

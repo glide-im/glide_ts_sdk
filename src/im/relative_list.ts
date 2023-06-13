@@ -1,7 +1,7 @@
 import {catchError, concat, map, Observable, of, tap} from "rxjs";
 import {Api} from "../api/api";
 
-interface RelativeUser {
+export interface RelativeUser {
     Uid: string
     Account: string
     Nickname: string
@@ -22,6 +22,8 @@ export interface RelativeList {
     addBlackRelativeList(id: string): Observable<any>
 
     removeBlackRelativeList(id: string): Observable<any>
+
+    removeBlackRelativeLists(id: string[]): Observable<any>
 
     init(): Observable<string>
 }
@@ -44,11 +46,11 @@ export class RelativeListImpl implements RelativeList {
     private getOrInitContactList(): Observable<any> {
         return Api.getBlacklistList().pipe(
             tap(relativeUsers => {
+                this.blackRelativeList = []
                 relativeUsers.forEach(u => {
                     const user = u as RelativeUserBean
                     this.blackRelativeList.push(user.user_info)
                 })
-                console.log("relativeUsers", this.blackRelativeList)
             }),
         )
     }
@@ -71,6 +73,13 @@ export class RelativeListImpl implements RelativeList {
     public removeBlackRelativeList(id: string): Observable<any> {
         return concat(
             Api.removeFromBlackList([id]),
+            this.init(),
+        )
+    }
+
+    public removeBlackRelativeLists(id: string[]): Observable<any> {
+        return concat(
+            Api.removeFromBlackList(id),
             this.init(),
         )
     }
