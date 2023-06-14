@@ -22,6 +22,7 @@ export function SettingDialog(props: { show: boolean; onClose: () => void }) {
     const wsUrl = useRef<HTMLInputElement>(null);
     const ackNotify = useRef<HTMLInputElement>(null);
     const enableCache = useRef<HTMLInputElement>(null);
+    const local = useRef<HTMLInputElement>(null);
 
     const url = Api.getBaseUrl();
     const ws = Account.getInstance().server;
@@ -37,6 +38,16 @@ export function SettingDialog(props: { show: boolean; onClose: () => void }) {
         setEnableCookie(enableCache.current.checked);
         props.onClose();
     };
+
+    const onLocal = () => {
+        if (local.current.checked) {
+            baseUrl.current.value = 'http://localhost:8081/api';
+            wsUrl.current.value = 'ws://localhost:8083/ws';
+        }else{
+            baseUrl.current.value = 'https://intercom.ink/api/';
+            wsUrl.current.value = 'wss://intercom.ink/ws';
+        }
+    }
 
     return (
         <>
@@ -76,6 +87,16 @@ export function SettingDialog(props: { show: boolean; onClose: () => void }) {
                             />
                         }
                         label='启用 Cookie'
+                    />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                onClick={onLocal}
+                                defaultChecked={false}
+                                inputRef={local}
+                            />
+                        }
+                        label='本地调试'
                     />
                 </DialogContent>
                 <DialogActions>

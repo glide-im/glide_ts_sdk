@@ -2,6 +2,11 @@ export interface AuthBean {
     token: string;
     uid: number;
     server: string[];
+    credential: CredentialBean;
+}
+
+export interface CredentialBean {
+    credential: string;
 }
 
 export interface ContactsBean {
@@ -15,6 +20,10 @@ export interface UserInfoBean {
     account: string;
     nick_name: string;
     avatar: string;
+}
+
+export interface TicketBean {
+    Ticket: string;
 }
 
 export interface SessionBean {

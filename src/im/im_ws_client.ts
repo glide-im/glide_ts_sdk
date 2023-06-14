@@ -15,8 +15,8 @@ import {
     tap,
     throwError,
     timeout,
-    TimeoutError,
-} from 'rxjs';
+    TimeoutError
+} from "rxjs";
 import {
     AckMessage,
     AckNotify,
@@ -24,10 +24,10 @@ import {
     Actions,
     CliCustomMessage,
     CommonMessage,
-    Message,
-} from './message';
-import { Logger } from '../utils/Logger';
-import { WebSockEvent, WsClient } from './ws_client';
+    Message
+} from "./message";
+import { Logger } from "../utils/Logger";
+import { WebSockEvent, WsClient } from "./ws_client";
 
 const ackTimeout = 3000;
 const heartbeatInterval = 30000;
@@ -39,6 +39,23 @@ const ackRequestDelayForDebug = 1600;
 // 测试用, 模拟发送端网络延迟
 const ackMessageDelayForDebug = 800;
 
+export enum SendErrorCause {
+    Unknown,
+    // 服务器拒绝发送, 暂时情况是 ticket 失效, 无法发送
+    // 后续可能添加因频率, 账号被封等情况
+    Forbidden,
+}
+
+// 表示发送消息失败
+export interface MessageSendError extends Error {
+    // 错误原因
+    errorCause: SendErrorCause;
+}
+
+export function isMessageSendError(e: any): e is MessageSendError {
+    return e.errorCause !== undefined;
+}
+
 export interface MessageSendResult {
     mid: number;
     cliId: string;
@@ -47,7 +64,7 @@ export interface MessageSendResult {
 }
 
 class IMWebSocketClient extends WsClient {
-    private tag1 = 'WebSocketClient';
+    private tag1 = "WebSocketClient";
     private seq: number;
     private heartbeat: Subscription | null;
 
@@ -57,13 +74,13 @@ class IMWebSocketClient extends WsClient {
         this.startHeartbeat();
         this.events().subscribe({
             next: (e) => {
-                Logger.log(this.tag1, 'websocket event changed >>', [e]);
-            },
+                Logger.log(this.tag1, "websocket event changed >>", [e]);
+            }
         });
         this.messages().subscribe({
             next: (m) => {
                 // TODO 群消息ack策略更新, 聊天中, 积累一定数量的消息后, 或群聊冷却后ack
-                Logger.log(this.tag1, 'receive message >>', [m]);
+                Logger.log(this.tag1, "receive message >>", [m]);
                 if (
                     m.action === Actions.MessageChat ||
                     m.action === Actions.MessageChatRecall
@@ -71,7 +88,7 @@ class IMWebSocketClient extends WsClient {
                     const msg: Message = m.data as Message;
                     this.ackRequestMessage(msg.from, msg.mid);
                 }
-            },
+            }
         });
     }
 
@@ -79,7 +96,7 @@ class IMWebSocketClient extends WsClient {
         return super.connect({
             url: ws,
             timeout: connectionTimeout,
-            ignoreError: true,
+            ignoreError: true
         });
     }
 
@@ -100,7 +117,7 @@ class IMWebSocketClient extends WsClient {
             data: d,
             seq: seq,
             to: null,
-            extra: null,
+            extra: null
         };
 
         return this.sendProtocolMessage(message).pipe(
@@ -131,10 +148,9 @@ class IMWebSocketClient extends WsClient {
         return super.event();
     }
 
-    public sendChannelMessage(m: Message): Observable<MessageSendResult> {
+    public sendChannelMessage(m: Message, ticket?: string): Observable<MessageSendResult> {
         const msg = this.createCommonMessage(m.to, Actions.MessageGroup, m);
-        msg.ticket = '';
-        // TODO 添加会话 ticket
+        msg.ticket = ticket;
         return concat(
             of(msg).pipe(
                 mergeMap((msg) => this.sendProtocolMessage(msg)),
@@ -143,7 +159,7 @@ class IMWebSocketClient extends WsClient {
                         ({
                             mid: 0,
                             cliId: m.cliMid,
-                            seq: m.seq,
+                            seq: m.seq
                         } as MessageSendResult)
                 )
             ),
@@ -151,24 +167,25 @@ class IMWebSocketClient extends WsClient {
         );
     }
 
-    public sendChatMessage(m: Message): Observable<MessageSendResult> {
+    public sendChatMessage(m: Message, ticket?: string): Observable<MessageSendResult> {
         const msg = this.createCommonMessage(m.to, Actions.MessageChat, m);
-        // TODO 添加会话 ticket
+        msg.ticket = ticket;
         return concat(
             // 发送消息
             of(msg).pipe(
                 mergeMap((msg) => this.sendProtocolMessage(msg)),
-                map(
-                    () =>
-                        ({
-                            mid: 0,
-                            cliId: m.cliMid,
-                            seq: m.seq,
-                        } as MessageSendResult)
+                map(() => ({
+                        mid: 0,
+                        cliId: m.cliMid,
+                        seq: m.seq
+                    } as MessageSendResult)
                 )
             ),
-            // 等待服务器 ack
-            race(this.getAckObservable(m), this.getSendFailedObservable(msg)),
+            // 等待服务器 ack, 或者发送失败, 任意一个先到就结束
+            race(
+                this.getAckObservable(m),
+                this.getSendFailedObservable(msg)
+            ),
             // 等待接收者 ack
             this.getAckNotifyObservable(m)
         ).pipe(filter((r) => r.action !== null));
@@ -202,7 +219,7 @@ class IMWebSocketClient extends WsClient {
             data: data,
             seq: this.seq++,
             to: to,
-            extra: null,
+            extra: null
         };
     }
 
@@ -212,7 +229,7 @@ class IMWebSocketClient extends WsClient {
         const msg = JSON.stringify(data);
         return super.send(msg).pipe(
             map(() => data),
-            tap(() => Logger.log(this.tag1, 'send message >>', [data]))
+            tap(() => Logger.log(this.tag1, "send message >>", [data]))
         );
     }
 
@@ -224,7 +241,7 @@ class IMWebSocketClient extends WsClient {
                     const hb: CommonMessage<{}> = {
                         action: Actions.Heartbeat,
                         data: {},
-                        seq: this.seq++,
+                        seq: this.seq++
                     };
                     return hb;
                 }),
@@ -232,23 +249,24 @@ class IMWebSocketClient extends WsClient {
             )
             .subscribe({
                 next: () => {
-                    Logger.log(this.tag1, 'heartbeat ok');
+                    Logger.log(this.tag1, "heartbeat ok");
                 },
                 error: (e) => {
-                    Logger.error(this.tag1, 'heartbeat error', e);
+                    Logger.error(this.tag1, "heartbeat error", e);
                 },
                 complete: () => {
                     this.heartbeat = null;
-                    Logger.log(this.tag1, 'heartbeat complete');
-                },
+                    Logger.log(this.tag1, "heartbeat complete");
+                }
             });
     }
 
     private getAckObservableFail(msg: Message): Observable<MessageSendResult> {
         return of(1).pipe(
             delay(ackTimeout),
-            map(() => {}),
-            mergeMap(() => throwError(new Error('ack timeout')))
+            map(() => {
+            }),
+            mergeMap(() => throwError(new Error("ack timeout")))
         );
     }
 
@@ -264,6 +282,15 @@ class IMWebSocketClient extends WsClient {
             ),
             take(1),
             map((m) => {
+                if (m.action === Actions.NotifyForbidden) {
+                    const err: MessageSendError = {
+                        cause: null, errorCause: null, message: "", name: "", stack: ""
+                    };
+                    err.errorCause = SendErrorCause.Forbidden;
+                    err.message = m.data;
+                    err.name = "MessageSendError";
+                    throw err;
+                }
                 throw new Error(m.data);
             })
         );
@@ -283,13 +310,13 @@ class IMWebSocketClient extends WsClient {
                     mid: ack.mid,
                     cliId: ack.cliMid,
                     seq: msg.seq,
-                    action: Actions.AckMessage,
+                    action: Actions.AckMessage
                 } as MessageSendResult;
             }),
             timeout(ackTimeout),
             delay(ackMessageDelayForDebug),
             catchError((e) => {
-                e = e instanceof TimeoutError ? new Error('ack timeout') : e;
+                e = e instanceof TimeoutError ? new Error("ack timeout") : e;
                 return throwError(e);
             })
         );
@@ -309,9 +336,9 @@ class IMWebSocketClient extends WsClient {
                 (res) =>
                     ({
                         mid: res.mid,
-                        cliId: '',
+                        cliId: "",
                         seq: 0,
-                        action: Actions.AckNotify,
+                        action: Actions.AckNotify
                     } as MessageSendResult)
             ),
             catchError((e) => of({ action: null } as MessageSendResult))
@@ -336,7 +363,7 @@ class IMWebSocketClient extends WsClient {
     private ackRequestMessage(from: string, mid: number) {
         const ackR: AckRequest = {
             mid: mid,
-            from: from,
+            from: from
         };
 
         of(this.createCommonMessage(from, Actions.AckRequest, ackR))
@@ -345,10 +372,11 @@ class IMWebSocketClient extends WsClient {
                 mergeMap((msg) => this.sendProtocolMessage(msg))
             )
             .subscribe({
-                next: () => {},
-                error: (e) => {
-                    Logger.error(this.tag1, 'ackRequestMessage', e);
+                next: () => {
                 },
+                error: (e) => {
+                    Logger.error(this.tag1, "ackRequestMessage", e);
+                }
             });
     }
 }

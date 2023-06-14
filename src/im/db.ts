@@ -132,6 +132,7 @@ export class SessionDbCache implements SessionListCache {
             UnreadCount: 0,
             UpdateAt: 0,
             Status: 0,
+            Ticket: '',
         };
 
         // copy all properties to s

@@ -1,9 +1,9 @@
-import { Account } from './account';
-import { Message, MessageStatus, MessageType, Reply } from './message';
-import { Cache } from './cache';
-import { map, Observable, scan, Subject, throwError } from 'rxjs';
-import { GlideBaseInfo } from './def';
-import { Logger } from '../utils/Logger';
+import { Account } from "./account";
+import { Message, MessageStatus, MessageType, Reply } from "./message";
+import { Cache } from "./cache";
+import { map, Observable, scan, Subject, throwError } from "rxjs";
+import { GlideBaseInfo } from "./def";
+import { Logger } from "../utils/Logger";
 
 export enum SendingStatus {
     Unknown,
@@ -151,7 +151,7 @@ export function createChatMessage2(
 }
 
 class ChatMessageImpl implements ChatMessageInternal {
-    private tag = 'ChatMessageImpl';
+    private tag = "ChatMessageImpl";
 
     public ReceiveAt: number;
 
@@ -186,7 +186,7 @@ class ChatMessageImpl implements ChatMessageInternal {
 
     init() {
         this.Mid = this.Mid || -1;
-        this.Content = this.Content || '';
+        this.Content = this.Content || "";
         this.Target = this.FromMe ? this.To : this.From;
         this.FromMe = this.From === Account.getInstance().getUID();
         this.SendAt =
@@ -230,21 +230,21 @@ class ChatMessageImpl implements ChatMessageInternal {
                             .map((v) => {
                                 return v.content;
                             })
-                            .join('');
+                            .join("");
                     })
                 )
                 .subscribe({
                     next: (message) => {
                         this.Content = message;
-                        Logger.log(this.tag, 'stream message update', message);
+                        Logger.log(this.tag, "stream message update", message);
                         this.eventSubject.next({
                             message: this as ChatMessage,
-                            type: MessageUpdateType.UpdateContent,
+                            type: MessageUpdateType.UpdateContent
                         });
                     },
                     error: (err) => {
-                        Logger.error(this.tag, 'stream message error', err);
-                    },
+                        Logger.error(this.tag, "stream message error", err);
+                    }
                 });
         }
     }
@@ -269,10 +269,10 @@ class ChatMessageImpl implements ChatMessageInternal {
 
     public getSenderName(): string {
         if (this.FromMe) {
-            return '我';
+            return "我";
         }
         const userInfo = Cache.getUserInfo(this.From) ?? {
-            name: '-',
+            name: "-"
         };
         return userInfo.name;
     }
@@ -285,27 +285,27 @@ class ChatMessageImpl implements ChatMessageInternal {
                 const name = userInfo === null ? this.Content : userInfo.name;
                 const isMe = this.Content === Account.getInstance().getUID();
                 if (this.Type === 100) {
-                    return isMe ? '你已加入频道' : `${name} 加入频道`;
+                    return isMe ? "你已加入频道" : `${name} 加入频道`;
                 }
-                return isMe ? '你已离开频道' : `${name} 离开频道`;
+                return isMe ? "你已离开频道" : `${name} 离开频道`;
             // case MessageType.StreamMarkdown:
             // case MessageType.StreamText:
             //     return '[流消息]'
             case MessageType.Image:
-                return '[图片]';
+                return "[图片]";
             case MessageType.Audio:
-                return '[声音]';
+                return "[声音]";
             case MessageType.Location:
-                return '[位置]';
+                return "[位置]";
             case MessageType.File:
-                return '[文件]';
+                return "[文件]";
             case MessageType.Reply:
                 if (detail) {
                     return this.replyMessage.content;
                 }
-                return '[回复消息]' + this.replyMessage.content;
+                return "[回复消息]" + this.replyMessage.content;
             default:
-                return this.Content === undefined ? '-' : this.Content;
+                return this.Content === undefined ? "-" : this.Content;
         }
     }
 
@@ -314,7 +314,7 @@ class ChatMessageImpl implements ChatMessageInternal {
             m.Type !== MessageType.StreamMarkdown &&
             m.Type !== MessageType.StreamText
         ) {
-            Logger.log(this.tag, 'update a non stream message');
+            Logger.log(this.tag, "update a non stream message");
             return;
         }
         this.Status = m.Status;
@@ -322,20 +322,20 @@ class ChatMessageImpl implements ChatMessageInternal {
             case MessageStatus.StreamStart:
                 this.eventSubject.next({
                     message: this,
-                    type: MessageUpdateType.UpdateStatus,
+                    type: MessageUpdateType.UpdateStatus
                 });
                 break;
             case MessageStatus.StreamSending:
                 this.streamMessageSource?.next({
                     seq: m.Seq,
-                    content: m.Content,
+                    content: m.Content
                 });
                 break;
             case MessageStatus.StreamFinish:
                 setTimeout(() => {
                     this.eventSubject.next({
                         message: this,
-                        type: MessageUpdateType.UpdateStatus,
+                        type: MessageUpdateType.UpdateStatus
                     });
                 }, 1000);
                 break;
@@ -344,7 +344,7 @@ class ChatMessageImpl implements ChatMessageInternal {
                 setTimeout(() => {
                     this.eventSubject.next({
                         message: this,
-                        type: MessageUpdateType.UpdateStatus,
+                        type: MessageUpdateType.UpdateStatus
                     });
                 }, 1000);
                 break;
@@ -354,7 +354,7 @@ class ChatMessageImpl implements ChatMessageInternal {
 
     public revoke(): Observable<void> {
         // TODO 先获取消息所属会话, 然后通过会发送撤回消息
-        return throwError(() => new Error('not implemented'));
+        return throwError(() => new Error("not implemented"));
     }
 
     public setFailedReason(reason: string) {
@@ -373,12 +373,12 @@ class ChatMessageImpl implements ChatMessageInternal {
         this.Status = status;
         this.eventSubject.next({
             message: this,
-            type: MessageUpdateType.UpdateStatus,
+            type: MessageUpdateType.UpdateStatus
         });
     }
 
     public update(m: ChatMessage): void {
-        Logger.log(this.tag, 'update message', [this.Content], [m.Content]);
+        Logger.log(this.tag, "update message", [this.Content], [m.Content]);
 
         if (
             m.Type === MessageType.StreamMarkdown ||
@@ -419,7 +419,7 @@ class ChatMessageImpl implements ChatMessageInternal {
             sendAt: this.SendAt,
             status: this.Status,
             type: this.Type,
-            seq: this.Seq,
+            seq: this.Seq
         };
     }
 }

@@ -11,35 +11,35 @@ import {
     tap,
     throwError,
     timeout,
-    toArray,
-} from 'rxjs';
-import { Api } from '../api/api';
-import { setApiToken } from '../api/axios';
-import { AuthBean } from '../api/model';
-import { ContactsList } from './contacts_list';
-import { GlideBaseInfo } from './def';
-import { Cache, GlideCache } from './cache';
+    toArray
+} from "rxjs";
+import { Api } from "../api/api";
+import { setApiToken } from "../api/axios";
+import { AuthBean } from "../api/model";
+import { ContactsList } from "./contacts_list";
+import { GlideBaseInfo } from "./def";
+import { Cache, GlideCache } from "./cache";
 import {
     Actions,
     AuthenticateData,
     CommonMessage,
-    UserStatusData,
-} from './message';
+    UserStatusData
+} from "./message";
 import {
     InternalSessionList,
     InternalSessionListImpl,
-    SessionList,
-} from './session_list';
-import { IMWsClient } from './im_ws_client';
-import { getCookie } from '../utils/Cookies';
-import { onError } from '../rx/next';
-import { Logger } from '../utils/Logger';
-import { isResponse } from '../api/response';
-import { showSnack } from '../component/widget/SnackBar';
-import { RelativeList, RelativeListImpl } from './relative_list';
+    SessionList
+} from "./session_list";
+import { IMWsClient } from "./im_ws_client";
+import { getCookie } from "../utils/Cookies";
+import { onError } from "../rx/next";
+import { Logger } from "../utils/Logger";
+import { isResponse } from "../api/response";
+import { showSnack } from "../component/widget/SnackBar";
+import { RelativeList, RelativeListImpl } from "./relative_list";
 
 export class Account {
-    private tag = 'Account';
+    private tag = "Account";
 
     private uid: string;
     private sessions: InternalSessionList;
@@ -52,7 +52,7 @@ export class Account {
     static instance: Account = new Account();
 
     constructor() {
-        this.token = getCookie('token');
+        this.token = getCookie("token");
         this.cache = new GlideCache();
         this.contacts = new ContactsList();
         this.sessions = new InternalSessionListImpl(this, this.cache);
@@ -70,15 +70,15 @@ export class Account {
     }
 
     public login(account: string, password: string): Observable<string> {
-        return Api.login(account, password).pipe(
+        return Api.login(account, password, true).pipe(
             mergeMap((res) => this.initAccount(res)),
             tap((res) => {
-                Logger.log(this.tag, 'Login', res);
+                Logger.log(this.tag, "Login", res);
             }),
             toArray(),
-            map((res) => 'login success'),
+            map((res) => "login success"),
             onError((err) => {
-                Logger.error(this.tag, 'Login', 'auth failed', err);
+                Logger.error(this.tag, "Login", "auth failed", err);
             }),
             catchError((err) => throwError(() => new Error(err)))
         );
@@ -88,10 +88,10 @@ export class Account {
         return Api.guest(nickname, avatar).pipe(
             mergeMap((res) => this.initAccount(res)),
             tap((res) => {
-                Logger.log(this.tag, 'GustLogin', res);
+                Logger.log(this.tag, "GustLogin", res);
             }),
             onError((err) => {
-                Logger.error(this.tag, 'GustLogin', 'auth failed', err);
+                Logger.error(this.tag, "GustLogin", "auth failed", err);
             }),
             catchError((err) => throwError(() => new Error(err)))
         );
@@ -103,7 +103,7 @@ export class Account {
                 return this.initAccount(res);
             }),
             tap((res) => {
-                Logger.log(this.tag, 'TokenAuth', res);
+                Logger.log(this.tag, "TokenAuth", res);
             }),
             timeout(3000),
             catchError((err) => {
@@ -126,11 +126,11 @@ export class Account {
     }
 
     public clearAuth() {
-        Logger.log(this.tag, 'clean auth info');
-        this.uid = '';
-        this.token = '';
+        Logger.log(this.tag, "clean auth info");
+        this.uid = "";
+        this.token = "";
         IMWsClient.close();
-        Cache.storeToken('');
+        Cache.storeToken("");
     }
 
     public getSessionList(): SessionList {
@@ -146,7 +146,7 @@ export class Account {
     }
 
     public isAuthenticated(): boolean {
-        return this.token && this.token !== '';
+        return this.token && this.token !== "";
     }
 
     public getUID(): string {
@@ -172,15 +172,16 @@ export class Account {
             })
         );
 
+
         return concat(
             this.initCache(),
             initUserInfo,
             this.sessions.init(this.cache),
             this.relatives.init(),
             IMWsClient.connect(this.server),
-            of('ws not ready, skip auth').pipe(
+            of("ws not ready, skip auth").pipe(
                 mergeMap((s) =>
-                    IMWsClient.isReady() ? this.authWs(false) : of(s)
+                    IMWsClient.isReady() ? this.authWs(auth.credential?.credential) : of(s)
                 )
             )
         );
@@ -188,44 +189,44 @@ export class Account {
 
     private initCache(): Observable<string> {
         return concat(
-            of('cache init start'),
+            of("cache init start"),
             this.cache
                 .init(this.getUID())
                 .pipe(catchError((err) => of(`cache init failed ${err}`))),
-            of('cache init complete')
+            of("cache init complete")
         );
     }
 
-    private authWs(v2: boolean): Observable<string> {
+    private authWs(credential?: string): Observable<string> {
         let request: Observable<CommonMessage<any>>;
 
-        if (v2) {
+        if (credential) {
             const credentials: AuthenticateData = {
-                credential: '',
-                version: 1,
+                credential: credential,
+                version: 1
             };
             request = IMWsClient.request(Actions.Authenticate, credentials);
         } else {
             request = IMWsClient.request(Actions.ApiUserAuth, {
-                Token: this.token,
+                Token: this.token
             });
         }
 
         return concat(
-            of('ws auth start'),
+            of("ws auth start"),
             request.pipe(
-                map(() => 'ws auth success'),
+                map(() => "ws auth success"),
                 tap(() => {
                     this.startHandleMessage();
                 }),
                 catchError((err) => {
                     if (
-                        err.hasOwnProperty('name') &&
-                        err.name === 'TimeoutError'
+                        err.hasOwnProperty("name") &&
+                        err.name === "TimeoutError"
                     ) {
-                        return throwError(() => 'ws auth timeout');
+                        return throwError(() => "ws auth timeout");
                     } else {
-                        return throwError(() => err.message ?? '');
+                        return throwError(() => err.message ?? "");
                     }
                 })
             )
@@ -248,7 +249,7 @@ export class Account {
                         this.sessions.onMessage(m);
                         break;
                     case Actions.NotifyKickOut:
-                        showSnack('kick out');
+                        showSnack("kick out");
                         this.logout();
                         break;
                     case Actions.NotifyNeedAuth:
@@ -257,11 +258,11 @@ export class Account {
                 }
             },
             error: (err) => {
-                Logger.error(this.tag, 'ws messages error', err);
+                Logger.error(this.tag, "ws messages error", err);
             },
             complete: () => {
-                Logger.log(this.tag, 'ws messages complete');
-            },
+                Logger.log(this.tag, "ws messages complete");
+            }
         });
     }
 }
@@ -302,12 +303,12 @@ export class UserStatusManager {
                         const status = {
                             uid: sd.uid,
                             online: sd.online,
-                            onlineAt: sd.onlineAt,
+                            onlineAt: sd.onlineAt
                         };
                         this.states.set(sd.uid, status);
                         this.events.next(status);
                     }
-                },
+                }
             });
     }
 
@@ -326,7 +327,7 @@ export class UserStatusManager {
                 return concat(of(state), ob);
             } else {
                 const request = IMWsClient.request(Actions.ApiUserState, {
-                    uid: uid,
+                    uid: uid
                 }).pipe(map((res) => res.data as UserStatusData));
                 return onErrorResumeNext(concat(request, ob), ob);
             }
