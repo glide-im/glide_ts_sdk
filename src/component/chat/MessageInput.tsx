@@ -140,55 +140,63 @@ export function MessageInput(props: {
     );
 }
 
-export function MessageInputV2(props: { sid: string, onLayoutChange: () => void }) {
+export function MessageInputV2(props: {
+    sid: string;
+    onLayoutChange: () => void;
+}) {
+    const input = useRef<HTMLInputElement>(null);
 
-    const input = useRef<HTMLInputElement>(null)
-
-    const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+    const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
+        null
+    );
     const [open, setOpen] = React.useState(false);
     const [reply, setReply] = React.useState<ChatMessage | null>(null);
 
     useEffect(() => {
-        setReply(null)
-        const sp = EventBus.event<ChatMessage>(Event.ReplyMessage).pipe(
-            filter((e) => e.SID === props.sid)
-        ).subscribe({
-            next: (e) => {
-                setReply(e)
-            }
-        })
-        return () => sp.unsubscribe()
-    }, [props.sid])
+        setReply(null);
+        const sp = EventBus.event<ChatMessage>(Event.ReplyMessage)
+            .pipe(filter((e) => e.SID === props.sid))
+            .subscribe({
+                next: (e) => {
+                    setReply(e);
+                },
+            });
+        return () => sp.unsubscribe();
+    }, [props.sid]);
 
     const onSend = (msg: string) => {
         const m = msg.trim();
         if (m.length === 0) {
-            return
+            return;
         }
-        const session = Account.session().get(props.sid)
+        const session = Account.session().get(props.sid);
         if (session != null) {
-            let observable: Observable<ChatMessage>
+            let observable: Observable<ChatMessage>;
             if (reply != null) {
                 const replyMessage: Reply = {
-                    content: m, replyTo: reply.toMessage()
-                }
-                observable = session.send(JSON.stringify(replyMessage), MessageType.Reply)
+                    content: m,
+                    replyTo: reply.toMessage(),
+                };
+                observable = session.send(
+                    JSON.stringify(replyMessage),
+                    MessageType.Reply
+                );
             } else {
-                observable = session.send(m, MessageType.Text)
+                observable = session.send(m, MessageType.Text);
             }
             observable.subscribe({
                 error: (err) => showSnack(err.toString()),
                 next: (e) => {
-                    console.log(e)
-                }
-            })
+                    console.log(e);
+                },
+            });
         }
-        setReply(null)
-    }
+        setReply(null);
+    };
 
     useEffect(() => {
-        props.onLayoutChange()
-    })
+        props.onLayoutChange();
+    });
 
     const onEmojiClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -196,142 +204,240 @@ export function MessageInputV2(props: { sid: string, onLayoutChange: () => void 
     };
 
     const handleSendClick = () => {
-        onSend(input.current.value)
-        input.current.value = ''
-    }
+        onSend(input.current.value);
+        input.current.value = '';
+    };
 
-    const onAttachFileClick = () => {
-
-    }
+    const onAttachFileClick = () => {};
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        Account.session().get(props.sid)?.sendUserTypingEvent();
 
-        Account.session().get(props.sid)?.sendUserTypingEvent()
-
-        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+        if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
             e.preventDefault();
-            handleSendClick()
+            handleSendClick();
         }
-    }
+    };
 
-    const handleReplyClick = () => {
+    const handleReplyClick = () => {};
 
-    }
-
-    const replyE = reply && <Grid container className={'mt-2 mx-2 max-w-lg'}>
-        <Grid item xs={10} className={'px-2 align-middle  hover:rounded-md cursor-pointer hover:bg-gray-100'}>
-            <Typography variant={'body2'}
-                        sx={{maxLines: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: "nowrap"}}
-                        lineHeight={"2.1rem"}
-                        onClick={handleReplyClick}>
-                <span className={'pr-2 text-cyan-500'}>{reply.getSenderName()}</span>
-                {reply.getDisplayContent(false)}
-            </Typography>
-        </Grid>
-        <Grid item xs={1}>
-            <IconButton size={"small"} onClick={() => setReply(null)}>
-                <Close/>
-            </IconButton>
-        </Grid>
-    </Grid>
-
-    return <Box className={'flex flex-row w-full flex-wrap items-end'}>
-        <Box className={'grow rounded mr-1 bg-white'}>
-            {replyE}
-            <Box className={'items-center flex flex-wrap'}>
-                <Popover onClose={() => setOpen(false)} id={'id1'} anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }} anchorEl={anchorEl} transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                }} open={open}>
-                    <EmojiList onclick={(e) => {
-                        input.current.value = input.current.value + e
-                        setOpen(false)
-                    }}/>
-                </Popover>
-                <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onEmojiClick}>
-                    <EmojiEmotionsRounded/>
+    const replyE = reply && (
+        <Grid container className={'mt-2 mx-2 max-w-lg'}>
+            <Grid
+                item
+                xs={10}
+                className={
+                    'px-2 align-middle  hover:rounded-md cursor-pointer hover:bg-gray-100'
+                }>
+                <Typography
+                    variant={'body2'}
+                    sx={{
+                        maxLines: 1,
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                    }}
+                    lineHeight={'2.1rem'}
+                    onClick={handleReplyClick}>
+                    <span className={'pr-2 text-cyan-500'}>
+                        {reply.getSenderName()}
+                    </span>
+                    {reply.getDisplayContent(false)}
+                </Typography>
+            </Grid>
+            <Grid item xs={1}>
+                <IconButton size={'small'} onClick={() => setReply(null)}>
+                    <Close />
                 </IconButton>
-                <InputBase inputRef={input}
-                           className={'border-0'}
-                           autoComplete={"off"}
-                           size={"medium"}
-                           sx={{ml: 1, flex: 1, fontFamily: 'MS-YaHei',}} fullWidth
-                           placeholder="说点什么"
-                           onKeyDown={handleKeyDown}
-                           inputProps={{'aria-label': 'search google maps'}}/>
-                <VideoChat session={props.sid} showIcon={true}/>
-                <IconButton aria-describedby={'id1'} sx={{p: '10px'}} onClick={onAttachFileClick}>
-                    <AttachFileRounded/>
-                </IconButton>
+            </Grid>
+        </Grid>
+    );
+
+    return (
+        <Box className={'flex flex-row w-full flex-wrap items-end'}>
+            <Box className={'grow rounded mr-1 bg-white'}>
+                {replyE}
+                <Box className={'items-center flex flex-wrap'}>
+                    <Popover
+                        onClose={() => setOpen(false)}
+                        id={'id1'}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                        }}
+                        anchorEl={anchorEl}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                        }}
+                        open={open}>
+                        <EmojiList
+                            onclick={(e) => {
+                                input.current.value = input.current.value + e;
+                                setOpen(false);
+                            }}
+                        />
+                    </Popover>
+                    <IconButton
+                        aria-describedby={'id1'}
+                        sx={{ p: '10px' }}
+                        onClick={onEmojiClick}>
+                        <EmojiEmotionsRounded />
+                    </IconButton>
+                    <InputBase
+                        inputRef={input}
+                        className={'border-0'}
+                        autoComplete={'off'}
+                        size={'medium'}
+                        sx={{ ml: 1, flex: 1, fontFamily: 'MS-YaHei' }}
+                        fullWidth
+                        placeholder='说点什么'
+                        onKeyDown={handleKeyDown}
+                        inputProps={{ 'aria-label': 'search google maps' }}
+                    />
+                    <VideoChat session={props.sid} showIcon={true} />
+                    <IconButton
+                        aria-describedby={'id1'}
+                        sx={{ p: '10px' }}
+                        onClick={onAttachFileClick}>
+                        <AttachFileRounded />
+                    </IconButton>
+                </Box>
+            </Box>
+            <Box className={'flex-none'}>
+                <Box sx={{ bgcolor: grey[50], borderRadius: '100px' }}>
+                    <IconButton
+                        color={'primary'}
+                        sx={{ p: '10px' }}
+                        size={'large'}
+                        onClick={handleSendClick}>
+                        <SendRounded />
+                    </IconButton>
+                </Box>
             </Box>
         </Box>
-        <Box className={'flex-none'}>
-            <Box sx={{bgcolor: grey[50], borderRadius: '100px'}}>
-                <IconButton color={'primary'} sx={{p: '10px'}} size={"large"} onClick={handleSendClick}>
-                    <SendRounded/>
-                </IconButton>
-            </Box>
-        </Box>
-    </Box>
+    );
 }
 
-function SendImageDialog(props: { open: boolean, callback: (url: string) => void }) {
+function SendImageDialog(props: {
+    open: boolean;
+    callback: (url: string) => void;
+}) {
+    const input = useRef<HTMLInputElement>();
 
-    const input = useRef<HTMLInputElement>()
-
-    return <Box>
-        <Dialog fullWidth open={props.open} onClose={() => {
-            props.callback('')
-        }} aria-labelledby="form-dialog-title">
-            <DialogTitle id="form-dialog-title">发送图片</DialogTitle>
-            <DialogContent>
-                <Box></Box>
-                <FormControl fullWidth>
-                    <InputLabel id="demo-simple-select-label">选择图片</InputLabel>
-                    <Select inputRef={input} onChange={(v) => {
-                    }}>
-                        <MenuItem value={'https://www.baidu.com/img/flexible/logo/pc/result.png'}>图片 1</MenuItem>
-                        <MenuItem
-                            value={'https://dlweb.sogoucdn.com/pcsearch/web/index/images/logo_300x116_e497c82.png'}>图片
-                            2</MenuItem>
-                        <MenuItem value={'http://inews.gtimg.com/newsapp_bt/0/12171811596_909/0'}>图片 3</MenuItem>
-                        <MenuItem
-                            value={'http://lf3-cdn-tos.bytescm.com/obj/static/xitu_juejin_web/e08da34488b114bd4c665ba2fa520a31.svg'}>图片
-                            4</MenuItem>
-                        <MenuItem value={'https://i0.sinaimg.cn/home/2014/1030/hxjzg103.jpg'}>图片 5</MenuItem>
-                    </Select>
-                </FormControl>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => {
-                    console.log(input.current)
-                    props.callback(input.current.value)
-                }} color="primary">
-                    发送
-                </Button>
-            </DialogActions>
-        </Dialog>
-    </Box>
+    return (
+        <Box>
+            <Dialog
+                fullWidth
+                open={props.open}
+                onClose={() => {
+                    props.callback('');
+                }}
+                aria-labelledby='form-dialog-title'>
+                <DialogTitle id='form-dialog-title'>发送图片</DialogTitle>
+                <DialogContent>
+                    <Box></Box>
+                    <FormControl fullWidth>
+                        <InputLabel id='demo-simple-select-label'>
+                            选择图片
+                        </InputLabel>
+                        <Select inputRef={input} onChange={(v) => {}}>
+                            <MenuItem
+                                value={
+                                    'https://www.baidu.com/img/flexible/logo/pc/result.png'
+                                }>
+                                图片 1
+                            </MenuItem>
+                            <MenuItem
+                                value={
+                                    'https://dlweb.sogoucdn.com/pcsearch/web/index/images/logo_300x116_e497c82.png'
+                                }>
+                                图片 2
+                            </MenuItem>
+                            <MenuItem
+                                value={
+                                    'http://inews.gtimg.com/newsapp_bt/0/12171811596_909/0'
+                                }>
+                                图片 3
+                            </MenuItem>
+                            <MenuItem
+                                value={
+                                    'http://lf3-cdn-tos.bytescm.com/obj/static/xitu_juejin_web/e08da34488b114bd4c665ba2fa520a31.svg'
+                                }>
+                                图片 4
+                            </MenuItem>
+                            <MenuItem
+                                value={
+                                    'https://i0.sinaimg.cn/home/2014/1030/hxjzg103.jpg'
+                                }>
+                                图片 5
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            console.log(input.current);
+                            props.callback(input.current.value);
+                        }}
+                        color='primary'>
+                        发送
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
 }
 
 const emojis = [
-    '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉', '😊',
-    '😋', '😎', '😍', '😘', '😗', '😙', '😚', '🙂', '🤗', '🤔',
-    '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
+    '😀',
+    '😁',
+    '😂',
+    '🤣',
+    '😃',
+    '😄',
+    '😅',
+    '😆',
+    '😉',
+    '😊',
+    '😋',
+    '😎',
+    '😍',
+    '😘',
+    '😗',
+    '😙',
+    '😚',
+    '🙂',
+    '🤗',
+    '🤔',
+    '🤐',
+    '🤨',
+    '😐',
+    '😑',
+    '😶',
+    '😏',
+    '😒',
+    '🙄',
+    '😬',
+    '🤥',
 ];
 
 function EmojiList(props: { onclick: (emoji: string) => void }) {
-
-
     return (
         <Box>
             <Grid container p={1}>
                 {emojis.map((emoji) => (
-                    <Grid item xs={2} key={emoji} justifyContent="center" alignItems="center" display={"flex"}
-                          width={10}>
-                        <IconButton size={"small"} onClick={() => props.onclick(emoji)}>
+                    <Grid
+                        item
+                        xs={2}
+                        key={emoji}
+                        justifyContent='center'
+                        alignItems='center'
+                        display={'flex'}
+                        width={10}>
+                        <IconButton
+                            size={'small'}
+                            onClick={() => props.onclick(emoji)}>
                             {/*<EmojiFlagsSharp fontSize="large" />*/}
                             <div>{emoji}</div>
                         </IconButton>

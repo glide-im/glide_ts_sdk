@@ -23,10 +23,9 @@ export function setRtcConfig(c: RTCConfiguration) {
     rtcConfig = c;
 }
 
-export type WebRtcSessionState = "idle" | "incoming" | "dialing" | "connected";
+export type WebRtcSessionState = 'idle' | 'incoming' | 'dialing' | 'connected';
 
 export class WebRTC {
-
     public static incoming: Incoming | null = null;
 
     public static getSignaling(): Signaling {
@@ -34,14 +33,19 @@ export class WebRTC {
     }
 
     public static dial(peerId: string): Promise<Dialing> {
-        return WsDialing.dial(peerId)
+        return WsDialing.dial(peerId);
     }
 
-    public static onIncoming(cb: (peerInfo: PeerInfo, incoming: Incoming) => void) {
-        WebRTC.getSignaling().onIncoming = (peerInfo: PeerInfo, incoming: Incoming) => {
+    public static onIncoming(
+        cb: (peerInfo: PeerInfo, incoming: Incoming) => void
+    ) {
+        WebRTC.getSignaling().onIncoming = (
+            peerInfo: PeerInfo,
+            incoming: Incoming
+        ) => {
             incoming.disposeEvent.subscribe(() => {
-                WebRTC.incoming = null
-            })
+                WebRTC.incoming = null;
+            });
             WebRTC.incoming = incoming;
             cb(peerInfo, incoming);
             // (incoming as WsIncoming).event.subscribe(() => {

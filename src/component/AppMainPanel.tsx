@@ -94,52 +94,63 @@ export const AppMainPanel: any = withRouter((props: RouteComponentProps) => {
 });
 
 const MobileMain = withRouter((props: RouteComponentProps) => {
-
     const match = useRouteMatch();
-    const selected = window.location.href.match(/\/im\/(session\/?)$/g) != null ? 0 : 1;
-    const isMainPage = window.location.href.match(/\/im\/(session\/?|profile\/?)$/g) != null;
+    const selected =
+        window.location.href.match(/\/im\/(session\/?)$/g) != null ? 0 : 1;
+    const isMainPage =
+        window.location.href.match(/\/im\/(session\/?|profile\/?)$/g) != null;
 
     return (
         <Box bgcolor={grey[100]} width={'100%'}>
             <Switch>
                 <Route path={`${match.url}/session`} exact={true}>
-                    <Box height={"calc(100vh - 56px)"}>
-                        <AppBar position="static">
+                    <Box height={'calc(100vh - 56px)'}>
+                        <AppBar position='static'>
                             <Toolbar>
-                                <IconButton edge="start" color="inherit" aria-label="menu">
-                                </IconButton>
-                                <Typography variant="h6">
-                                    会话
-                                </Typography>
+                                <IconButton
+                                    edge='start'
+                                    color='inherit'
+                                    aria-label='menu'></IconButton>
+                                <Typography variant='h6'>会话</Typography>
                             </Toolbar>
                         </AppBar>
-                        <Box overflow={"hidden"} className="BeautyScrollBar">
-                            <SessionListView/>
+                        <Box overflow={'hidden'} className='BeautyScrollBar'>
+                            <SessionListView />
                         </Box>
                     </Box>
                 </Route>
                 <Route path={`${match.url}/profile`} exact>
-                    <Box height={"calc(100vh - 56px)"}>
-                        <Profile/>
+                    <Box height={'calc(100vh - 56px)'}>
+                        <Profile />
                     </Box>
                 </Route>
                 <Route path={`${match.url}/session/:sid`}>
-                    <ChatRoomContainerMobile/>
+                    <ChatRoomContainerMobile />
                 </Route>
                 <Route path={`${match.url}/`} exact={true}>
-                    <Redirect to={`${match.url}/session/`}/>
+                    <Redirect to={`${match.url}/session/`} />
                 </Route>
             </Switch>
-            {isMainPage ? <BottomNavigation value={selected} showLabels>
-                <BottomNavigationAction label="聊天" icon={<MessageOutlined/>} onClick={() => {
-                    props.history.replace(`/im/session`)
-                }
-                }/>
-                <BottomNavigationAction label="我的" icon={<ManageAccountsOutlined/>} onClick={() => {
-                    props.history.replace(`/im/profile`)
-                }}/>
-            </BottomNavigation> : <></>
-            }
+            {isMainPage ? (
+                <BottomNavigation value={selected} showLabels>
+                    <BottomNavigationAction
+                        label='聊天'
+                        icon={<MessageOutlined />}
+                        onClick={() => {
+                            props.history.replace(`/im/session`);
+                        }}
+                    />
+                    <BottomNavigationAction
+                        label='我的'
+                        icon={<ManageAccountsOutlined />}
+                        onClick={() => {
+                            props.history.replace(`/im/profile`);
+                        }}
+                    />
+                </BottomNavigation>
+            ) : (
+                <></>
+            )}
         </Box>
-    )
-})
+    );
+});

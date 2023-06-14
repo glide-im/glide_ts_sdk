@@ -7,11 +7,19 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer(props: ImageViewerProps) {
-  return (
-    <Dialog open={props.open} onClose={props.onClose} fullWidth maxWidth="xl">
-      <DialogContent>
-        <img src={props.imageUrl} style={{ width: '100%', height: '100%' }}  alt={"-"}/>
-      </DialogContent>
-    </Dialog>
-  );
+    return (
+        <Dialog
+            open={props.open}
+            onClose={props.onClose}
+            fullWidth
+            maxWidth='xl'>
+            <DialogContent>
+                <img
+                    src={props.imageUrl}
+                    style={{ width: '100%', height: '100%' }}
+                    alt={'-'}
+                />
+            </DialogContent>
+        </Dialog>
+    );
 }

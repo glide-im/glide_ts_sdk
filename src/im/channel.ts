@@ -62,18 +62,20 @@ export class Channel {
 }
 
 class _channelList {
-
-    private _list: Map<string, Channel> = new Map()
+    private _list: Map<string, Channel> = new Map();
 
     public getChannel(id: string): Channel | null {
-        if (!this._list.has("the_world_channel")) {
-            this._list.set('the_world_channel', new Channel('the_world_channel'))
+        if (!this._list.has('the_world_channel')) {
+            this._list.set(
+                'the_world_channel',
+                new Channel('the_world_channel')
+            );
         }
         if (!this._list.has(id)) {
-            return null
+            return null;
         }
-        return this._list.get(id)
+        return this._list.get(id);
     }
 }
 
-export const ChannelList = new _channelList()
+export const ChannelList = new _channelList();

@@ -5,10 +5,10 @@ interface ContainerProps {
     backgroundColor: string;
 }
 
-const PopupMenu = ({children, backgroundColor}: ContainerProps) => {
+const PopupMenu = ({ children, backgroundColor }: ContainerProps) => {
     const style = {
         backgroundColor,
-        padding: "10px",
+        padding: '10px',
     };
 
     return <div style={style}>{children}</div>;

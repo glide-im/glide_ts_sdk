@@ -23,28 +23,29 @@ export function PaperComponent(props: PaperProps) {
     );
 }
 
-export default function VideoChat(props: { session: string, showIcon: boolean }) {
-
+export default function VideoChat(props: {
+    session: string;
+    showIcon: boolean;
+}) {
     const [open, setOpen] = React.useState(false);
 
     useEffect(() => {
-        let sp: Subscription | null = null
+        let sp: Subscription | null = null;
         if (!props.showIcon) {
             WebRTC.onIncoming((peerInfo, incoming) => {
                 sp = incoming.cancelEvent.subscribe(() => {
-                    setOpen(false)
-                    sp.unsubscribe()
-                })
-                setOpen(true)
-            })
+                    setOpen(false);
+                    sp.unsubscribe();
+                });
+                setOpen(true);
+            });
         }
-        return () => sp?.unsubscribe()
+        return () => sp?.unsubscribe();
     }, [props.showIcon]);
-
 
     const session = Account.session().get(props.session);
     if (session?.Type !== SessionType.Single) {
-        return <></>
+        return <></>;
     }
 
     const handleClickOpen = () => {
@@ -57,20 +58,25 @@ export default function VideoChat(props: { session: string, showIcon: boolean })
 
     return (
         <div>
-            {props.showIcon ? <IconButton onClick={handleClickOpen}>
-                <VideoCallRounded/>
-            </IconButton> : <></>}
+            {props.showIcon ? (
+                <IconButton onClick={handleClickOpen}>
+                    <VideoCallRounded />
+                </IconButton>
+            ) : (
+                <></>
+            )}
             <Dialog
                 open={open}
                 onClose={handleClose}
                 PaperComponent={PaperComponent}
-                aria-labelledby="draggable-dialog-title"
-            >
-                <DialogTitle style={{cursor: 'move'}} id="draggable-dialog-title">
+                aria-labelledby='draggable-dialog-title'>
+                <DialogTitle
+                    style={{ cursor: 'move' }}
+                    id='draggable-dialog-title'>
                     视频通话
                 </DialogTitle>
                 <DialogContent>
-                    <WebRtcView targetId={session.To} onClose={handleClose}/>
+                    <WebRtcView targetId={session.To} onClose={handleClose} />
                 </DialogContent>
             </Dialog>
         </div>

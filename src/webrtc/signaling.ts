@@ -55,24 +55,20 @@ export interface Signaling {
 
     onIncoming: (peerInfo: PeerInfo, incoming: Incoming) => void;
 
-    sendSignaling(to: string, type: SignalingType, content: any): Promise<any>
+    sendSignaling(to: string, type: SignalingType, content: any): Promise<any>;
 
-    addMessageListener(l: (m: SignalingMessage) => void): () => void
+    addMessageListener(l: (m: SignalingMessage) => void): () => void;
 }
 
 export class WsSignaling implements Signaling {
-
     private messageListeners: ((m: SignalingMessage) => void)[] = [];
     private incomingList = new Map<string, Incoming>();
 
     myId: string | null = null;
 
-    onIncoming: (peerInfo: PeerInfo, incoming: Incoming) => void = () => {
-    }
-    onHelloCallback: (id: string, replay: boolean) => void = () => {
-    }
-    logCallback: (message: string) => void = () => {
-    };
+    onIncoming: (peerInfo: PeerInfo, incoming: Incoming) => void = () => {};
+    onHelloCallback: (id: string, replay: boolean) => void = () => {};
+    logCallback: (message: string) => void = () => {};
 
     private static instance: WsSignaling;
 
@@ -84,13 +80,14 @@ export class WsSignaling implements Signaling {
     }
 
     constructor() {
-
-        IMWsClient.messages().pipe(
-            filter((m) => m.action === Actions.MessageCli),
-            map((m) => m.data as SignalingMessage),
-        ).subscribe({
-            next: (m) => this.onSignalingMessage(m),
-        })
+        IMWsClient.messages()
+            .pipe(
+                filter((m) => m.action === Actions.MessageCli),
+                map((m) => m.data as SignalingMessage)
+            )
+            .subscribe({
+                next: (m) => this.onSignalingMessage(m),
+            });
     }
 
     available(): boolean {
@@ -101,20 +98,34 @@ export class WsSignaling implements Signaling {
     addMessageListener(l: (m: SignalingMessage) => void): () => void {
         this.messageListeners.push(l);
         return () => {
-            this.messageListeners = this.messageListeners.filter(x => x !== l);
-        }
+            this.messageListeners = this.messageListeners.filter(
+                (x) => x !== l
+            );
+        };
     }
 
     public helloToFriend(id: string, replay: boolean = false) {
-        this.sendSignaling(id, replay ? SignalingType.Hello : SignalingType.Hi, this.myId!!).then();
+        this.sendSignaling(
+            id,
+            replay ? SignalingType.Hello : SignalingType.Hi,
+            this.myId!!
+        ).then();
     }
 
-    public async sendSignaling(to: string, type: SignalingType, content: any): Promise<any> {
+    public async sendSignaling(
+        to: string,
+        type: SignalingType,
+        content: any
+    ): Promise<any> {
         this.myId = Account.getInstance().getUID();
         const m = {
-            content: content, from: this.myId, id: 0, to: to, type: type.valueOf(),
+            content: content,
+            from: this.myId,
+            id: 0,
+            to: to,
+            type: type.valueOf(),
         };
-        return firstValueFrom(IMWsClient.sendCliCustomMessage(m))
+        return firstValueFrom(IMWsClient.sendCliCustomMessage(m));
     }
 
     deleteIncoming(peerId: string) {
@@ -124,21 +135,20 @@ export class WsSignaling implements Signaling {
     }
 
     private onSignalingMessage(msg: SignalingMessage) {
-
         if (msg.type >= 2000 && msg.type <= 2011) {
-            mLog("signaling", JSON.stringify(msg));
+            mLog('signaling', JSON.stringify(msg));
         } else {
-            return
+            return;
         }
-        this.messageListeners.forEach(l => l(msg));
+        this.messageListeners.forEach((l) => l(msg));
 
         switch (msg.type) {
             case SignalingType.Hi:
                 this.helloToFriend(msg.content, true);
-                this.onHelloCallback(msg.content, false)
+                this.onHelloCallback(msg.content, false);
                 break;
             case SignalingType.Hello:
-                this.onHelloCallback(msg.content, true)
+                this.onHelloCallback(msg.content, true);
                 break;
             case SignalingType.Dialing:
                 const peer = msg.content as PeerInfo;

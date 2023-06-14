@@ -77,36 +77,51 @@ export function GroupMemberList(props: { id: string }) {
     );
 }
 
-function AddMemberDialog(props: { open: boolean, callback: (s: number) => void }) {
+function AddMemberDialog(props: {
+    open: boolean;
+    callback: (s: number) => void;
+}) {
+    const [id, setId] = useState(-1);
 
-    const [id, setId] = useState(-1)
-
-    return <>
-        <Dialog open={props.open} onClose={() => {
-            props.callback(-1)
-        }} aria-labelledby="form-dialog-title">
-            <DialogTitle id="form-dialog-title">Add Member</DialogTitle>
-            <DialogContent>
-                <DialogContentText>
-                    Invite member to group
-                </DialogContentText>
-                <TextField autoFocus onChange={e => {
-                    const id = parseInt(e.target.value)
-                    if (isNaN(id)) {
-                        return
-                    }
-                    setId(id)
-                }} margin="dense" id="number" label="ID"
-                           type="text"
-                           fullWidth/>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => {
-                    props.callback(id)
-                }} color="primary">
-                    Submit
-                </Button>
-            </DialogActions>
-        </Dialog>
-    </>
+    return (
+        <>
+            <Dialog
+                open={props.open}
+                onClose={() => {
+                    props.callback(-1);
+                }}
+                aria-labelledby='form-dialog-title'>
+                <DialogTitle id='form-dialog-title'>Add Member</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Invite member to group
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        onChange={(e) => {
+                            const id = parseInt(e.target.value);
+                            if (isNaN(id)) {
+                                return;
+                            }
+                            setId(id);
+                        }}
+                        margin='dense'
+                        id='number'
+                        label='ID'
+                        type='text'
+                        fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            props.callback(id);
+                        }}
+                        color='primary'>
+                        Submit
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
+    );
 }

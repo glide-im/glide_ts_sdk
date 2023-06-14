@@ -20,19 +20,18 @@ export interface ConnectConfig {
 }
 
 export interface WebSockEvent {
-    state: number,
-    event: any
+    state: number;
+    event: any;
 }
 
 const DEFAULT_TIMEOUT = 5000;
 
 export class WsClient {
-
-    private tag = "WsClient";
+    private tag = 'WsClient';
 
     private websocket: WebSocket | null;
-    private readyState: number
-    private error: any
+    private readyState: number;
+    private error: any;
 
     private eventSubject = new Subject<WebSockEvent>();
     private messageSubject = new Subject<MessageEvent>();
@@ -43,20 +42,24 @@ export class WsClient {
     }
 
     public connect(url: string | ConnectConfig): Observable<string> {
-        if (typeof url == "string") {
-            return this.connectWithComplete(url)
+        if (typeof url == 'string') {
+            return this.connectWithComplete(url);
         } else {
             return this.connectWithComplete(url.url).pipe(
                 timeout(url.timeout || DEFAULT_TIMEOUT),
-                map(() => this.readyState === WebSocket.OPEN ? "ws connecting complete" : `${this.error}`),
+                map(() =>
+                    this.readyState === WebSocket.OPEN
+                        ? 'ws connecting complete'
+                        : `${this.error}`
+                ),
                 catchError((e) => {
                     if (url.ignoreError) {
-                        return of("ws connecting skip error, " + e)
+                        return of('ws connecting skip error, ' + e);
                     } else {
-                        return throwError(() => e)
+                        return throwError(() => e);
                     }
                 })
-            )
+            );
         }
     }
 
@@ -66,44 +69,48 @@ export class WsClient {
             interval(100).pipe(
                 filter(() => this.readyState !== WebSocket.CONNECTING),
                 take(1),
-                map(() => "ws connecting complete, state: " + this.readyState),
+                map(() => 'ws connecting complete, state: ' + this.readyState)
             )
-        )
+        );
     }
 
     private connectInternal(url: string): Observable<string> {
-        if (this.websocket && (this.websocket.readyState === WebSocket.OPEN || this.readyState === WebSocket.OPEN)) {
-            throwError(() => "websocket is already open");
+        if (
+            this.websocket &&
+            (this.websocket.readyState === WebSocket.OPEN ||
+                this.readyState === WebSocket.OPEN)
+        ) {
+            throwError(() => 'websocket is already open');
         }
 
         return new Observable((subscriber) => {
-            this.readyState = WebSocket.CONNECTING
-            subscriber.next("ws connecting")
+            this.readyState = WebSocket.CONNECTING;
+            subscriber.next('ws connecting');
 
             try {
                 this.websocket = new WebSocket(url);
             } catch (e) {
-                subscriber.error(e)
-                return
+                subscriber.error(e);
+                return;
             }
 
             this.websocket.onclose = (ev: CloseEvent) => {
                 this.closeInternal(ev);
-            }
+            };
             this.websocket.onerror = (ev: Event) => {
-                this.error = ev.type
+                this.error = ev.type;
                 this.closeInternal(ev);
-            }
+            };
             this.websocket.onmessage = (ev: MessageEvent) => {
                 this.messageSubject.next(ev);
-            }
+            };
             this.websocket.onopen = (ev: Event) => {
                 this.readyState = WebSocket.OPEN;
-                this.eventSubject.next({state: WebSocket.OPEN, event: ev});
-            }
+                this.eventSubject.next({ state: WebSocket.OPEN, event: ev });
+            };
 
-            subscriber.complete()
-        })
+            subscriber.complete();
+        });
     }
 
     private closeInternal(event: any) {
@@ -112,27 +119,36 @@ export class WsClient {
                 this.websocket.close();
                 this.websocket = null;
                 this.readyState = WebSocket.CLOSED;
-                this.eventSubject.next({state: WebSocket.CLOSED, event: event});
+                this.eventSubject.next({
+                    state: WebSocket.CLOSED,
+                    event: event,
+                });
             }
         } catch (e) {
-            Logger.error(this.tag, "close websocket error", e)
+            Logger.error(this.tag, 'close websocket error', e);
         }
     }
 
-    public send(data: string | ArrayBufferLike | Blob | ArrayBufferView): Observable<string | ArrayBufferLike | Blob | ArrayBufferView> {
+    public send(
+        data: string | ArrayBufferLike | Blob | ArrayBufferView
+    ): Observable<string | ArrayBufferLike | Blob | ArrayBufferView> {
         return new Observable((subscriber) => {
-            if (this.websocket && this.websocket.readyState === WebSocket.OPEN && this.readyState === WebSocket.OPEN) {
+            if (
+                this.websocket &&
+                this.websocket.readyState === WebSocket.OPEN &&
+                this.readyState === WebSocket.OPEN
+            ) {
                 try {
                     this.websocket.send(data);
-                    subscriber.next(data)
+                    subscriber.next(data);
                 } catch (e) {
-                    subscriber.error(e)
+                    subscriber.error(e);
                 }
             } else {
-                subscriber.error("websocket is not ready")
+                subscriber.error('websocket is not ready');
             }
-            subscriber.complete()
-        })
+            subscriber.complete();
+        });
     }
 
     public messageEvent(): Subject<MessageEvent> {
@@ -140,16 +156,18 @@ export class WsClient {
     }
 
     public close() {
-        this.closeInternal("close by user");
+        this.closeInternal('close by user');
     }
 
     public isReady(): boolean {
-        return this.websocket && this.websocket.readyState === WebSocket.OPEN && this.readyState === WebSocket.OPEN;
+        return (
+            this.websocket &&
+            this.websocket.readyState === WebSocket.OPEN &&
+            this.readyState === WebSocket.OPEN
+        );
     }
 
     public event(): Subject<WebSockEvent> {
         return this.eventSubject;
     }
-
-
 }

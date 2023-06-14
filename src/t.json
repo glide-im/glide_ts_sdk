@@ -94,10 +94,7 @@
                         "pet_data": null,
                         "saved_price": -99999999,
                         "saved_time": -99999999,
-                        "location_ids": [
-                            3,
-                            4
-                        ]
+                        "location_ids": [3, 4]
                     },
                     {
                         "id": 10017219,
@@ -133,10 +130,7 @@
                         "pet_data": null,
                         "saved_price": -99999999,
                         "saved_time": -99999999,
-                        "location_ids": [
-                            3,
-                            4
-                        ]
+                        "location_ids": [3, 4]
                     }
                 ],
                 "products": [],

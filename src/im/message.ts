@@ -89,7 +89,7 @@ export enum Actions {
     AckRequest = 'ack.request',
     AckNotify = 'ack.notify',
 
-    Authenticate = "authenticate",
+    Authenticate = 'authenticate',
 
     Api = 'api',
     ApiFailed = 'api.failed',
@@ -163,7 +163,7 @@ export interface CliCustomMessage {
 
 // 登录 ws 服务的凭据, 从业务接口获取, 用于 ws 连接时的认证, 有效期 30 秒
 export interface AuthenticateData {
-    version: number,
+    version: number;
     credential: string;
 }
 

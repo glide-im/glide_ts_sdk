@@ -6,4 +6,4 @@ interface ChatContextValue {
 
 export const ChatContext = createContext({
     scrollToBottom: Function,
-} as ChatContextValue)
+} as ChatContextValue);

@@ -16,7 +16,7 @@ import { Account } from '../../im/account';
 import { SettingDialog } from './SettingsDialog';
 import { showSnack } from '../widget/SnackBar';
 
-export const Guest = withRouter((props: RouteComponentProps) => {
+export const Guest: any = withRouter((props: RouteComponentProps) => {
     const accountInput = useRef<HTMLInputElement>(null);
 
     const [open, setOpen] = useState(false);
@@ -184,9 +184,111 @@ export const Guest = withRouter((props: RouteComponentProps) => {
     );
 });
 
-const surnames: string[] = ["张", "李", "赵", "钱", "孙", "周", "吴", "郑", "王", "冯", "陈", "褚", "卫", "沈", "韩", "杨", "朱", "秦", "尤", "许", "何", "吕", "施", "桂", "袁", "夏", "殷", "崔", "侯", "邓", "龚", "苏", "梁", "魏", "忻", "唐", "董", "于", "祝", "鲁", "薛", "雷", "贺", "倪", "汤", "滕", "殳", "牛"];
-const names: string[] = ["衣", "燕", "心", "天", "罡", "马", "刀", "影", "漠", "魂", "剑", "飞", "云", "雪", "岳", "华", "青", "枫", "波", "霜", "明", "良", "俊", "忠", "信", "义", "勇", "虎", "龙", "豹", "猛", "辉", "杰", "晨", "昊", "博", "翔", "萧", "瑾", "琦", "雯", "婧", "嘉", "慧", "思", "娜", "欣", "峰", "升", "强", "川", "群", "爽"];
-
+const surnames: string[] = [
+    '张',
+    '李',
+    '赵',
+    '钱',
+    '孙',
+    '周',
+    '吴',
+    '郑',
+    '王',
+    '冯',
+    '陈',
+    '褚',
+    '卫',
+    '沈',
+    '韩',
+    '杨',
+    '朱',
+    '秦',
+    '尤',
+    '许',
+    '何',
+    '吕',
+    '施',
+    '桂',
+    '袁',
+    '夏',
+    '殷',
+    '崔',
+    '侯',
+    '邓',
+    '龚',
+    '苏',
+    '梁',
+    '魏',
+    '忻',
+    '唐',
+    '董',
+    '于',
+    '祝',
+    '鲁',
+    '薛',
+    '雷',
+    '贺',
+    '倪',
+    '汤',
+    '滕',
+    '殳',
+    '牛',
+];
+const names: string[] = [
+    '衣',
+    '燕',
+    '心',
+    '天',
+    '罡',
+    '马',
+    '刀',
+    '影',
+    '漠',
+    '魂',
+    '剑',
+    '飞',
+    '云',
+    '雪',
+    '岳',
+    '华',
+    '青',
+    '枫',
+    '波',
+    '霜',
+    '明',
+    '良',
+    '俊',
+    '忠',
+    '信',
+    '义',
+    '勇',
+    '虎',
+    '龙',
+    '豹',
+    '猛',
+    '辉',
+    '杰',
+    '晨',
+    '昊',
+    '博',
+    '翔',
+    '萧',
+    '瑾',
+    '琦',
+    '雯',
+    '婧',
+    '嘉',
+    '慧',
+    '思',
+    '娜',
+    '欣',
+    '峰',
+    '升',
+    '强',
+    '川',
+    '群',
+    '爽',
+];
 
 function generateWuxiaName(): string {
     let name: string;
@@ -195,7 +297,6 @@ function generateWuxiaName(): string {
     const randomName = names[Math.floor(Math.random() * names.length)];
 
     name = `${randomSurname}${randomName}`;
-
 
     return name;
 }

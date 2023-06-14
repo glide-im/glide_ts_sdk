@@ -115,127 +115,127 @@ export class GlideCache implements SessionListCache, ChatMessageCache {
 }
 
 class BaseInfoCache {
-
     private tempCache = new Map<string, GlideBaseInfo>();
 
     constructor() {
         this.tempCache.set('system', {
-            avatar: "https://im.dengzii.com/system.png",
-            name: "系统",
+            avatar: 'https://im.dengzii.com/system.png',
+            name: '系统',
             isChannel: false,
-            id: "system",
-        })
+            id: 'system',
+        });
         this.tempCache.set('the_world_channel', {
-            avatar: "https://im.dengzii.com/world_channel.png",
+            avatar: 'https://im.dengzii.com/world_channel.png',
             id: 'the_world_channel',
             isChannel: true,
-            name: "世界频道"
-        })
+            name: '世界频道',
+        });
     }
 
     public getToken(): string {
-        return getCookie("token");
+        return getCookie('token');
     }
 
     public storeToken(token: string) {
-        setCookie("token", token, 7);
+        setCookie('token', token, 7);
     }
 
     public getUserInfo(id: string): GlideBaseInfo | null {
         let i = this.tempCache.get(id);
         if (i !== null && i !== undefined) {
-            return i
+            return i;
         }
         const res = BaseInfoCache._readObject(`user_${id}`);
         if (res !== null) {
             this.tempCache.set(id, res);
-            Logger.log('Cache', "restore cache user info", res)
-            return res
+            Logger.log('Cache', 'restore cache user info', res);
+            return res;
         }
-        return null
+        return null;
     }
 
     public getChannelInfo(id: string): GlideBaseInfo | null {
         if (id === 'the_world_channel') {
             return {
-                avatar: "https://im.dengzii.com/world_channel.png", id: id,
-                isChannel: true, name: "世界频道",
-            }
+                avatar: 'https://im.dengzii.com/world_channel.png',
+                id: id,
+                isChannel: true,
+                name: '世界频道',
+            };
         }
-        return {avatar: "", id: id, isChannel: true, name: id}
+        return { avatar: '', id: id, isChannel: true, name: id };
     }
 
     public loadUserInfo1(id: string): Observable<GlideBaseInfo> {
         const ci = this.getUserInfo(id);
         if (ci !== null) {
-            return of(ci)
+            return of(ci);
         }
 
         return from(Api.getUserInfo(id)).pipe(
-            map(r => r[0]),
+            map((r) => r[0]),
             map<UserInfoBean, GlideBaseInfo>((us, i) => {
                 if (!us) {
                     return {
-                        avatar: "https://api.dicebear.com/6.x/adventurer/svg?seed=" + id,
+                        avatar:
+                            'https://api.dicebear.com/6.x/adventurer/svg?seed=' +
+                            id,
                         name: id,
                         id: id,
-                    } as GlideBaseInfo
+                    } as GlideBaseInfo;
                 }
                 const m = {
                     avatar: us.avatar,
                     name: us.nick_name,
                     id: us.uid.toString(),
-                } as GlideBaseInfo
+                } as GlideBaseInfo;
                 BaseInfoCache._writeObject(`user_${id}`, m);
                 this.tempCache.set(m.id, m);
                 return m;
             }),
-            catchError(e => {
-                Logger.error('Cache', 'load user info failed', e)
+            catchError((e) => {
+                Logger.error('Cache', 'load user info failed', e);
                 return of({
-                    avatar: "",
+                    avatar: '',
                     name: id,
                     id: id,
-                } as GlideBaseInfo)
+                } as GlideBaseInfo);
             })
-        )
+        );
     }
 
     public loadUserInfo(...id: string[]): Observable<GlideBaseInfo[]> {
-
         return of(...id).pipe(
-            groupBy<string, boolean>(id => {
+            groupBy<string, boolean>((id) => {
                 return this.getUserInfo(id) != null;
             }),
-            mergeMap(g => {
+            mergeMap((g) => {
                 if (g.key) {
-                    return g.pipe(
-                        map(id => this.getUserInfo(id)),
-                    );
+                    return g.pipe(map((id) => this.getUserInfo(id)));
                 } else {
                     return g.pipe(
                         toArray(),
-                        mergeMap(ids => {
-                            return Api.getUserInfo(...ids)
+                        mergeMap((ids) => {
+                            return Api.getUserInfo(...ids);
                         }),
-                        mergeMap(userInfos => of(...userInfos)),
-                        map<UserInfoBean, GlideBaseInfo>(u => ({
+                        mergeMap((userInfos) => of(...userInfos)),
+                        map<UserInfoBean, GlideBaseInfo>((u) => ({
                             avatar: u.avatar,
                             name: u.nick_name,
                             id: u.uid.toString(),
                             isChannel: false,
-                        })),
-                    )
+                        }))
+                    );
                 }
             }),
             toArray(),
-            tap(userInfo => {
-                userInfo.forEach(u => {
+            tap((userInfo) => {
+                userInfo.forEach((u) => {
                     BaseInfoCache._writeObject(`ui_${id}`, u);
                     this.tempCache.set(u.id, u);
                 });
             })
-        )
+        );
     }
 
     public clean() {
@@ -246,7 +246,7 @@ class BaseInfoCache {
 
     static _readObject(key: string): any | null {
         const val = localStorage.getItem(key);
-        if (val === null && val === "") {
+        if (val === null && val === '') {
             return null;
         }
         //console.log('[cache]', "read cache", key, val)

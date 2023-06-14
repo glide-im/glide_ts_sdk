@@ -12,4 +12,4 @@
 //   }
 // };
 
-export default function reportWebVitals(){};
+export default function reportWebVitals() {}

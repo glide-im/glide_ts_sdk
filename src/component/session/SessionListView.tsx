@@ -83,10 +83,21 @@ export const SessionListView: any = withRouter((props: RouteComponentProps) => {
     return <>{content}</>;
 });
 
-function Progress(props: { showProgress?: boolean, msg?: string }) {
-
-    return <Box display={"flex"} flexDirection={"column"} paddingTop={"50%"}>
-        {props.showProgress !== false ? <CircularProgress style={{margin: "auto"}}/> : <></>}
-        {props.msg ? <Typography variant={"caption"} textAlign={"center"}>{props.msg}</Typography> : <></>}
-    </Box>
+function Progress(props: { showProgress?: boolean; msg?: string }) {
+    return (
+        <Box display={'flex'} flexDirection={'column'} paddingTop={'50%'}>
+            {props.showProgress !== false ? (
+                <CircularProgress style={{ margin: 'auto' }} />
+            ) : (
+                <></>
+            )}
+            {props.msg ? (
+                <Typography variant={'caption'} textAlign={'center'}>
+                    {props.msg}
+                </Typography>
+            ) : (
+                <></>
+            )}
+        </Box>
+    );
 }

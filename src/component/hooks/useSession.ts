@@ -14,4 +14,4 @@ function useSession() {
     return session;
 }
 
-export default useSession
+export default useSession;

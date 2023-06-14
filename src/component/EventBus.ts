@@ -30,5 +30,5 @@ export class EventBus {
 }
 
 export enum Event {
-    ReplyMessage = "ReplyMessage",
+    ReplyMessage = 'ReplyMessage',
 }

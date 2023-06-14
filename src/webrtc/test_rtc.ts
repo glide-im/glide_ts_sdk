@@ -26,16 +26,16 @@ function connectionPeer(stream: MediaStream, s: (stream: MediaStream) => void) {
             console.log('icecandidate event: ', event.candidate);
             thierPeerConnection.addIceCandidate(event.candidate);
         }
-    }
+    };
 
     thierPeerConnection.onicecandidate = function (event) {
         if (event.candidate) {
             myPeerConnection.addIceCandidate(event.candidate);
         }
-    }
+    };
     thierPeerConnection.ontrack = function (event) {
         s(event.streams[0]);
-    }
+    };
 
     stream.getTracks().forEach(function (track) {
         myPeerConnection.addTrack(track, stream);
@@ -49,6 +49,6 @@ function connectionPeer(stream: MediaStream, s: (stream: MediaStream) => void) {
         return thierPeerConnection.createAnswer().then(function (answer) {
             thierPeerConnection.setLocalDescription(answer);
             myPeerConnection.setRemoteDescription(answer);
-        })
-    })
+        });
+    });
 }

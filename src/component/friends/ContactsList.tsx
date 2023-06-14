@@ -112,27 +112,29 @@ export function ContactsList() {
     );
 }
 
-
 interface Props extends RouteComponentProps {
     contact: Contacts;
-    onClick?: (id: number) => void
+    onClick?: (id: number) => void;
 }
 
 export const ContactsItem = withRouter((props: Props) => {
-
     const c = props.contact;
     const handleClick = () => {
         props.history.push(`./session/${c.id}`);
-    }
+    };
 
-    return <>
-        <ListItem button key={`${c.type}-${c.id}`} onClick={handleClick}>
-            <ListItemIcon>
-                <Avatar variant="rounded" sx={{ bgcolor: grey[500] }} src={c.avatar} />
-            </ListItemIcon>
-            <ListItemText primary={c.name} />
-        </ListItem>
-
-    </>
-})
-
+    return (
+        <>
+            <ListItem button key={`${c.type}-${c.id}`} onClick={handleClick}>
+                <ListItemIcon>
+                    <Avatar
+                        variant='rounded'
+                        sx={{ bgcolor: grey[500] }}
+                        src={c.avatar}
+                    />
+                </ListItemIcon>
+                <ListItemText primary={c.name} />
+            </ListItem>
+        </>
+    );
+});

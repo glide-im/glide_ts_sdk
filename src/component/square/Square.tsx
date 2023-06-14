@@ -119,27 +119,32 @@ export function Square() {
     );
 }
 
-
 function UserCard(props: { u: OnlineUserInfoBean }) {
-
-    const [user, setUser] = useState<GlideBaseInfo | null>(null)
+    const [user, setUser] = useState<GlideBaseInfo | null>(null);
 
     useEffect(() => {
-        Cache.loadUserInfo(props.u.ID)
-            .subscribe({
-                next: (data) => {
-                    setUser(data[0])
-                },
-            })
-    }, [props.u.ID])
+        Cache.loadUserInfo(props.u.ID).subscribe({
+            next: (data) => {
+                setUser(data[0]);
+            },
+        });
+    }, [props.u.ID]);
 
     const onClick = () => {
-        Account.getInstance().getSessionList()
-    }
+        Account.getInstance().getSessionList();
+    };
 
-    return <Card style={{ padding: "16px", cursor: "pointer" }} onClick={onClick}>
-        <Box mt={"8px"}><Avatar style={{ margin: "auto" }} src={user?.avatar} /></Box>
-        <Box mt={"8px"}><Typography variant="body2">Name: {user?.name}</Typography></Box>
-        <Box mt={"4px"}><Typography variant="body2">ID: {props.u.ID}</Typography></Box>
-    </Card>
+    return (
+        <Card style={{ padding: '16px', cursor: 'pointer' }} onClick={onClick}>
+            <Box mt={'8px'}>
+                <Avatar style={{ margin: 'auto' }} src={user?.avatar} />
+            </Box>
+            <Box mt={'8px'}>
+                <Typography variant='body2'>Name: {user?.name}</Typography>
+            </Box>
+            <Box mt={'4px'}>
+                <Typography variant='body2'>ID: {props.u.ID}</Typography>
+            </Box>
+        </Card>
+    );
 }

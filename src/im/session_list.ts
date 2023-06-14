@@ -36,240 +36,273 @@ export enum SessionListEventType {
 }
 
 export interface SessionListEvent {
-    event: SessionListEventType
-    session?: Session
+    event: SessionListEventType;
+    session?: Session;
 }
 
 export interface SessionList {
-    get(sid: SessionId): Session | null
+    get(sid: SessionId): Session | null;
 
-    getSessions(): Observable<Session[]>
+    getSessions(): Observable<Session[]>;
 
-    setSelectedSession(sid: SessionId)
+    setSelectedSession(sid: SessionId);
 
-    getCurrentSession(): Session | null
+    getCurrentSession(): Session | null;
 
-    createSession(id: SessionId): Observable<Session>
+    createSession(id: SessionId): Observable<Session>;
 
-    event(): Observable<SessionListEvent>
+    event(): Observable<SessionListEvent>;
 
-    getSessionsTemped(): Session[]
+    getSessionsTemped(): Session[];
 }
 
 // @Internal 仅供 glide 内部使用
 export interface InternalSessionList extends SessionList {
+    init(cache: SessionListCache & ChatMessageCache): Observable<string>;
 
-    init(cache: SessionListCache & ChatMessageCache): Observable<string>
+    clear();
 
-    clear()
-
-    onMessage(message: CommonMessage<Message | CliCustomMessage>)
+    onMessage(message: CommonMessage<Message | CliCustomMessage>);
 }
 
 export interface SessionListCache {
-    getSession(sid: SessionId): Observable<SessionBaseInfo | null>
+    getSession(sid: SessionId): Observable<SessionBaseInfo | null>;
 
-    setSession(info: SessionBaseInfo): Observable<void>
+    setSession(info: SessionBaseInfo): Observable<void>;
 
-    clearAllSession(): Observable<void>
+    clearAllSession(): Observable<void>;
 
-    getAllSession(): Observable<SessionBaseInfo[]>
+    getAllSession(): Observable<SessionBaseInfo[]>;
 
-    removeSession(sid: SessionId): Observable<void>
+    removeSession(sid: SessionId): Observable<void>;
 
-    containSession(sid: SessionId): Observable<boolean>
+    containSession(sid: SessionId): Observable<boolean>;
 
-    sessionCount(): Observable<number>
+    sessionCount(): Observable<number>;
 }
 
 export class InternalSessionListImpl implements InternalSessionList {
-
-    private tag = "InternalSessionListImpl"
+    private tag = 'InternalSessionListImpl';
 
     private account: Account;
-    private currentSession: string = "0";
+    private currentSession: string = '0';
 
-    private sessionEventSubject = new Subject<SessionListEvent>()
-    private sessionMap: Map<SessionId, InternalSession> = new Map<SessionId, InternalSession>()
+    private sessionEventSubject = new Subject<SessionListEvent>();
+    private sessionMap: Map<SessionId, InternalSession> = new Map<
+        SessionId,
+        InternalSession
+    >();
 
     private readonly cache: SessionListCache & ChatMessageCache;
 
     constructor(account: Account, cache: SessionListCache & ChatMessageCache) {
-        this.account = account
-        this.cache = cache
+        this.account = account;
+        this.cache = cache;
     }
 
     public static getInstance(): SessionList {
         return Account.getInstance().getSessionList();
     }
 
-    public init(cache: SessionListCache & ChatMessageCache): Observable<string> {
-
+    public init(
+        cache: SessionListCache & ChatMessageCache
+    ): Observable<string> {
         return concat(
-            of("start load session from cache"),
+            of('start load session from cache'),
             this.cache.getAllSession().pipe(
                 mergeMap((res) => of(...res)),
                 mergeMap((bi) => this.add(fromBaseInfo(bi, this.cache), false)),
                 mergeMap((session) => {
-                    Logger.log(this.tag, "load session from cache, " + session.ID)
-                    return session.init()
+                    Logger.log(
+                        this.tag,
+                        'load session from cache, ' + session.ID
+                    );
+                    return session.init();
                 }),
-                catchError(err => {
-                    Logger.error("load session from cache failed, " + err)
-                    return of(null)
+                catchError((err) => {
+                    Logger.error('load session from cache failed, ' + err);
+                    return of(null);
                 }),
                 filter((v) => v !== null),
                 toArray(),
-                map((s) => "load session from cache complete, " + s.length + " session"),
-                catchError(err => of("load session from cache failed, " + err))
+                map(
+                    (s) =>
+                        'load session from cache complete, ' +
+                        s.length +
+                        ' session'
+                ),
+                catchError((err) =>
+                    of('load session from cache failed, ' + err)
+                )
             ),
-            of("start sync session from server"),
+            of('start sync session from server'),
             this.getSessions(false).pipe(
-                map(() => "session sync complete"),
-                catchError(err => `session sync failed, ${err}`)
+                map(() => 'session sync complete'),
+                catchError((err) => `session sync failed, ${err}`)
             )
-        )
+        );
     }
 
     public setSelectedSession(sid: SessionId) {
-        this.currentSession = sid
+        this.currentSession = sid;
     }
 
     public getCurrentSession(): InternalSession | null {
-        return this.get(this.currentSession)
+        return this.get(this.currentSession);
     }
 
     public createSession(id: SessionId): Observable<InternalSession> {
         if (this.getByUid(id) !== null) {
-            return of(this.getByUid(id))
+            return of(this.getByUid(id));
         }
-        const newSession = createSession(id, SessionType.Single, this.cache)
+        const newSession = createSession(id, SessionType.Single, this.cache);
         return this.add(newSession, true).pipe(
             tap((r) => {
                 // 不等待初始化完成
-                r.init().subscribe()
+                r.init().subscribe();
             })
-        )
+        );
     }
 
     public event(): Observable<SessionListEvent> {
-        return this.sessionEventSubject
+        return this.sessionEventSubject;
     }
 
     public getSessions(reload: boolean = false): Observable<InternalSession[]> {
         if (this.sessionMap.size !== 0 && !reload) {
             return of(Array.from(this.sessionMap.values()));
         }
-        return Api.getRecentSession()
-            .pipe(
-                mergeMap(beans => of(...beans)),
-                groupBy(bean => this.contain(getSID(bean.Type, bean.To.toString()))),
-                mergeMap(group => {
-                    if (group.key) {
-                        // session exists, update from bean
-                        return group.pipe(
-                            mergeMap(ss => of(ss)),
-                            map(ss => {
-                                const sid = getSID(ss.Type, ss.To.toString())
-                                let session = this.sessionMap.get(sid)
-                                session.update(ss)
-                                return session
-                            }),
-                        )
-                    }
-
-                    // session not exists, create new session
+        return Api.getRecentSession().pipe(
+            mergeMap((beans) => of(...beans)),
+            groupBy((bean) =>
+                this.contain(getSID(bean.Type, bean.To.toString()))
+            ),
+            mergeMap((group) => {
+                if (group.key) {
+                    // session exists, update from bean
                     return group.pipe(
-                        mergeMap(ss => of(ss)),
-                        mergeMap(ss => {
-                            const session = fromSessionBean(ss, this.cache)
-                            return this.add(session, true).pipe(
-                                mergeMap(() => session.init()),
-                            )
-                        }),
-                    )
-                }),
-                toArray(),
-            )
+                        mergeMap((ss) => of(ss)),
+                        map((ss) => {
+                            const sid = getSID(ss.Type, ss.To.toString());
+                            let session = this.sessionMap.get(sid);
+                            session.update(ss);
+                            return session;
+                        })
+                    );
+                }
+
+                // session not exists, create new session
+                return group.pipe(
+                    mergeMap((ss) => of(ss)),
+                    mergeMap((ss) => {
+                        const session = fromSessionBean(ss, this.cache);
+                        return this.add(session, true).pipe(
+                            mergeMap(() => session.init())
+                        );
+                    })
+                );
+            }),
+            toArray()
+        );
     }
 
     public getSessionsTemped(): InternalSession[] {
-        return Array.from(this.sessionMap.values())
+        return Array.from(this.sessionMap.values());
     }
 
     public onMessage(message: CommonMessage<Message | CliCustomMessage>) {
-
-        let sessionType: SessionType = SessionType.Single
-        let target = message.data.from
+        let sessionType: SessionType = SessionType.Single;
+        let target = message.data.from;
 
         switch (message.action) {
             case Actions.MessageChat:
             case Actions.MessageChatRecall:
-                sessionType = SessionType.Single
-                target = message.data.from
+                sessionType = SessionType.Single;
+                target = message.data.from;
                 break;
             case Actions.MessageGroupRecall:
             case Actions.MessageGroup:
             case Actions.NotifyGroup:
-                sessionType = SessionType.Channel
-                target = message.data.to
+                sessionType = SessionType.Channel;
+                target = message.data.to;
                 break;
         }
 
-        const session = this.get(getSID(sessionType, target))
+        const session = this.get(getSID(sessionType, target));
 
         if (session !== null) {
-            session.onMessage(message.action, message.data as Message)
+            session.onMessage(message.action, message.data as Message);
         } else {
-            of(createSession(target, sessionType, this.cache)).pipe(
-                mergeMap((ses) => this.add(ses, true)),
-                mergeMap((ses) => ses.init()),
-            ).subscribe({
-                next: (r) => r.onMessage(message.action, message.data as Message),
-                error: err => Logger.error(this.tag, "onMessage", err)
-            })
+            of(createSession(target, sessionType, this.cache))
+                .pipe(
+                    mergeMap((ses) => this.add(ses, true)),
+                    mergeMap((ses) => ses.init())
+                )
+                .subscribe({
+                    next: (r) =>
+                        r.onMessage(message.action, message.data as Message),
+                    error: (err) => Logger.error(this.tag, 'onMessage', err),
+                });
         }
     }
 
-    private add(session: InternalSession, updateDb: Boolean): Observable<InternalSession> {
+    private add(
+        session: InternalSession,
+        updateDb: Boolean
+    ): Observable<InternalSession> {
         if (this.sessionMap.has(session.ID)) {
-            return of(this.sessionMap.get(session.ID))
+            return of(this.sessionMap.get(session.ID));
         }
 
         // 是否需要更新缓存成功后再添加到内存 ?
-        this.sessionMap.set(session.ID, session)
-        Logger.log(this.tag, "session added, update cache=", updateDb, session.ID)
-        this.sessionEventSubject.next({event: SessionListEventType.create, session: session})
+        this.sessionMap.set(session.ID, session);
+        Logger.log(
+            this.tag,
+            'session added, update cache=',
+            updateDb,
+            session.ID
+        );
+        this.sessionEventSubject.next({
+            event: SessionListEventType.create,
+            session: session,
+        });
         if (!updateDb) {
-            return of(session)
+            return of(session);
         }
         return this.cache.setSession(session as SessionBaseInfo).pipe(
-            tap(() => Logger.log(this.tag, "session added to cache: ", session.ID)),
+            tap(() =>
+                Logger.log(this.tag, 'session added to cache: ', session.ID)
+            ),
             map(() => session),
-            catchError(err => {
-                Logger.error(this.tag, "session added to cache failed: ", session.ID, err)
-                return of(session)
+            catchError((err) => {
+                Logger.error(
+                    this.tag,
+                    'session added to cache failed: ',
+                    session.ID,
+                    err
+                );
+                return of(session);
             })
         );
     }
 
     public get(sid: SessionId): InternalSession | null {
         if (!this.sessionMap.has(sid)) {
-            return null
+            return null;
         }
         return this.sessionMap.get(sid);
     }
 
     private getByUid(uid: SessionId): InternalSession | null {
-        return this.get(getSID(1, uid))
+        return this.get(getSID(1, uid));
     }
 
     public clear() {
-        this.currentSession = ""
-        this.sessionMap = new Map<SessionId, InternalSession>()
+        this.currentSession = '';
+        this.sessionMap = new Map<SessionId, InternalSession>();
     }
 
     public contain(chatId: SessionId): boolean {
-        return this.sessionMap.has(chatId)
+        return this.sessionMap.has(chatId);
     }
 }

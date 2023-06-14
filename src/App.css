@@ -1,5 +1,4 @@
 .App {
-
 }
 
 .BeautyScrollBar::-webkit-scrollbar {
@@ -32,7 +31,8 @@
 
 .app-code {
     overflow-x: auto;
-    font-family: Consolas, Monaco, "Source Code Pro", "Courier New", monospace, serif;
+    font-family: Consolas, Monaco, 'Source Code Pro', 'Courier New', monospace,
+        serif;
     background-color: gainsboro;
     padding: 8px;
     border-radius: 4px;

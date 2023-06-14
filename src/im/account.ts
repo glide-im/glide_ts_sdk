@@ -268,67 +268,73 @@ export class Account {
 
 // 用户状态
 export interface UserState {
-    uid: string
-    online: boolean     // 是否在线
-    onlineAt: number    // 上次在线时间
+    uid: string;
+    online: boolean; // 是否在线
+    onlineAt: number; // 上次在线时间
 }
 
 // 关注的用户状态管理
 export class UserStatusManager {
+    private states = new Map<string, UserState>();
+    private events = new Subject<UserState>();
 
-    private states = new Map<string, UserState>()
-    private events = new Subject<UserState>()
-
-    private static instance = new UserStatusManager()
+    private static instance = new UserStatusManager();
 
     constructor() {
         // 监听用户上下线事件
-        IMWsClient.messages().pipe(
-            filter(message =>
-                message.action === Actions.EventUserOnline
-                || message.action === Actions.EventUserOffline),
-        ).subscribe({
-            next: message => {
-                const sd = message.data as UserStatusData
-                const state = this.states.get(sd.uid)
-                if (state) {
-                    state.online = sd.online
-                    state.onlineAt = sd.onlineAt
-                    this.events.next(state)
-                } else {
-                    const status = {
-                        uid: sd.uid,
-                        online: sd.online,
-                        onlineAt: sd.onlineAt
-                    };
-                    this.states.set(sd.uid, status)
-                    this.events.next(status)
-                }
-            }
-        })
+        IMWsClient.messages()
+            .pipe(
+                filter(
+                    (message) =>
+                        message.action === Actions.EventUserOnline ||
+                        message.action === Actions.EventUserOffline
+                )
+            )
+            .subscribe({
+                next: (message) => {
+                    const sd = message.data as UserStatusData;
+                    const state = this.states.get(sd.uid);
+                    if (state) {
+                        state.online = sd.online;
+                        state.onlineAt = sd.onlineAt;
+                        this.events.next(state);
+                    } else {
+                        const status = {
+                            uid: sd.uid,
+                            online: sd.online,
+                            onlineAt: sd.onlineAt,
+                        };
+                        this.states.set(sd.uid, status);
+                        this.events.next(status);
+                    }
+                },
+            });
     }
 
     //
-    public static getObservable(uid: string, emitImmediately?: boolean): Observable<UserState> {
+    public static getObservable(
+        uid: string,
+        emitImmediately?: boolean
+    ): Observable<UserState> {
         const ob = UserStatusManager.instance.events.pipe(
-            filter(event => event.uid === uid)
-        )
+            filter((event) => event.uid === uid)
+        );
         // 如果需要立即发射一次状态
         if (emitImmediately) {
-            const state = UserStatusManager.instance.states.get(uid)
+            const state = UserStatusManager.instance.states.get(uid);
             if (state) {
-                return concat(of(state), ob)
+                return concat(of(state), ob);
             } else {
-                const request = IMWsClient.request(Actions.ApiUserState, {uid: uid}).pipe(
-                    map(res => res.data as UserStatusData),
-                )
-                return onErrorResumeNext(concat(request, ob), ob)
+                const request = IMWsClient.request(Actions.ApiUserState, {
+                    uid: uid,
+                }).pipe(map((res) => res.data as UserStatusData));
+                return onErrorResumeNext(concat(request, ob), ob);
             }
         }
-        return ob
+        return ob;
     }
 
     public static get(uid: string): UserState | null {
-        return UserStatusManager.instance.states.get(uid) || null
+        return UserStatusManager.instance.states.get(uid) || null;
     }
 }

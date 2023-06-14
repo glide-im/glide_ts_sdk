@@ -44,7 +44,7 @@ export type SessionId = string;
 
 export enum SessionType {
     Single = 1,
-    Channel = 2
+    Channel = 2,
 }
 
 export enum SessionStatus {
@@ -67,11 +67,10 @@ export function getSID(type: number, to: string): string {
         lg = sm;
         sm = tmp;
     }
-    return lg + "_" + sm;
+    return lg + '_' + sm;
 }
 
 export interface SessionBaseInfo {
-
     // sid
     readonly ID: SessionId;
     readonly Avatar: string;
@@ -86,14 +85,14 @@ export interface SessionBaseInfo {
 }
 
 export enum SessionEventType {
-    Initial = "initial",
-    UpdateBaseInfo = "update_base_info",
-    UpdateUnreadCount = "update_unread_count",
-    UpdateLastMessage = "update_last_message",
-    NewMessage = "new_message",
-    MessageUpdate = "message_update",
-    ReloadMessageHistory = "message_history",
-    OnlineStatusUpdate = "online_status_update",
+    Initial = 'initial',
+    UpdateBaseInfo = 'update_base_info',
+    UpdateUnreadCount = 'update_unread_count',
+    UpdateLastMessage = 'update_last_message',
+    NewMessage = 'new_message',
+    MessageUpdate = 'message_update',
+    ReloadMessageHistory = 'message_history',
+    OnlineStatusUpdate = 'online_status_update',
 }
 
 export interface SessionEvent {
@@ -103,10 +102,9 @@ export interface SessionEvent {
 }
 
 export interface Session extends SessionBaseInfo {
-
-    readonly messageSubject: Subject<ChatMessage>
-    readonly event: Subject<SessionEvent>
-    readonly inputEvent: Observable<Array<string>>
+    readonly messageSubject: Subject<ChatMessage>;
+    readonly event: Subject<SessionEvent>;
+    readonly inputEvent: Observable<Array<string>>;
 
     waitInit(): Observable<InternalSession>;
 
@@ -116,48 +114,57 @@ export interface Session extends SessionBaseInfo {
 
     sendImageMessage(url: string): Observable<ChatMessage>;
 
-    sendUserTypingEvent()
+    sendUserTypingEvent();
 
     send(content: string, type: number): Observable<ChatMessage>;
 
-    getMessages(): ChatMessage[]
+    getMessages(): ChatMessage[];
 
-    getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]>
+    getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]>;
 
-    clearMessageHistory(): Observable<any>
+    clearMessageHistory(): Observable<any>;
 }
 
 export interface InternalSession extends Session {
-    onMessage(action: Actions, message: Message | CliCustomMessage)
+    onMessage(action: Actions, message: Message | CliCustomMessage);
 
-    update(session: SessionBean | SessionBaseInfo)
+    update(session: SessionBean | SessionBaseInfo);
 
     init(): Observable<InternalSession>;
 
-    setCache(cache: SessionListCache & ChatMessageCache)
+    setCache(cache: SessionListCache & ChatMessageCache);
 }
 
-export function createSession(to: string, type: SessionType, cache: SessionListCache & ChatMessageCache): InternalSession {
+export function createSession(
+    to: string,
+    type: SessionType,
+    cache: SessionListCache & ChatMessageCache
+): InternalSession {
     const ret = InternalSessionImpl.create(to, type);
-    ret.setCache(cache)
-    return ret
+    ret.setCache(cache);
+    return ret;
 }
 
-export function fromSessionBean(sessionBean: SessionBean, cache: SessionListCache & ChatMessageCache): InternalSession {
+export function fromSessionBean(
+    sessionBean: SessionBean,
+    cache: SessionListCache & ChatMessageCache
+): InternalSession {
     const ret = InternalSessionImpl.fromSessionBean(sessionBean);
-    ret.setCache(cache)
-    return ret
+    ret.setCache(cache);
+    return ret;
 }
 
-export function fromBaseInfo(baseInfo: SessionBaseInfo, cache: SessionListCache & ChatMessageCache): InternalSession {
+export function fromBaseInfo(
+    baseInfo: SessionBaseInfo,
+    cache: SessionListCache & ChatMessageCache
+): InternalSession {
     const ret = InternalSessionImpl.fromBaseInfo(baseInfo);
-    ret.setCache(cache)
-    return ret
+    ret.setCache(cache);
+    return ret;
 }
 
 class InternalSessionImpl implements InternalSession {
-
-    private tag = "InternalSessionImpl";
+    private tag = 'InternalSessionImpl';
 
     public ID: SessionId;
     public Avatar: string;
@@ -173,51 +180,62 @@ class InternalSessionImpl implements InternalSession {
     private messageList = new Array<ChatMessageInternal>();
     private messageMap = new Map<string, ChatMessageInternal>();
 
-    private readonly _messageSubject: Subject<ChatMessageInternal> = new Subject<ChatMessageInternal>();
-    private readonly _updateSubject: Subject<SessionEvent> = new Subject<SessionEvent>();
-    private readonly _inputEventReceive: Subject<Array<string>> = new Subject<Array<string>>();
+    private readonly _messageSubject: Subject<ChatMessageInternal> =
+        new Subject<ChatMessageInternal>();
+    private readonly _updateSubject: Subject<SessionEvent> =
+        new Subject<SessionEvent>();
+    private readonly _inputEventReceive: Subject<Array<string>> = new Subject<
+        Array<string>
+    >();
     private readonly _typingEventEmitter: Subject<any> = new Subject<any>();
 
     private initialized = false;
-    private cache: SessionListCache & ChatMessageCache
+    private cache: SessionListCache & ChatMessageCache;
 
     private constructor(type: SessionType, to: string) {
-        this.LastMessage = "-"
-        this.LastMessageSender = "-"
-        this.UnreadCount = 0
+        this.LastMessage = '-';
+        this.LastMessageSender = '-';
+        this.UnreadCount = 0;
 
         this.To = to;
         this.Type = type;
         this.ID = this.getSID();
         this.Title = this.ID;
-        this.UpdateAt = Date.now()
+        this.UpdateAt = Date.now();
 
         this.event.subscribe({
             next: (event) => {
-                Logger.log(this.tag, "event", event.session.ID, event.type, event.message?.Sending, event.message?.getDisplayContent())
-            }
-        })
+                Logger.log(
+                    this.tag,
+                    'event',
+                    event.session.ID,
+                    event.type,
+                    event.message?.Sending,
+                    event.message?.getDisplayContent()
+                );
+            },
+        });
 
         // send typing event
-        this._typingEventEmitter.pipe(
-            debounce(() => interval(100)),
-        ).subscribe({
+        this._typingEventEmitter.pipe(debounce(() => interval(100))).subscribe({
             next: () => {
                 const myUid = Account.getInstance().getUID();
                 const m = {
-                    content: JSON.stringify(Account.getInstance().getUserInfo()),
+                    content: JSON.stringify(
+                        Account.getInstance().getUserInfo()
+                    ),
                     from: myUid,
                     id: 0,
                     to: this.To,
-                    type: ClientCustomType.CliMessageTypeTyping
+                    type: ClientCustomType.CliMessageTypeTyping,
                 } as CliCustomMessage;
                 IMWsClient.sendCliCustomMessage(m).subscribe({
                     error: (e) => {
-                        Logger.error(this.tag, "send typing event error", e)
-                    }
-                })
-            }
-        })
+                        Logger.error(this.tag, 'send typing event error', e);
+                    },
+                });
+            },
+        });
     }
 
     get messageSubject(): Subject<ChatMessage> {
@@ -229,7 +247,7 @@ class InternalSessionImpl implements InternalSession {
     }
 
     private getTicket(): string {
-        return ''
+        return '';
     }
 
     private isSelected(): boolean {
@@ -241,7 +259,10 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public static fromSessionBean(sb: SessionBean): InternalSessionImpl {
-        let session = new InternalSessionImpl(SessionType.Single, sb.To.toString());
+        let session = new InternalSessionImpl(
+            SessionType.Single,
+            sb.To.toString()
+        );
         session.UpdateAt = sb.UpdateAt;
         return session;
     }
@@ -269,7 +290,7 @@ class InternalSessionImpl implements InternalSession {
             filter(() => this.initialized),
             take(1),
             map(() => this)
-        )
+        );
     }
 
     public clearMessageHistory(): Observable<any> {
@@ -277,14 +298,14 @@ class InternalSessionImpl implements InternalSession {
             mergeMap((message) => this.cache.deleteMessage(message.getId())),
             toArray(),
             tap(() => {
-                this.messageList = []
-                this.messageMap.clear()
-                this.LastMessage = ""
-                this.LastMessageSender = ""
-                this.UpdateAt = Date.now()
-                this.sync2Cache('clear history')
+                this.messageList = [];
+                this.messageMap.clear();
+                this.LastMessage = '';
+                this.LastMessageSender = '';
+                this.UpdateAt = Date.now();
+                this.sync2Cache('clear history');
 
-                this.clearUnread()
+                this.clearUnread();
                 this.event.next({
                     type: SessionEventType.UpdateLastMessage,
                     session: this,
@@ -294,15 +315,15 @@ class InternalSessionImpl implements InternalSession {
                     session: this,
                 });
             })
-        )
+        );
     }
 
     public clearUnread() {
         if (this.UnreadCount === 0) {
-            return
+            return;
         }
         this.UnreadCount = 0;
-        this.sync2Cache('UnreadCount')
+        this.sync2Cache('UnreadCount');
         this.event.next({
             type: SessionEventType.UpdateUnreadCount,
             session: this,
@@ -310,30 +331,45 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public init(): Observable<InternalSession> {
-        const initBaseInfo = this.isGroup() ? of(Cache.getChannelInfo(this.ID)) : Cache.loadUserInfo1(this.To)
+        const initBaseInfo = this.isGroup()
+            ? of(Cache.getChannelInfo(this.ID))
+            : Cache.loadUserInfo1(this.To);
 
-        if (this.To === "the_world_channel") {
-            of("Hi, 我来了").pipe(
-                delay(2000),
-                mergeMap(msg => this.sendTextMessage(msg)),
-                toArray(),
-            ).subscribe({
-                next: (msg) => Logger.log(this.tag, 'hello message sent'),
-                error: (err) => Logger.error(this.tag, 'hello message send failed', err)
-            })
+        if (this.To === 'the_world_channel') {
+            of('Hi, 我来了')
+                .pipe(
+                    delay(2000),
+                    mergeMap((msg) => this.sendTextMessage(msg)),
+                    toArray()
+                )
+                .subscribe({
+                    next: (msg) => Logger.log(this.tag, 'hello message sent'),
+                    error: (err) =>
+                        Logger.error(
+                            this.tag,
+                            'hello message send failed',
+                            err
+                        ),
+                });
         }
 
         return concat(
             initBaseInfo.pipe(
                 map((info) => {
-                    Logger.log(this.tag, "init session ", info.id, info.name, info.avatar)
-                    this.Title = info.name ?? this.To
-                    this.Avatar = info.avatar ?? "-"
+                    Logger.log(
+                        this.tag,
+                        'init session ',
+                        info.id,
+                        info.name,
+                        info.avatar
+                    );
+                    this.Title = info.name ?? this.To;
+                    this.Avatar = info.avatar ?? '-';
                     this.event.next({
                         type: SessionEventType.UpdateBaseInfo,
                         session: this,
-                    })
-                    this.initialized = true
+                    });
+                    this.initialized = true;
                 })
             ),
             this.cache.getSessionMessagesByTime(this.ID, Date.now()).pipe(
@@ -341,26 +377,30 @@ class InternalSessionImpl implements InternalSession {
                 map((msg) => createChatMessage(msg)),
                 toArray(),
                 map((msgs) => {
-                    const sorted = msgs.sort((a, b) => a.SendAt - b.SendAt)
+                    const sorted = msgs.sort((a, b) => a.SendAt - b.SendAt);
                     for (let m in sorted) {
-                        this.messageList.push(sorted[m])
-                        this.messageMap.set(sorted[m].getId(), sorted[m])
+                        this.messageList.push(sorted[m]);
+                        this.messageMap.set(sorted[m].getId(), sorted[m]);
                     }
-                    Logger.log(this.tag, "init session ", this.ID, "message count", msgs.length)
+                    Logger.log(
+                        this.tag,
+                        'init session ',
+                        this.ID,
+                        'message count',
+                        msgs.length
+                    );
                 })
             )
-        ).pipe(
-            map((info) => this)
-        )
-
+        ).pipe(map((info) => this));
     }
 
     public isGroup(): boolean {
         return this.Type === SessionType.Channel;
     }
 
-    public getMessageHistory(beforeMid: number | null): Observable<ChatMessage[]> {
-
+    public getMessageHistory(
+        beforeMid: number | null
+    ): Observable<ChatMessage[]> {
         if (beforeMid === null && this.messageList.length !== 0) {
             beforeMid = Number.MAX_SAFE_INTEGER;
         }
@@ -390,46 +430,56 @@ class InternalSessionImpl implements InternalSession {
 
     public onMessage(action: Actions, message: Message | CliCustomMessage) {
         if (action === Actions.MessageCli) {
-            const m = message as CliCustomMessage
+            const m = message as CliCustomMessage;
             switch (message.type) {
                 case ClientCustomType.CliMessageTypeTyping:
-                    this._inputEventReceive.next(JSON.parse(m.content))
-                    break
+                    this._inputEventReceive.next(JSON.parse(m.content));
+                    break;
             }
-            return
+            return;
         }
 
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
-        const isChannel = action === Actions.MessageGroup || action === Actions.MessageGroupRecall || action === Actions.NotifyGroup
-        const chatMessage = createChatMessage2(this.ID, message as Message, isChannel)
+        const isChannel =
+            action === Actions.MessageGroup ||
+            action === Actions.MessageGroupRecall ||
+            action === Actions.NotifyGroup;
+        const chatMessage = createChatMessage2(
+            this.ID,
+            message as Message,
+            isChannel
+        );
 
         switch (chatMessage.Type) {
             case MessageType.StreamMarkdown:
             case MessageType.StreamText:
                 let streamMessage = this.messageMap.get(chatMessage.getId());
                 if (streamMessage === undefined || streamMessage === null) {
-                    this.onReceiveStreamMessage(chatMessage)
-                    break
+                    this.onReceiveStreamMessage(chatMessage);
+                    break;
                 }
                 // update stream message
-                streamMessage.update(chatMessage)
+                streamMessage.update(chatMessage);
                 return;
         }
         // todo filter none-display message
 
-        Logger.log(this.tag, "onMessage", this.ID, message.type, [chatMessage.getId(), chatMessage.getDisplayContent(false)]);
+        Logger.log(this.tag, 'onMessage', this.ID, message.type, [
+            chatMessage.getId(),
+            chatMessage.getDisplayContent(false),
+        ]);
         // TODO 优化
 
         this.cache.addMessage(chatMessage).subscribe({
             next: () => {
-                this.addMessage(chatMessage)
+                this.addMessage(chatMessage);
             },
             error: (err) => {
-                Logger.error(this.tag, [chatMessage], "add message error", err)
-            }
-        })
+                Logger.error(this.tag, [chatMessage], 'add message error', err);
+            },
+        });
         // Cache.cacheUserInfo(message.from).then(() => {
         //     this.addMessageByOrder(c);
         // })
@@ -441,35 +491,52 @@ class InternalSessionImpl implements InternalSession {
                 this.event.next({
                     type: SessionEventType.MessageUpdate,
                     session: this,
-                    message: chatMessage
-                })
-            }
-        })
+                    message: chatMessage,
+                });
+            },
+        });
 
         // 首次收到消息, 订阅消息更新
-        chatMessage.events().pipe(
-            timeout(10000),
-            filter((event) => event.type === MessageUpdateType.UpdateStatus),
-            filter((event) => event.message.Status !== MessageStatus.StreamSending),
-            take(1),
-            mergeMap((event) => this.cache.updateMessage(event.message)),
-        ).subscribe({
-            next: () => {
-                const last = this.messageList[this.messageList.length - 1]
-                if (last?.getId() === chatMessage.getId()) {
-                    this.LastMessage = chatMessage.getDisplayContent(false)
-                }
-                this.event.next({
-                    type: SessionEventType.UpdateLastMessage,
-                    session: this,
-                    message: chatMessage
-                })
-                Logger.log(this.tag, [chatMessage], "stream message complete, cache updated")
-            },
-            error: (err) => {
-                Logger.error(this.tag, [chatMessage], "update stream message cache error", err)
-            }
-        })
+        chatMessage
+            .events()
+            .pipe(
+                timeout(10000),
+                filter(
+                    (event) => event.type === MessageUpdateType.UpdateStatus
+                ),
+                filter(
+                    (event) =>
+                        event.message.Status !== MessageStatus.StreamSending
+                ),
+                take(1),
+                mergeMap((event) => this.cache.updateMessage(event.message))
+            )
+            .subscribe({
+                next: () => {
+                    const last = this.messageList[this.messageList.length - 1];
+                    if (last?.getId() === chatMessage.getId()) {
+                        this.LastMessage = chatMessage.getDisplayContent(false);
+                    }
+                    this.event.next({
+                        type: SessionEventType.UpdateLastMessage,
+                        session: this,
+                        message: chatMessage,
+                    });
+                    Logger.log(
+                        this.tag,
+                        [chatMessage],
+                        'stream message complete, cache updated'
+                    );
+                },
+                error: (err) => {
+                    Logger.error(
+                        this.tag,
+                        [chatMessage],
+                        'update stream message cache error',
+                        err
+                    );
+                },
+            });
     }
 
     public sendTextMessage(msg: string): Observable<ChatMessage> {
@@ -477,7 +544,7 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public sendImageMessage(img: string): Observable<ChatMessage> {
-        return this.send(img, MessageType.Image)
+        return this.send(img, MessageType.Image);
     }
 
     public getMessages(): ChatMessage[] {
@@ -487,9 +554,9 @@ class InternalSessionImpl implements InternalSession {
     public sendUserTypingEvent() {
         if (this.isGroup()) {
             // TODO send typing event to group
-            return
+            return;
         }
-        this._typingEventEmitter.next("typing")
+        this._typingEventEmitter.next('typing');
     }
 
     private getMessageBeforeMid(mid: number): ChatMessage[] {
@@ -499,7 +566,7 @@ class InternalSessionImpl implements InternalSession {
 
         let index = 0;
         if (mid !== 0) {
-            index = this.messageList.findIndex(msg => msg.Mid <= mid);
+            index = this.messageList.findIndex((msg) => msg.Mid <= mid);
             if (index === -1) {
                 return [];
             }
@@ -509,27 +576,28 @@ class InternalSessionImpl implements InternalSession {
     }
 
     private addMessage(message: ChatMessageInternal) {
-
         const isNewMessage = !this.messageMap.has(message.getId());
 
         if (!isNewMessage) {
             this.messageMap.get(message.getId())?.update(message);
             this.cache.updateMessage(message).subscribe({
                 next: () => {
-                    Logger.log(this.tag, "message updated", message.CliMid)
+                    Logger.log(this.tag, 'message updated', message.CliMid);
                 },
                 error: (err) => {
-                    Logger.error(this.tag, "message update failed", err)
-                }
-            })
+                    Logger.error(this.tag, 'message update failed', err);
+                },
+            });
 
             this.event.next({
                 type: SessionEventType.MessageUpdate,
                 session: this,
-                message: message
+                message: message,
             });
         } else {
-            let index = this.messageList.findIndex(msg => msg.OrderKey > message.OrderKey);
+            let index = this.messageList.findIndex(
+                (msg) => msg.OrderKey > message.OrderKey
+            );
             this.messageMap.set(message.getId(), message);
             if (index === -1) {
                 this.messageList.push(message);
@@ -548,18 +616,18 @@ class InternalSessionImpl implements InternalSession {
             this.LastMessageSender = message.getSenderName();
 
             this.UpdateAt = message.SendAt;
-            this.messageSubject.next(message)
+            this.messageSubject.next(message);
         }
 
         if (isNewMessage) {
             this.event.next({
                 type: SessionEventType.NewMessage,
                 session: this,
-                message: message
+                message: message,
             });
         }
 
-        this.sync2Cache('receive message')
+        this.sync2Cache('receive message');
     }
 
     private getSID(): string {
@@ -575,7 +643,7 @@ class InternalSessionImpl implements InternalSession {
             lg = sm;
             sm = tmp;
         }
-        return lg + "_" + sm;
+        return lg + '_' + sm;
     }
 
     public send(content: string, type: number): Observable<ChatMessage> {
@@ -594,77 +662,91 @@ class InternalSessionImpl implements InternalSession {
             type: type,
             status: 0,
         };
-        const chatMessage: ChatMessageInternal = createChatMessage2(this.ID, m, this.isGroup());
+        const chatMessage: ChatMessageInternal = createChatMessage2(
+            this.ID,
+            m,
+            this.isGroup()
+        );
         chatMessage.setSendingStatus(SendingStatus.Sending);
 
         // TODO 检查 ticket
-        let sendObservable: Observable<MessageSendResult>
+        let sendObservable: Observable<MessageSendResult>;
         switch (this.Type) {
             case SessionType.Single:
-                sendObservable = IMWsClient.sendChatMessage(m)
+                sendObservable = IMWsClient.sendChatMessage(m);
                 break;
             case SessionType.Channel:
-                sendObservable = IMWsClient.sendChannelMessage(m)
+                sendObservable = IMWsClient.sendChannelMessage(m);
                 break;
             default:
-                return throwError(() => new Error("unknown session type"));
+                return throwError(() => new Error('unknown session type'));
         }
 
         // add to cache
         this.cache.addMessage(chatMessage).subscribe({
             next: () => {
-                this.addMessage(chatMessage)
+                this.addMessage(chatMessage);
             },
             error: (err) => {
-                Logger.error(this.tag, [chatMessage], "add message error", err)
-            }
-        })
+                Logger.error(this.tag, [chatMessage], 'add message error', err);
+            },
+        });
 
         return sendObservable.pipe(
             timeout(10000),
-            catchError(err => {
-                Logger.error(this.tag, [chatMessage], "send message error", err)
-                chatMessage.setSendingStatus(SendingStatus.Failed)
-                chatMessage.setFailedReason(err.message || err.toString())
+            catchError((err) => {
+                Logger.error(
+                    this.tag,
+                    [chatMessage],
+                    'send message error',
+                    err
+                );
+                chatMessage.setSendingStatus(SendingStatus.Failed);
+                chatMessage.setFailedReason(err.message || err.toString());
                 this.event.next({
                     type: SessionEventType.MessageUpdate,
                     session: this,
-                    message: chatMessage
+                    message: chatMessage,
                 });
-                this.syncMessage2Cache(chatMessage)
+                this.syncMessage2Cache(chatMessage);
 
-                return throwError(() => err)
+                return throwError(() => err);
             }),
-            tap(resp => {
-                Logger.log(this.tag, "message send state changed", [resp])
+            tap((resp) => {
+                Logger.log(this.tag, 'message send state changed', [resp]);
                 switch (resp.action) {
                     case Actions.AckMessage:
                         chatMessage.setMid(resp.mid);
-                        chatMessage.setSendingStatus(SendingStatus.ClientAck)
+                        chatMessage.setSendingStatus(SendingStatus.ClientAck);
                         break;
                     case Actions.AckNotify:
-                        chatMessage.setSendingStatus(SendingStatus.ServerAck)
+                        chatMessage.setSendingStatus(SendingStatus.ServerAck);
                         break;
                     default:
-                        Logger.warn(this.tag, "unknown action", [resp], resp.action)
-                        return
+                        Logger.warn(
+                            this.tag,
+                            'unknown action',
+                            [resp],
+                            resp.action
+                        );
+                        return;
                 }
                 // update cache after send success
-                this.syncMessage2Cache(chatMessage)
+                this.syncMessage2Cache(chatMessage);
 
                 this.event.next({
                     type: SessionEventType.MessageUpdate,
                     session: this,
-                    message: chatMessage
+                    message: chatMessage,
                 });
                 return chatMessage;
             }),
-            map(resp => chatMessage),
+            map((resp) => chatMessage)
         );
     }
 
     update(session: SessionBaseInfo | SessionBean) {
-        Logger.log(this.tag, "update", [session])
+        Logger.log(this.tag, 'update', [session]);
         if (this.isSessionBaseInfo(session)) {
             this.Avatar = session.Avatar;
             this.Title = session.Title;
@@ -677,43 +759,64 @@ class InternalSessionImpl implements InternalSession {
             this.ID = this.getSID();
             this.sync2Cache('update session');
         } else {
-            Logger.warn(this.tag, "update session with session bean not implement", [session])
+            Logger.warn(
+                this.tag,
+                'update session with session bean not implement',
+                [session]
+            );
         }
     }
 
     syncMessage2Cache(chatMessage: ChatMessage) {
         this.cache.updateMessage(chatMessage).subscribe({
             next: () => {
-                Logger.log(this.tag, "message updated", chatMessage.CliMid)
-            }
-        })
+                Logger.log(this.tag, 'message updated', chatMessage.CliMid);
+            },
+        });
     }
 
     sync2Cache(cause?: string) {
         this.cache.setSession(this).subscribe({
             next: () => {
-                Logger.log(this.tag, "session updated", this.ID, 'cause', cause)
+                Logger.log(
+                    this.tag,
+                    'session updated',
+                    this.ID,
+                    'cause',
+                    cause
+                );
             },
             error: (err) => {
-                Logger.error(this.tag, "session update failed", 'cause', cause, err)
-            }
-        })
+                Logger.error(
+                    this.tag,
+                    'session update failed',
+                    'cause',
+                    cause,
+                    err
+                );
+            },
+        });
     }
 
-    private isSessionBaseInfo(session: SessionBaseInfo | SessionBean): session is SessionBaseInfo {
+    private isSessionBaseInfo(
+        session: SessionBaseInfo | SessionBean
+    ): session is SessionBaseInfo {
         return (session as SessionBaseInfo).ID !== undefined;
     }
 }
 
-
 function uuid(len, radix): string {
-    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
-    let uuid = [], i;
+    const chars =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split(
+            ''
+        );
+    let uuid = [],
+        i;
     radix = radix || chars.length;
 
     if (len) {
         // Compact form
-        for (i = 0; i < len; i++) uuid[i] = chars[0 | Math.random() * radix];
+        for (i = 0; i < len; i++) uuid[i] = chars[0 | (Math.random() * radix)];
     } else {
         // rfc4122, version 4 form
         let r;
@@ -726,11 +829,11 @@ function uuid(len, radix): string {
         // per rfc4122, sec. 4.1.5
         for (i = 0; i < 36; i++) {
             if (!uuid[i]) {
-                r = 0 | Math.random() * 16;
-                uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
+                r = 0 | (Math.random() * 16);
+                uuid[i] = chars[i === 19 ? (r & 0x3) | 0x8 : r];
             }
         }
     }
 
-    return uuid.join('').replaceAll("-", "").toUpperCase();
+    return uuid.join('').replaceAll('-', '').toUpperCase();
 }
