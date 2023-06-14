@@ -5,8 +5,8 @@ import {
     ErrorOutline,
     FileDownload,
     HelpOutlined,
-    Map
-} from "@mui/icons-material";
+    Map,
+} from '@mui/icons-material';
 import {
     Avatar,
     Box,
@@ -17,26 +17,26 @@ import {
     LinearProgress,
     Paper,
     Tooltip,
-    Typography
-} from "@mui/material";
-import {grey} from "@mui/material/colors";
-import React, {useEffect, useMemo, useState} from "react";
-import {RouteComponentProps, withRouter} from "react-router-dom";
-import {Account} from "../../im/account";
-import {Cache} from "../../im/cache";
-import {ChatMessage, SendingStatus} from "../../im/chat_message";
-import {GlideBaseInfo} from "../../im/def";
-import {MessageStatus, MessageType} from "../../im/message";
-import {ImageViewer} from "../widget/ImageViewer";
-import {Markdown} from "../widget/Markdown";
-import {ChatContext} from "./context/ChatContext";
-import {time2Str} from "../../utils/TimeUtils";
-import {filter, Observable} from "rxjs";
-import {MessagePopup} from "./MessagePopup";
-import {SxProps} from "@mui/system";
-import {Theme} from "@mui/material/styles";
-import {Logger} from "../../utils/Logger";
-import {SessionEventType} from "../../im/session";
+    Typography,
+} from '@mui/material';
+import { grey } from '@mui/material/colors';
+import React, { useEffect, useMemo, useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Account } from '../../im/account';
+import { Cache } from '../../im/cache';
+import { ChatMessage, SendingStatus } from '../../im/chat_message';
+import { GlideBaseInfo } from '../../im/def';
+import { MessageStatus, MessageType } from '../../im/message';
+import { ImageViewer } from '../widget/ImageViewer';
+import { Markdown } from '../widget/Markdown';
+import { ChatContext } from './context/ChatContext';
+import { time2Str } from '../../utils/TimeUtils';
+import { filter, Observable } from 'rxjs';
+import { MessagePopup } from './MessagePopup';
+import { SxProps } from '@mui/system';
+import { Theme } from '@mui/material/styles';
+import { Logger } from '../../utils/Logger';
+import { SessionEventType } from '../../im/session';
 
 const messageBoxStyleLeft: SxProps<Theme> = {
     overflow: 'visible',
@@ -53,8 +53,8 @@ const messageBoxStyleLeft: SxProps<Theme> = {
         bgcolor: 'background.paper',
         transform: 'translateY(-50%) rotate(70deg)',
         zIndex: 0,
-    }
-}
+    },
+};
 
 const messageBoxStyleRight: SxProps<Theme> = {
     overflow: 'visible',

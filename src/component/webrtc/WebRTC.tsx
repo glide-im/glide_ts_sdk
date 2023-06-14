@@ -1,55 +1,70 @@
-import React, {useEffect, useRef} from 'react';
-import {rtcConfig, setRtcConfig, WebRTC, WebRtcSessionState} from "../../webrtc/webrtc";
-import {Dialing, Incoming, RtcDialog} from "../../webrtc/dialing";
-import {Box, Button, Dialog, IconButton, Typography} from "@mui/material";
-import {CheckRounded, CloseRounded, PhoneRounded, SettingsRounded} from "@mui/icons-material";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import {showSnack} from "../widget/SnackBar";
+import React, { useEffect, useRef } from 'react';
+import {
+    rtcConfig,
+    setRtcConfig,
+    WebRTC,
+    WebRtcSessionState,
+} from '../../webrtc/webrtc';
+import { Dialing, Incoming, RtcDialog } from '../../webrtc/dialing';
+import { Box, Button, Dialog, IconButton, Typography } from '@mui/material';
+import {
+    CheckRounded,
+    CloseRounded,
+    PhoneRounded,
+    SettingsRounded,
+} from '@mui/icons-material';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import { showSnack } from '../widget/SnackBar';
 
 function ConfigureDialog() {
-
     const textRef = useRef<HTMLTextAreaElement | null>(null);
     const [show, setShow] = React.useState(false);
 
     const onApply = () => {
         if (show) {
-            const config = JSON.parse(textRef.current!.value) as RTCConfiguration;
-            setRtcConfig(config)
+            const config = JSON.parse(
+                textRef.current!.value
+            ) as RTCConfiguration;
+            setRtcConfig(config);
         }
-        setShow(!show)
-    }
+        setShow(!show);
+    };
 
     const handleClose = () => {
-        setShow(false)
-    }
+        setShow(false);
+    };
 
-    return <>
-        <Dialog
-            open={show}
-            onClose={handleClose}
-            aria-labelledby="draggable-dialog-title"
-        >
-            <DialogTitle style={{cursor: 'move'}} id="draggable-dialog-title">
-                ICE Server 配置
-            </DialogTitle>
-            <DialogContent>
-                <Box>
-                    <textarea ref={textRef} defaultValue={JSON.stringify(rtcConfig)}
-                              style={{width: "500px", height: "300px"}}/>
-                </Box>
-                <Box>
-                    <Button onClick={onApply}>
-                        应用
-                    </Button>
-                </Box>
-            </DialogContent>
-        </Dialog>
+    return (
+        <>
+            <Dialog
+                open={show}
+                onClose={handleClose}
+                aria-labelledby='draggable-dialog-title'>
+                <DialogTitle
+                    style={{ cursor: 'move' }}
+                    id='draggable-dialog-title'>
+                    ICE Server 配置
+                </DialogTitle>
+                <DialogContent>
+                    <Box>
+                        <textarea
+                            ref={textRef}
+                            defaultValue={JSON.stringify(rtcConfig)}
+                            style={{ width: '500px', height: '300px' }}
+                        />
+                    </Box>
+                    <Box>
+                        <Button onClick={onApply}>应用</Button>
+                    </Box>
+                </DialogContent>
+            </Dialog>
 
-        <IconButton onClick={onApply} size={"large"}>
-            <SettingsRounded/>
-        </IconButton>
-    </>
+            <IconButton onClick={onApply} size={'large'}>
+                <SettingsRounded />
+            </IconButton>
+        </>
+    );
 }
 
 export function WebRtcView(props: { targetId: string, onClose: () => void }) {

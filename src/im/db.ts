@@ -1,26 +1,30 @@
-import {SessionListCache} from "./session_list";
-import {SessionBaseInfo} from "./session";
-import {DBSchema, IDBPDatabase, openDB} from "idb";
-import {catchError, concat, map, mergeMap, Observable, of, retry} from "rxjs";
-import {fromPromise} from "rxjs/internal/observable/innerFrom";
-import {ChatMessageCache, MessageBaseInfo, SendingStatus} from "./chat_message";
-import {MessageStatus} from "./message";
+import { SessionListCache } from './session_list';
+import { SessionBaseInfo } from './session';
+import { DBSchema, IDBPDatabase, openDB } from 'idb';
+import { catchError, concat, map, mergeMap, Observable, of, retry } from 'rxjs';
+import { fromPromise } from 'rxjs/internal/observable/innerFrom';
+import {
+    ChatMessageCache,
+    MessageBaseInfo,
+    SendingStatus,
+} from './chat_message';
+import { MessageStatus } from './message';
 
 interface GlideDBSchema extends DBSchema {
     session: {
-        value: SessionBaseInfo,
-        key: string,
-        indexes: { 'by-to': string }
-    },
+        value: SessionBaseInfo;
+        key: string;
+        indexes: { 'by-to': string };
+    };
     message: {
-        value: MessageBaseInfo,
-        key: string,
+        value: MessageBaseInfo;
+        key: string;
         indexes: {
-            'by-mid': number,
-            'by-sid': string,
-            'by-cliid': string,
-        }
-    }
+            'by-mid': number;
+            'by-sid': string;
+            'by-cliid': string;
+        };
+    };
 }
 
 export class GlideDb {

@@ -1,10 +1,9 @@
-import {Dialog, DialogContent} from "@mui/material";
-
+import { Dialog, DialogContent } from '@mui/material';
 
 interface ImageViewerProps {
-  open: boolean;
-  onClose: () => void;
-  imageUrl: string;
+    open: boolean;
+    onClose: () => void;
+    imageUrl: string;
 }
 
 export function ImageViewer(props: ImageViewerProps) {

@@ -11,43 +11,51 @@ import {
     tap,
     throwError,
     timeout,
-    toArray
-} from "rxjs";
-import {Api} from "../api/api";
-import {setApiToken} from "../api/axios";
-import {AuthBean} from "../api/model";
-import {ContactsList} from "./contacts_list";
-import {GlideBaseInfo} from "./def";
-import {Cache, GlideCache} from "./cache";
-import {Actions, AuthenticateData, CommonMessage, UserStatusData} from "./message";
-import {InternalSessionList, InternalSessionListImpl, SessionList} from "./session_list";
-import {IMWsClient} from "./im_ws_client";
-import {getCookie} from "../utils/Cookies";
-import {onError} from "../rx/next";
-import {Logger} from "../utils/Logger";
-import {isResponse} from "../api/response";
-import {showSnack} from "../component/widget/SnackBar";
-import {RelativeList, RelativeListImpl} from "./relative_list";
+    toArray,
+} from 'rxjs';
+import { Api } from '../api/api';
+import { setApiToken } from '../api/axios';
+import { AuthBean } from '../api/model';
+import { ContactsList } from './contacts_list';
+import { GlideBaseInfo } from './def';
+import { Cache, GlideCache } from './cache';
+import {
+    Actions,
+    AuthenticateData,
+    CommonMessage,
+    UserStatusData,
+} from './message';
+import {
+    InternalSessionList,
+    InternalSessionListImpl,
+    SessionList,
+} from './session_list';
+import { IMWsClient } from './im_ws_client';
+import { getCookie } from '../utils/Cookies';
+import { onError } from '../rx/next';
+import { Logger } from '../utils/Logger';
+import { isResponse } from '../api/response';
+import { showSnack } from '../component/widget/SnackBar';
+import { RelativeList, RelativeListImpl } from './relative_list';
 
 export class Account {
-
-    private tag = "Account";
+    private tag = 'Account';
 
     private uid: string;
-    private sessions: InternalSessionList
+    private sessions: InternalSessionList;
     private relatives: RelativeList;
-    private contacts: ContactsList
-    private readonly cache: GlideCache
+    private contacts: ContactsList;
+    private readonly cache: GlideCache;
     server: string = process.env.REACT_APP_WS_URL;
     token: string;
 
     static instance: Account = new Account();
 
     constructor() {
-        this.token = getCookie('token')
-        this.cache = new GlideCache()
-        this.contacts = new ContactsList()
-        this.sessions = new InternalSessionListImpl(this, this.cache)
+        this.token = getCookie('token');
+        this.cache = new GlideCache();
+        this.contacts = new ContactsList();
+        this.sessions = new InternalSessionListImpl(this, this.cache);
         this.relatives = new RelativeListImpl();
     }
 
@@ -62,71 +70,67 @@ export class Account {
     }
 
     public login(account: string, password: string): Observable<string> {
-        return Api.login(account, password)
-            .pipe(
-                mergeMap(res => this.initAccount(res)),
-                tap(res => {
-                    Logger.log(this.tag, "Login", res)
-                }),
-                toArray(),
-                map(res => "login success"),
-                onError(err => {
-                    Logger.error(this.tag, "Login", "auth failed", err)
-                }),
-                catchError(err => throwError(() => new Error(err)))
-            )
+        return Api.login(account, password).pipe(
+            mergeMap((res) => this.initAccount(res)),
+            tap((res) => {
+                Logger.log(this.tag, 'Login', res);
+            }),
+            toArray(),
+            map((res) => 'login success'),
+            onError((err) => {
+                Logger.error(this.tag, 'Login', 'auth failed', err);
+            }),
+            catchError((err) => throwError(() => new Error(err)))
+        );
     }
 
     public guest(nickname: string, avatar: string): Observable<string> {
-
-        return Api.guest(nickname, avatar)
-            .pipe(
-                mergeMap(res => this.initAccount(res)),
-                tap(res => {
-                    Logger.log(this.tag, "GustLogin", res)
-                }),
-                onError(err => {
-                    Logger.error(this.tag, "GustLogin", "auth failed", err)
-                }),
-                catchError(err => throwError(() => new Error(err)))
-            )
+        return Api.guest(nickname, avatar).pipe(
+            mergeMap((res) => this.initAccount(res)),
+            tap((res) => {
+                Logger.log(this.tag, 'GustLogin', res);
+            }),
+            onError((err) => {
+                Logger.error(this.tag, 'GustLogin', 'auth failed', err);
+            }),
+            catchError((err) => throwError(() => new Error(err)))
+        );
     }
 
     public auth(): Observable<string> {
-        return Api.auth(this.token)
-            .pipe(
-                mergeMap(res => {
-                    return this.initAccount(res)
-                }),
-                tap(res => {
-                    Logger.log(this.tag, "TokenAuth", res)
-                }),
-                timeout(3000),
-                catchError(err => {
-                    this.clearAuth()
+        return Api.auth(this.token).pipe(
+            mergeMap((res) => {
+                return this.initAccount(res);
+            }),
+            tap((res) => {
+                Logger.log(this.tag, 'TokenAuth', res);
+            }),
+            timeout(3000),
+            catchError((err) => {
+                this.clearAuth();
 
-                    if (isResponse(err)) {
-                        this.clearAuth()
-                    }
-                    return throwError(err)
-                }),
-                catchError(err => throwError(() => new Error(err)))
-            )
+                if (isResponse(err)) {
+                    this.clearAuth();
+                }
+                return throwError(err);
+            }),
+            catchError((err) => throwError(() => new Error(err)))
+        );
     }
 
     public logout() {
-        this.sessions = new InternalSessionListImpl(this, this.cache)
-        this.contacts = new ContactsList()
-        this.clearAuth()
-        IMWsClient.close()
+        this.sessions = new InternalSessionListImpl(this, this.cache);
+        this.contacts = new ContactsList();
+        this.clearAuth();
+        IMWsClient.close();
     }
 
     public clearAuth() {
-        Logger.log(this.tag, "clean auth info");
-        this.uid = "";
-        this.token = "";
+        Logger.log(this.tag, 'clean auth info');
+        this.uid = '';
+        this.token = '';
         IMWsClient.close();
-        Cache.storeToken("");
+        Cache.storeToken('');
     }
 
     public getSessionList(): SessionList {
@@ -142,7 +146,7 @@ export class Account {
     }
 
     public isAuthenticated(): boolean {
-        return this.token && this.token !== "";
+        return this.token && this.token !== '';
     }
 
     public getUID(): string {
@@ -154,19 +158,19 @@ export class Account {
     }
 
     private initAccount(auth: AuthBean): Observable<string> {
-
         setApiToken(auth.token);
         this.uid = auth.uid.toString();
         this.token = auth.token;
         Cache.storeToken(auth.token);
 
-        const initUserInfo: Observable<string> = Cache.loadUserInfo1(this.getUID())
-            .pipe(
-                map(us => {
-                    this.userInfo = us;
-                    return `init account info success ${us.id}, ${us.name}`
-                })
-            )
+        const initUserInfo: Observable<string> = Cache.loadUserInfo1(
+            this.getUID()
+        ).pipe(
+            map((us) => {
+                this.userInfo = us;
+                return `init account info success ${us.id}, ${us.name}`;
+            })
+        );
 
         return concat(
             this.initCache(),
@@ -174,59 +178,61 @@ export class Account {
             this.sessions.init(this.cache),
             this.relatives.init(),
             IMWsClient.connect(this.server),
-            of("ws not ready, skip auth").pipe(
+            of('ws not ready, skip auth').pipe(
                 mergeMap((s) =>
-                    IMWsClient.isReady() ? this.authWs(false) : of(s),
+                    IMWsClient.isReady() ? this.authWs(false) : of(s)
                 )
             )
-        )
+        );
     }
 
     private initCache(): Observable<string> {
         return concat(
-            of("cache init start"),
-            this.cache.init(this.getUID())
-                .pipe(
-                    catchError(err => of(`cache init failed ${err}`)),
-                ),
-            of("cache init complete"),
-        )
+            of('cache init start'),
+            this.cache
+                .init(this.getUID())
+                .pipe(catchError((err) => of(`cache init failed ${err}`))),
+            of('cache init complete')
+        );
     }
 
     private authWs(v2: boolean): Observable<string> {
-
-        let request: Observable<CommonMessage<any>>
+        let request: Observable<CommonMessage<any>>;
 
         if (v2) {
             const credentials: AuthenticateData = {
-                credential: "",
-                version: 1
-            }
-            request = IMWsClient.request(Actions.Authenticate, credentials)
+                credential: '',
+                version: 1,
+            };
+            request = IMWsClient.request(Actions.Authenticate, credentials);
         } else {
-            request = IMWsClient.request(Actions.ApiUserAuth, {Token: this.token})
+            request = IMWsClient.request(Actions.ApiUserAuth, {
+                Token: this.token,
+            });
         }
 
         return concat(
-            of("ws auth start"),
+            of('ws auth start'),
             request.pipe(
-                map(() => "ws auth success"),
+                map(() => 'ws auth success'),
                 tap(() => {
-                    this.startHandleMessage()
+                    this.startHandleMessage();
                 }),
-                catchError(err => {
-                    if (err.hasOwnProperty("name") && err.name === "TimeoutError") {
-                        return throwError(() => "ws auth timeout");
+                catchError((err) => {
+                    if (
+                        err.hasOwnProperty('name') &&
+                        err.name === 'TimeoutError'
+                    ) {
+                        return throwError(() => 'ws auth timeout');
                     } else {
-                        return throwError(() => err.message ?? "");
+                        return throwError(() => err.message ?? '');
                     }
-                }),
+                })
             )
-        )
+        );
     }
 
     private startHandleMessage() {
-
         IMWsClient.messages().subscribe({
             next: (m: CommonMessage<any>) => {
                 switch (m.action) {
@@ -242,7 +248,7 @@ export class Account {
                         this.sessions.onMessage(m);
                         break;
                     case Actions.NotifyKickOut:
-                        showSnack("kick out");
+                        showSnack('kick out');
                         this.logout();
                         break;
                     case Actions.NotifyNeedAuth:
@@ -251,14 +257,12 @@ export class Account {
                 }
             },
             error: (err) => {
-                Logger.error(this.tag, "ws messages error", err)
+                Logger.error(this.tag, 'ws messages error', err);
             },
             complete: () => {
-                Logger.log(this.tag, "ws messages complete")
-            }
+                Logger.log(this.tag, 'ws messages complete');
+            },
         });
-
-
     }
 }
 

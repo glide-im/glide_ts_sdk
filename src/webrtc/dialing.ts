@@ -1,12 +1,12 @@
-import {mLog} from "./log";
-import {Peer} from "./peer";
-import {SignalingMessage, SignalingType, WsSignaling} from "./signaling";
-import {rtcConfig} from "./webrtc";
-import {Subject} from "rxjs";
+import { mLog } from './log';
+import { Peer } from './peer';
+import { SignalingMessage, SignalingType, WsSignaling } from './signaling';
+import { rtcConfig } from './webrtc';
+import { Subject } from 'rxjs';
 
 export interface PeerInfo {
-    id: string
-    sdp?: any | null
+    id: string;
+    sdp?: any | null;
 }
 
 export interface Dialing {

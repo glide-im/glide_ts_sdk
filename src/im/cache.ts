@@ -1,100 +1,117 @@
-import {catchError, from, groupBy, map, mergeMap, Observable, of, tap, toArray} from "rxjs";
-import {Api} from "../api/api";
-import {GlideBaseInfo} from "./def";
-import {UserInfoBean} from "../api/model";
-import {getCookie, setCookie} from "../utils/Cookies";
-import {SessionListCache} from "./session_list";
-import {ChatMessageCache, MessageBaseInfo} from "./chat_message";
-import {SessionBaseInfo} from "./session";
-import {MessageStatus} from "./message";
-import {ChatMessageDbCache, GlideDb, SessionDbCache} from "./db";
-import {Logger} from "../utils/Logger";
+import {
+    catchError,
+    from,
+    groupBy,
+    map,
+    mergeMap,
+    Observable,
+    of,
+    tap,
+    toArray,
+} from 'rxjs';
+import { Api } from '../api/api';
+import { GlideBaseInfo } from './def';
+import { UserInfoBean } from '../api/model';
+import { getCookie, setCookie } from '../utils/Cookies';
+import { SessionListCache } from './session_list';
+import { ChatMessageCache, MessageBaseInfo } from './chat_message';
+import { SessionBaseInfo } from './session';
+import { MessageStatus } from './message';
+import { ChatMessageDbCache, GlideDb, SessionDbCache } from './db';
+import { Logger } from '../utils/Logger';
 
 export class GlideCache implements SessionListCache, ChatMessageCache {
-
     private _db: GlideDb = new GlideDb();
 
-    private _sessionDbCache: SessionListCache
-    private _messageDbCache: ChatMessageCache
+    private _sessionDbCache: SessionListCache;
+    private _messageDbCache: ChatMessageCache;
 
     init(uid: string): Observable<string> {
-        this._sessionDbCache = new SessionDbCache(this._db)
-        this._messageDbCache = new ChatMessageDbCache(this._db)
-        return this._db.init(uid)
+        this._sessionDbCache = new SessionDbCache(this._db);
+        this._messageDbCache = new ChatMessageDbCache(this._db);
+        return this._db.init(uid);
     }
 
     addMessage(message: MessageBaseInfo): Observable<void> {
-        return this._messageDbCache.addMessage(message)
+        return this._messageDbCache.addMessage(message);
     }
 
     addMessages(messages: MessageBaseInfo[]): Observable<void> {
-        return this._messageDbCache.addMessages(messages)
+        return this._messageDbCache.addMessages(messages);
     }
 
     clearAllSession(): Observable<void> {
-        return this._sessionDbCache.clearAllSession()
+        return this._sessionDbCache.clearAllSession();
     }
 
     containSession(sid: string): Observable<boolean> {
-        return this._sessionDbCache.containSession(sid)
+        return this._sessionDbCache.containSession(sid);
     }
 
     deleteMessage(cliId: string): Observable<void> {
-        return this._messageDbCache.deleteMessage(cliId)
+        return this._messageDbCache.deleteMessage(cliId);
     }
 
     deleteMessageBySid(sid: string): Observable<void> {
-        return this._messageDbCache.deleteMessageBySid(sid)
+        return this._messageDbCache.deleteMessageBySid(sid);
     }
 
     getSession(sid: string): Observable<SessionBaseInfo | null> {
-        return this._sessionDbCache.getSession(sid)
+        return this._sessionDbCache.getSession(sid);
     }
 
     getAllSession(): Observable<SessionBaseInfo[]> {
-        return this._sessionDbCache.getAllSession()
+        return this._sessionDbCache.getAllSession();
     }
 
     getMessageByCliId(cliId: string): Observable<MessageBaseInfo | null> {
-        return this._messageDbCache.getMessageByCliId(cliId)
+        return this._messageDbCache.getMessageByCliId(cliId);
     }
 
     getMessageByMid(mid: number): Observable<MessageBaseInfo | null> {
-        return this._messageDbCache.getMessageByMid(mid)
+        return this._messageDbCache.getMessageByMid(mid);
     }
 
     getLatestSessionMessage(sid: string): Observable<MessageBaseInfo | null> {
-        return this._messageDbCache.getLatestSessionMessage(sid)
+        return this._messageDbCache.getLatestSessionMessage(sid);
     }
 
-    getSessionMessageBySeq(sid: string, beforeSeq: number): Observable<MessageBaseInfo | null> {
-        return this._messageDbCache.getSessionMessageBySeq(sid, beforeSeq)
+    getSessionMessageBySeq(
+        sid: string,
+        beforeSeq: number
+    ): Observable<MessageBaseInfo | null> {
+        return this._messageDbCache.getSessionMessageBySeq(sid, beforeSeq);
     }
 
-    getSessionMessagesByTime(sid: string, beforeTime: number): Observable<MessageBaseInfo[]> {
-        return this._messageDbCache.getSessionMessagesByTime(sid, beforeTime)
+    getSessionMessagesByTime(
+        sid: string,
+        beforeTime: number
+    ): Observable<MessageBaseInfo[]> {
+        return this._messageDbCache.getSessionMessagesByTime(sid, beforeTime);
     }
 
     removeSession(sid: string): Observable<void> {
-        return this._sessionDbCache.removeSession(sid)
+        return this._sessionDbCache.removeSession(sid);
     }
 
     setSession(info: SessionBaseInfo): Observable<void> {
-        return this._sessionDbCache.setSession(info)
+        return this._sessionDbCache.setSession(info);
     }
 
     sessionCount(): Observable<number> {
-        return this._sessionDbCache.sessionCount()
+        return this._sessionDbCache.sessionCount();
     }
 
     updateMessage(message: MessageBaseInfo): Observable<void> {
-        return this._messageDbCache.updateMessage(message)
+        return this._messageDbCache.updateMessage(message);
     }
 
-    updateMessageStatus(cliId: number, status: MessageStatus): Observable<void> {
-        return this._messageDbCache.updateMessageStatus(cliId, status)
+    updateMessageStatus(
+        cliId: number,
+        status: MessageStatus
+    ): Observable<void> {
+        return this._messageDbCache.updateMessageStatus(cliId, status);
     }
-
 }
 
 class BaseInfoCache {

@@ -1,8 +1,8 @@
 import React from 'react';
-import ReactMarkdown from "react-markdown";
-import {Box, Typography} from "@mui/material";
+import ReactMarkdown from 'react-markdown';
+import { Box, Typography } from '@mui/material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import {darcula} from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { darcula } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 export interface MarkdownProps {
     source: string;

@@ -1,7 +1,7 @@
-import { AxiosInstance, AxiosPromise } from "axios";
-import { map, Observable, OperatorFunction } from "rxjs";
-import { axiosInstance } from "./axios";
-import { Response } from "./response";
+import { AxiosInstance, AxiosPromise } from 'axios';
+import { map, Observable, OperatorFunction } from 'rxjs';
+import { axiosInstance } from './axios';
+import { Response } from './response';
 
 interface HttpResponse {
     status: number;

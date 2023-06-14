@@ -1,7 +1,7 @@
-import { createContext } from 'react'
+import { createContext } from 'react';
 
 interface ChatContextValue {
-    scrollToBottom: Function
+    scrollToBottom: Function;
 }
 
 export const ChatContext = createContext({

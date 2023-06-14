@@ -7,18 +7,27 @@ import {
     map,
     mergeMap,
     Observable,
-    of, race,
+    of,
+    race,
     Subject,
     Subscription,
     take,
     tap,
     throwError,
     timeout,
-    TimeoutError
+    TimeoutError,
 } from 'rxjs';
-import {AckMessage, AckNotify, AckRequest, Actions, CliCustomMessage, CommonMessage, Message} from './message';
-import {Logger} from "../utils/Logger";
-import {WebSockEvent, WsClient} from "./ws_client";
+import {
+    AckMessage,
+    AckNotify,
+    AckRequest,
+    Actions,
+    CliCustomMessage,
+    CommonMessage,
+    Message,
+} from './message';
+import { Logger } from '../utils/Logger';
+import { WebSockEvent, WsClient } from './ws_client';
 
 const ackTimeout = 3000;
 const heartbeatInterval = 30000;

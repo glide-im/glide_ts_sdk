@@ -1,16 +1,23 @@
-import {Observable} from "rxjs";
-import {getBaseUrl, post, setBaseUrl} from "./axios";
-import {AuthBean, ContactsBean, MessageBean, MidBean, ServerInfoBean, SessionBean, UserInfoBean} from "./model";
-import {rxios} from "./rxios";
-
+import { Observable } from 'rxjs';
+import { getBaseUrl, post, setBaseUrl } from './axios';
+import {
+    AuthBean,
+    ContactsBean,
+    MessageBean,
+    MidBean,
+    ServerInfoBean,
+    SessionBean,
+    UserInfoBean,
+} from './model';
+import { rxios } from './rxios';
 
 function login(account: string, password: string): Observable<AuthBean> {
     const param = {
         Email: account,
         Device: 2,
-        Password: password
+        Password: password,
     };
-    return rxios.post("auth/signin", param)
+    return rxios.post('auth/signin', param);
 }
 
 function guest(nickname: string, avatar: string): Observable<AuthBean> {

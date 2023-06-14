@@ -1,12 +1,11 @@
-import {Box, CircularProgress, Grid} from "@mui/material";
-import React from "react";
-
+import { Box, CircularProgress, Grid } from '@mui/material';
+import React from 'react';
 
 export function Loading(props: { msg?: string }) {
     return (
-        <Grid container justifyContent={"center"}>
+        <Grid container justifyContent={'center'}>
             <Box>
-                <CircularProgress/>
+                <CircularProgress />
                 {/*<Typography variant={"h5"} component={"p"}>{props.msg}</Typography>*/}
             </Box>
         </Grid>

@@ -1,10 +1,22 @@
-import {catchError, concat, filter, interval, map, Observable, of, Subject, take, throwError, timeout} from "rxjs";
-import {Logger} from "../utils/Logger";
+import {
+    catchError,
+    concat,
+    filter,
+    interval,
+    map,
+    Observable,
+    of,
+    Subject,
+    take,
+    throwError,
+    timeout,
+} from 'rxjs';
+import { Logger } from '../utils/Logger';
 
 export interface ConnectConfig {
-    url: string
-    timeout?: number
-    ignoreError?: boolean
+    url: string;
+    timeout?: number;
+    ignoreError?: boolean;
 }
 
 export interface WebSockEvent {

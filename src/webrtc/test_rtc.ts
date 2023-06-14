@@ -1,8 +1,12 @@
-import {iceServer} from "./webrtc";
+import { iceServer } from './webrtc';
 
-
-export async function testWebRTC(s: (stream: MediaStream) => void): Promise<MediaStream> {
-    const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+export async function testWebRTC(
+    s: (stream: MediaStream) => void
+): Promise<MediaStream> {
+    const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+    });
     connectionPeer(stream, s);
     return stream;
 }

@@ -1,12 +1,12 @@
-import {catchError, concat, map, Observable, of, tap} from "rxjs";
-import {Api} from "../api/api";
+import { catchError, concat, map, Observable, of, Subject, tap } from 'rxjs';
+import { Api } from '../api/api';
 
 export interface RelativeUser {
-    Uid: string
-    Account: string
-    Nickname: string
-    email: string
-    Avatar: string
+    Uid: string;
+    Account: string;
+    Nickname: string;
+    email: string;
+    Avatar: string;
 }
 
 interface RelativeUserBean {
@@ -26,11 +26,39 @@ export interface RelativeList {
     removeBlackRelativeLists(id: string[]): Observable<any>
 
     init(): Observable<string>
+
+    event(Event: string): Observable<string>
+
+    inUserBlackList(id: string): boolean
+}
+
+export enum Event {
+    BlackListUpdate = "BlackListUpdate",
 }
 
 export class RelativeListImpl implements RelativeList {
 
     private blackRelativeList: Array<RelativeUser> = []
+    private _subject = new Subject<{ event: Event, payload: any }>();
+
+    private publish(event: Event, payload: any):Observable<any> {
+        return new Observable((observer) => {
+            this._subject.next({event: event, payload: payload})
+            observer.complete()
+        })
+    }
+
+    public event(Event: string): Observable<string> {
+        return this._subject.asObservable().pipe(
+            // filter((e) => e.event === Event),
+            tap((e) => console.log(e)),
+            map((e) => e.payload)
+        )
+    }
+
+    public inUserBlackList(id: string): boolean {
+        return this.blackRelativeList.some(u => u.Uid === id)
+    }
 
     public init(): Observable<string> {
         return concat(
@@ -49,7 +77,9 @@ export class RelativeListImpl implements RelativeList {
                 this.blackRelativeList = []
                 relativeUsers.forEach(u => {
                     const user = u as RelativeUserBean
-                    this.blackRelativeList.push(user.user_info)
+                    this.blackRelativeList.push(Object.assign({}, user.user_info, {
+                        Uid: user.user_info.Uid.toString(),
+                    }))
                 })
             }),
         )
@@ -60,13 +90,14 @@ export class RelativeListImpl implements RelativeList {
     }
 
     public getBlackRelativeListID(): Array<string> {
-        return this.blackRelativeList.map(u => u.Uid.toString())
+        return this.blackRelativeList.map(u => u.Uid)
     }
 
     public addBlackRelativeList(id: string): Observable<any> {
         return concat(
             Api.addToBlackList([id]),
             this.init(),
+            this.publish(Event.BlackListUpdate, null),
         )
     }
 
@@ -74,6 +105,7 @@ export class RelativeListImpl implements RelativeList {
         return concat(
             Api.removeFromBlackList([id]),
             this.init(),
+            this.publish(Event.BlackListUpdate, null),
         )
     }
 
@@ -81,6 +113,7 @@ export class RelativeListImpl implements RelativeList {
         return concat(
             Api.removeFromBlackList(id),
             this.init(),
+            this.publish(Event.BlackListUpdate, null),
         )
     }
 }

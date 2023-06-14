@@ -14,10 +14,10 @@ import {
     tap,
     throwError,
     timeout,
-    toArray
-} from "rxjs";
-import {SessionBean} from "../api/model";
-import {Account} from "./account";
+    toArray,
+} from 'rxjs';
+import { SessionBean } from '../api/model';
+import { Account } from './account';
 import {
     ChatMessage,
     ChatMessageCache,
@@ -25,15 +25,22 @@ import {
     createChatMessage,
     createChatMessage2,
     MessageUpdateType,
-    SendingStatus
-} from "./chat_message";
-import {Cache} from "./cache";
-import {Actions, CliCustomMessage, ClientCustomType, Message, MessageStatus, MessageType} from "./message";
-import {IMWsClient, MessageSendResult} from "./im_ws_client";
-import {Logger} from "../utils/Logger";
-import {SessionListCache} from "./session_list";
+    SendingStatus,
+} from './chat_message';
+import { Cache } from './cache';
+import {
+    Actions,
+    CliCustomMessage,
+    ClientCustomType,
+    Message,
+    MessageStatus,
+    MessageType,
+} from './message';
+import { IMWsClient, MessageSendResult } from './im_ws_client';
+import { Logger } from '../utils/Logger';
+import { SessionListCache } from './session_list';
 
-export type SessionId = string
+export type SessionId = string;
 
 export enum SessionType {
     Single = 1,

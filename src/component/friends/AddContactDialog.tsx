@@ -2,16 +2,16 @@ import {
     Button,
     Dialog,
     DialogActions,
-    DialogContent, DialogTitle,
-    TextField
-} from "@mui/material";
-import { useState } from "react";
-
+    DialogContent,
+    DialogTitle,
+    TextField,
+} from '@mui/material';
+import { useState } from 'react';
 
 interface AddContactDialogProp {
-    open: boolean,
-    onClose: () => void,
-    onSubmit: (isGroup: boolean, id: string) => void,
+    open: boolean;
+    onClose: () => void;
+    onSubmit: (isGroup: boolean, id: string) => void;
 }
 
 export function AddContactDialog(props: AddContactDialogProp) {

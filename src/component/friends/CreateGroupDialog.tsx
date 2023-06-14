@@ -5,15 +5,14 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    TextField
-} from "@mui/material";
-import {useState} from "react";
-
+    TextField,
+} from '@mui/material';
+import { useState } from 'react';
 
 interface CreateGroupDialogProp {
-    open: boolean,
-    onClose: () => void,
-    onSubmit: (name: string) => void,
+    open: boolean;
+    onClose: () => void;
+    onSubmit: (name: string) => void;
 }
 
 export function CreateGroupDialog(props: CreateGroupDialogProp) {

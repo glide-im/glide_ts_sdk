@@ -1,4 +1,4 @@
-import { GroupAdd, Refresh } from "@mui/icons-material";
+import { GroupAdd, Refresh } from '@mui/icons-material';
 import {
     Avatar,
     Box,
@@ -9,101 +9,107 @@ import {
     ListItem,
     ListItemIcon,
     ListItemText,
-    Typography
-} from "@mui/material";
-import { grey } from "@mui/material/colors";
-import React, { useEffect, useState } from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { Contacts } from "../../im/contacts";
-import { AddContactDialog } from "./AddContactDialog";
-import { Account } from "../../im/account";
+    Typography,
+} from '@mui/material';
+import { grey } from '@mui/material/colors';
+import React, { useEffect, useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Contacts } from '../../im/contacts';
+import { AddContactDialog } from './AddContactDialog';
+import { Account } from '../../im/account';
 
 export function ContactsList() {
+    const [contacts, setContacts] = useState([]);
 
-    const [contacts, setContacts] = useState([])
-
-    const [showAddContact, setShowAddContact] = useState(false)
+    const [showAddContact, setShowAddContact] = useState(false);
     // const [showCreateGroup, setShowCreateGroup] = useState(false)
 
-    const c = Account.getInstance().getContactList()
+    const c = Account.getInstance().getContactList();
 
     useEffect(() => {
-        c.getOrInitContactList()
-            .subscribe({
-                next: (list: Contacts[]) => {
-                    setContacts(list)
-                },
-                error: (err) => {
-                    console.log(err)
-                }
-            })
+        c.getOrInitContactList().subscribe({
+            next: (list: Contacts[]) => {
+                setContacts(list);
+            },
+            error: (err) => {
+                console.log(err);
+            },
+        });
         c.setContactsUpdateListener(() => {
-            setContacts([...c.getAllContacts()])
-        })
-        return () => c.setContactsUpdateListener(null)
-    }, [c])
+            setContacts([...c.getAllContacts()]);
+        });
+        return () => c.setContactsUpdateListener(null);
+    }, [c]);
 
-    const list = contacts.flatMap(value => {
-        return (<ContactsItem contact={value} key={value.id} />)
-    }
-    )
+    const list = contacts.flatMap((value) => {
+        return <ContactsItem contact={value} key={value.id} />;
+    });
 
-    const refresh = () => {
-
-    }
+    const refresh = () => {};
 
     // const createGroup = (name: string) => {
-        // client.createGroup(name)
-        //     .then()
-        // setShowCreateGroup(false)
+    // client.createGroup(name)
+    //     .then()
+    // setShowCreateGroup(false)
     // }
 
     const addContactHandler = (isGroup: boolean, id: string) => {
         if (!isGroup) {
-            c.addFriend(id, "")
+            c.addFriend(id, '')
                 .then((r) => {
-                    setContacts([...c.getContacts()])
-                    console.log(r)
+                    setContacts([...c.getContacts()]);
+                    console.log(r);
                 })
                 .catch((e) => {
-                    alert(e)
-                    console.log(e)
-                })
+                    alert(e);
+                    console.log(e);
+                });
         } else {
             // client.joinGroup(id).then()
         }
-        setShowAddContact(false)
-    }
+        setShowAddContact(false);
+    };
 
-    return <Grid container style={{ height: "700px" }}>
-        <Grid item xs={4}>
-            <Box m={2}>
-                {/* <CreateGroupDialog open={showCreateGroup} onClose={() =>setShowAddContact(false)}
+    return (
+        <Grid container style={{ height: '700px' }}>
+            <Grid item xs={4}>
+                <Box m={2}>
+                    {/* <CreateGroupDialog open={showCreateGroup} onClose={() =>setShowAddContact(false)}
                     onSubmit={createGroup} /> */}
-                <AddContactDialog open={showAddContact} onClose={() => setShowAddContact(false)}
-                    onSubmit={addContactHandler} />
-                <Typography variant={"caption"}>联系人</Typography>
+                    <AddContactDialog
+                        open={showAddContact}
+                        onClose={() => setShowAddContact(false)}
+                        onSubmit={addContactHandler}
+                    />
+                    <Typography variant={'caption'}>联系人</Typography>
 
-                <IconButton size={"small"} onClick={refresh} style={{ float: "right" }}>
-                    <Refresh />
-                </IconButton>
+                    <IconButton
+                        size={'small'}
+                        onClick={refresh}
+                        style={{ float: 'right' }}>
+                        <Refresh />
+                    </IconButton>
 
-                <IconButton size={"small"} onClick={() => setShowAddContact(true)} style={{ float: "right" }}>
-                    <GroupAdd />
-                </IconButton>
-            </Box>
-            <Divider />
-            <List style={{ overflow: "auto", maxHeight: "600px" }}>
-
-                {list}
-
-            </List>
+                    <IconButton
+                        size={'small'}
+                        onClick={() => setShowAddContact(true)}
+                        style={{ float: 'right' }}>
+                        <GroupAdd />
+                    </IconButton>
+                </Box>
+                <Divider />
+                <List style={{ overflow: 'auto', maxHeight: '600px' }}>
+                    {list}
+                </List>
+            </Grid>
+            <Grid item xs={8}>
+                <Divider orientation={'vertical'} style={{ float: 'left' }} />
+                <Typography variant={'h5'} align={'center'}>
+                    {' '}
+                </Typography>
+            </Grid>
         </Grid>
-        <Grid item xs={8}>
-            <Divider orientation={"vertical"} style={{ float: "left" }} />
-            <Typography variant={"h5"} align={"center"}> </Typography>
-        </Grid>
-    </Grid>
+    );
 }
 
 

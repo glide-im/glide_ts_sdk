@@ -60,6 +60,7 @@
     "@types/node": "^12.20.47",
     "@types/react-router-dom": "^5.1.8",
     "dotenv-cli": "^5.1.0",
+    "prettier": "^2.8.8",
     "react-app-rewired": "^2.2.1",
     "release-it": "^15.11.0",
     "tailwindcss": "^3.3.1",

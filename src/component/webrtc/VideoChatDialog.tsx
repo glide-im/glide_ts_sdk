@@ -1,24 +1,23 @@
 import * as React from 'react';
-import {useEffect} from 'react';
+import { useEffect } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import Paper, {PaperProps} from '@mui/material/Paper';
+import Paper, { PaperProps } from '@mui/material/Paper';
 import Draggable from 'react-draggable';
-import {IconButton} from "@mui/material";
-import {VideoCallRounded} from "@mui/icons-material";
-import {WebRTC} from "../../webrtc/webrtc";
-import {WebRtcView} from "./WebRTC";
-import {Subscription} from "rxjs";
-import {SessionType} from "../../im/session";
-import {Account} from "../../im/account";
+import { IconButton } from '@mui/material';
+import { VideoCallRounded } from '@mui/icons-material';
+import { WebRTC } from '../../webrtc/webrtc';
+import { WebRtcView } from './WebRTC';
+import { Subscription } from 'rxjs';
+import { SessionType } from '../../im/session';
+import { Account } from '../../im/account';
 
 export function PaperComponent(props: PaperProps) {
     return (
         <Draggable
-            handle="#draggable-dialog-title"
-            cancel={'[class*="MuiDialogContent-root"]'}
-        >
+            handle='#draggable-dialog-title'
+            cancel={'[class*="MuiDialogContent-root"]'}>
             <Paper {...props} />
         </Draggable>
     );

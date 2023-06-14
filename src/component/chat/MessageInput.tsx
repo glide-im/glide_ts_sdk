@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from "react";
-import {MessageType, Reply} from "../../im/message";
+import React, { useEffect, useRef, useState } from 'react';
+import { MessageType, Reply } from '../../im/message';
 import {
     Box,
     Button,
@@ -16,7 +16,7 @@ import {
     Popover,
     Select,
     Typography,
-} from "@mui/material";
+} from '@mui/material';
 import {
     AttachFileRounded,
     Close,
@@ -26,92 +26,118 @@ import {
     ImageOutlined,
     KeyboardVoiceOutlined,
     Send,
-    SendRounded
-} from "@mui/icons-material";
-import {grey} from "@mui/material/colors";
-import VideoChat from "../webrtc/VideoChatDialog";
-import {Account} from "../../im/account";
-import {showSnack} from "../widget/SnackBar";
-import {ChatMessage} from "../../im/chat_message";
-import {Event, EventBus} from "../EventBus";
-import {filter, Observable} from "rxjs";
+    SendRounded,
+} from '@mui/icons-material';
+import { grey } from '@mui/material/colors';
+import VideoChat from '../webrtc/VideoChatDialog';
+import { Account } from '../../im/account';
+import { showSnack } from '../widget/SnackBar';
+import { ChatMessage } from '../../im/chat_message';
+import { Event, EventBus } from '../EventBus';
+import { filter, Observable } from 'rxjs';
 
-export function MessageInput(props: { onSend: (msg: string, type: number) => void }) {
-
-    const input = useRef<HTMLInputElement>(null)
-    const [showImageDialog, setShowImageDialog] = useState(false)
+export function MessageInput(props: {
+    onSend: (msg: string, type: number) => void;
+}) {
+    const input = useRef<HTMLInputElement>(null);
+    const [showImageDialog, setShowImageDialog] = useState(false);
 
     const onSend = (msg: string) => {
         const m = msg.trim();
         if (m.length === 0) {
-            return
+            return;
         }
-        props.onSend(m, MessageType.Text)
-    }
+        props.onSend(m, MessageType.Text);
+    };
 
     const handleSendClick = () => {
-        onSend(input.current.value)
-        input.current.value = ''
-    }
+        onSend(input.current.value);
+        input.current.value = '';
+    };
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && e.shiftKey) {
             e.preventDefault();
             return;
         }
 
-        if (e.key === "Enter") {
-            handleSendClick()
+        if (e.key === 'Enter') {
+            handleSendClick();
         }
-    }
+    };
     const handleEmojiClick = () => {
-        input.current.value = input.current.value + '😊'
-    }
+        input.current.value = input.current.value + '😊';
+    };
     const handleImageClick = () => {
-        setShowImageDialog(true)
-    }
+        setShowImageDialog(true);
+    };
 
-    return <>
-        <Box>
-            <SendImageDialog open={showImageDialog} callback={(url) => {
-                if (url.startsWith('http') && url.length > 7) {
-                    props.onSend(url, MessageType.Image)
-                }
-                setShowImageDialog(false)
-            }}/>
+    return (
+        <>
             <Box>
-                <IconButton onClick={handleImageClick} size={"small"} color={"primary"} disabled={true}>
-                    <ImageOutlined/>
-                </IconButton>
-                <IconButton onClick={handleEmojiClick} size={"small"} color={"primary"} disabled={true}>
-                    <EmojiEmotionsOutlined/>
-                </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.File)}
-                            disabled={true}>
-                    <FolderOutlined/>
-                </IconButton>
-                <IconButton size={"small"} color={"primary"} onClick={() => props.onSend("", MessageType.Audio)}
-                            disabled={true}>
-                    <KeyboardVoiceOutlined/>
-                </IconButton>
-            </Box>
+                <SendImageDialog
+                    open={showImageDialog}
+                    callback={(url) => {
+                        if (url.startsWith('http') && url.length > 7) {
+                            props.onSend(url, MessageType.Image);
+                        }
+                        setShowImageDialog(false);
+                    }}
+                />
+                <Box>
+                    <IconButton
+                        onClick={handleImageClick}
+                        size={'small'}
+                        color={'primary'}
+                        disabled={true}>
+                        <ImageOutlined />
+                    </IconButton>
+                    <IconButton
+                        onClick={handleEmojiClick}
+                        size={'small'}
+                        color={'primary'}
+                        disabled={true}>
+                        <EmojiEmotionsOutlined />
+                    </IconButton>
+                    <IconButton
+                        size={'small'}
+                        color={'primary'}
+                        onClick={() => props.onSend('', MessageType.File)}
+                        disabled={true}>
+                        <FolderOutlined />
+                    </IconButton>
+                    <IconButton
+                        size={'small'}
+                        color={'primary'}
+                        onClick={() => props.onSend('', MessageType.Audio)}
+                        disabled={true}>
+                        <KeyboardVoiceOutlined />
+                    </IconButton>
+                </Box>
 
-            <Box pr={1} pl={1}>
-                <Grid container spacing={2}>
-                    <Grid item xs={10}>
-                        <InputBase fullWidth inputRef={input} autoComplete={"off"}
-                                   onKeyDown={handleKeyDown}/>
+                <Box pr={1} pl={1}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={10}>
+                            <InputBase
+                                fullWidth
+                                inputRef={input}
+                                autoComplete={'off'}
+                                onKeyDown={handleKeyDown}
+                            />
+                        </Grid>
+                        <Grid item xs={2}>
+                            {/*<VideoChat incoming={null}/>*/}
+                            <IconButton
+                                onClick={handleSendClick}
+                                color={'primary'}
+                                style={{ float: 'right' }}>
+                                <Send />
+                            </IconButton>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={2}>
-                        {/*<VideoChat incoming={null}/>*/}
-                        <IconButton onClick={handleSendClick} color={"primary"} style={{float: "right"}}>
-                            <Send/>
-                        </IconButton>
-                    </Grid>
-                </Grid>
+                </Box>
             </Box>
-        </Box>
-    </>
-
+        </>
+    );
 }
 
 export function MessageInputV2(props: { sid: string, onLayoutChange: () => void }) {

@@ -1,8 +1,7 @@
-import { ContactsBean } from "../api/model";
-import { GlideBaseInfo } from "./def";
+import { ContactsBean } from '../api/model';
+import { GlideBaseInfo } from './def';
 
 export class Contacts {
-
     public avatar: string;
     public name: string;
     public id: string;
@@ -11,21 +10,19 @@ export class Contacts {
 
     public static create(b: ContactsBean): Contacts {
         let contact = new Contacts();
-        contact.avatar = "";
+        contact.avatar = '';
         contact.name = b.Id.toString();
         contact.id = b.Id;
         contact.type = b.Type;
-        contact.sid = ""
+        contact.sid = '';
         contact.init();
         return contact;
     }
 
-    public setInfo(u: GlideBaseInfo){
+    public setInfo(u: GlideBaseInfo) {
         this.avatar = u.avatar;
         this.name = u.name;
     }
 
-    private init() {
-
-    }
+    private init() {}
 }

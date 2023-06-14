@@ -1,7 +1,19 @@
-import {catchError, concat, filter, groupBy, map, mergeMap, Observable, of, Subject, tap, toArray} from "rxjs";
-import {Api} from "../api/api";
-import {Account} from "./account";
-import {Actions, CliCustomMessage, CommonMessage, Message} from "./message";
+import {
+    catchError,
+    concat,
+    filter,
+    groupBy,
+    map,
+    mergeMap,
+    Observable,
+    of,
+    Subject,
+    tap,
+    toArray,
+} from 'rxjs';
+import { Api } from '../api/api';
+import { Account } from './account';
+import { Actions, CliCustomMessage, CommonMessage, Message } from './message';
 import {
     createSession,
     fromBaseInfo,
@@ -11,11 +23,10 @@ import {
     Session,
     SessionBaseInfo,
     SessionId,
-    SessionType
-} from "./session";
-import {ChatMessageCache} from "./chat_message";
-import {Logger} from "../utils/Logger";
-
+    SessionType,
+} from './session';
+import { ChatMessageCache } from './chat_message';
+import { Logger } from '../utils/Logger';
 
 export enum SessionListEventType {
     create = 0,

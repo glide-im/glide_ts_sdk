@@ -1,9 +1,9 @@
-import {Account} from "./account";
-import {Message, MessageStatus, MessageType, Reply} from "./message";
-import {Cache} from "./cache";
-import {map, Observable, of, scan, Subject, throwError} from "rxjs";
-import {GlideBaseInfo} from "./def";
-import {Logger} from "../utils/Logger";
+import { Account } from './account';
+import { Message, MessageStatus, MessageType, Reply } from './message';
+import { Cache } from './cache';
+import { map, Observable, scan, Subject, throwError } from 'rxjs';
+import { GlideBaseInfo } from './def';
+import { Logger } from '../utils/Logger';
 
 export enum SendingStatus {
     Unknown,

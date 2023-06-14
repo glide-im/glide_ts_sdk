@@ -4,38 +4,45 @@ import {
     BottomNavigationAction,
     Box,
     Divider,
-    Grid,
     Hidden,
     IconButton,
     Toolbar,
-    Typography
-} from "@mui/material";
-import {grey} from "@mui/material/colors";
-import React from "react";
-import {Redirect, Route, RouteComponentProps, Switch, useRouteMatch, withRouter} from "react-router-dom";
-import {Account} from "../im/account";
-import {ContactsList} from "./friends/ContactsList";
-import {Square} from "./square/Square";
-import {SessionListView} from "./session/SessionListView";
-import {ManageAccountsOutlined, MessageOutlined} from "@mui/icons-material";
-import {ChatRoomContainer, ChatRoomContainerMobile} from "./chat/ChatRoom";
-import {Profile} from "./Profile";
-import {UserInfoHeader} from "./session/UserInfoHeader";
-import VideoChat from "./webrtc/VideoChatDialog";
+    Typography,
+} from '@mui/material';
+import { grey } from '@mui/material/colors';
+import React from 'react';
+import {
+    Redirect,
+    Route,
+    RouteComponentProps,
+    Switch,
+    useRouteMatch,
+    withRouter,
+} from 'react-router-dom';
+import { Account } from '../im/account';
+import { ContactsList } from './friends/ContactsList';
+import { Square } from './square/Square';
+import { SessionListView } from './session/SessionListView';
+import { ManageAccountsOutlined, MessageOutlined } from '@mui/icons-material';
+import { ChatRoomContainer, ChatRoomContainerMobile } from './chat/ChatRoom';
+import { Profile } from './Profile';
+import { UserInfoHeader } from './session/UserInfoHeader';
+import VideoChat from './webrtc/VideoChatDialog';
 
-
-export const AppMainPanel = withRouter((props: RouteComponentProps) => {
-
+export const AppMainPanel: any = withRouter((props: RouteComponentProps) => {
     if (!Account.getInstance().isAuthenticated()) {
-        props.history.push("/auth");
-        return <></>
+        props.history.push('/auth');
+        return <></>;
     }
 
     const match = useRouteMatch();
 
     return (
-        <Box className={'h-full 2xl:h-5/6 2xl:w-8/12 w-full 2xl:mx-auto mx-0 rounded-md bg-white shadow-md'}>
-            <VideoChat session={''} showIcon={false}/>
+        <Box
+            className={
+                'h-full 2xl:h-5/6 2xl:w-8/12 w-full 2xl:mx-auto mx-0 rounded-md bg-white shadow-md'
+            }>
+            <VideoChat session={''} showIcon={false} />
             <Hidden mdDown>
                 <div className={'h-full w-full'}>
                     <Switch>
@@ -43,37 +50,47 @@ export const AppMainPanel = withRouter((props: RouteComponentProps) => {
                             <Box className={'h-full flex flex-row'}>
                                 <Box className={'flex flex-col w-4/12'}>
                                     <Box>
-                                        <UserInfoHeader/>
+                                        <UserInfoHeader />
                                     </Box>
-                                    <Divider/>
-                                    <Box overflow={"hidden"} className="BeautyScrollBar flex-1">
-                                        <SessionListView/>
+                                    <Divider />
+                                    <Box
+                                        overflow={'hidden'}
+                                        className='BeautyScrollBar flex-1'>
+                                        <SessionListView />
                                     </Box>
                                 </Box>
 
-                                <Box className={"h-full flex-1"}>
-                                    <Divider orientation={"vertical"} style={{float: "left"}}/>
-                                    <ChatRoomContainer/>
+                                <Box className={'h-full flex-1'}>
+                                    <Divider
+                                        orientation={'vertical'}
+                                        style={{ float: 'left' }}
+                                    />
+                                    <ChatRoomContainer />
                                 </Box>
                             </Box>
                         </Route>
-                        <Route path={`${match.url}/friends`} children={<ContactsList/>}/>
-                        <Route path={`${match.url}/square`} children={<Square/>}/>
+                        <Route
+                            path={`${match.url}/friends`}
+                            children={<ContactsList />}
+                        />
+                        <Route
+                            path={`${match.url}/square`}
+                            children={<Square />}
+                        />
                         <Route path={`${match.url}/session`} exact={true}>
-                            <Redirect
-                                to={`${match.url}/session/0`}/>
+                            <Redirect to={`${match.url}/session/0`} />
                         </Route>
                         <Route path={`${match.url}/`} exact={true}>
-                            <Redirect to={`${match.url}/session/`}/>
+                            <Redirect to={`${match.url}/session/`} />
                         </Route>
                     </Switch>
                 </div>
             </Hidden>
             <Hidden mdUp>
-                <MobileMain/>
+                <MobileMain />
             </Hidden>
         </Box>
-    )
+    );
 });
 
 const MobileMain = withRouter((props: RouteComponentProps) => {

@@ -1,127 +1,155 @@
-import {RouteComponentProps, withRouter} from "react-router-dom";
-import {Account} from "../../im/account";
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { Account } from '../../im/account';
 import List from '@mui/material/List';
 import Checkbox from '@mui/material/Checkbox';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
-import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
-import {IMWsClient} from "../../im/im_ws_client";
+import React, {
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from 'react';
+import { IMWsClient } from '../../im/im_ws_client';
 import {
     Avatar,
     Box,
     Button,
-    Dialog, DialogActions,
+    Dialog,
+    DialogActions,
     DialogContent,
-    DialogTitle, Drawer,
+    DialogTitle,
+    Drawer,
     IconButton,
     Menu,
     MenuItem,
-    TextField
-} from "@mui/material";
-import {grey} from "@mui/material/colors";
+    TextField,
+} from '@mui/material';
+import { grey } from '@mui/material/colors';
 import {
     AddCommentOutlined,
-    ChatOutlined,
     ExitToAppOutlined,
     MenuOutlined,
     RefreshOutlined,
     SettingsOutlined,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import {RelativeUser} from "../../im/relative_list";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
-import {showSnack} from "../widget/SnackBar";
+import { RelativeUser } from '../../im/relative_list';
+import { Simulate } from 'react-dom/test-utils';
+import { showSnack } from '../widget/SnackBar';
 
-
-export const UserInfoHeader = withRouter((props: RouteComponentProps) => {
-    const blackListDrawerRef = useRef<any>()
-    let u = Account.getInstance().getUserInfo()
+export const UserInfoHeader: any = withRouter((props: RouteComponentProps) => {
+    const blackListDrawerRef = useRef<any>();
+    let u = Account.getInstance().getUserInfo();
     if (u === null) {
         u = {
-            avatar: "-", name: "-", id: "-", isChannel: false
-        }
+            avatar: '-',
+            name: '-',
+            id: '-',
+            isChannel: false,
+        };
     }
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [online, setOnline] = useState(IMWsClient.isReady())
+    const [online, setOnline] = useState(IMWsClient.isReady());
 
-    useEffect(() => {
-
-    })
+    useEffect(() => {});
 
     useEffect(() => {
         const sp = IMWsClient.events().subscribe({
             next: (e) => {
-                e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false)
-            }
-        })
-        return () => sp.unsubscribe()
+                e.state === WebSocket.OPEN ? setOnline(true) : setOnline(false);
+            },
+        });
+        return () => sp.unsubscribe();
     }, []);
 
     const onExitClick = () => {
-        Account.getInstance().logout()
-        props.history.replace("/auth")
-    }
+        Account.getInstance().logout();
+        props.history.replace('/auth');
+    };
 
     const reconnect = () => {
-        Account.getInstance().auth().subscribe()
-    }
+        Account.getInstance().auth().subscribe();
+    };
 
-    return <div className={'flex justify-between items-center p-4'}>
-        <div className={'flex items-center'}>
-            <Avatar src={u.avatar} sx={{width: 40, height: 40, bgcolor: grey[400]}}/>
-            <div className={'text-left flex flex-col ml-5'}>
-                <span className={'text-base'}>{u.name}</span>
-                <span className={'text-sm'}>UID: {u.id}</span>
+    return (
+        <div className={'flex justify-between items-center p-4'}>
+            <div className={'flex items-center'}>
+                <Avatar
+                    src={u.avatar}
+                    sx={{ width: 40, height: 40, bgcolor: grey[400] }}
+                />
+                <div className={'text-left flex flex-col ml-5'}>
+                    <span className={'text-base'}>{u.name}</span>
+                    <span className={'text-sm'}>UID: {u.id}</span>
+                </div>
+            </div>
+
+            <div>
+                <IconButton
+                    size={'large'}
+                    onClick={(e) => setAnchorEl(e.currentTarget)}>
+                    <MenuOutlined fontSize={'medium'} />
+                </IconButton>
+                {online ? (
+                    ''
+                ) : (
+                    <IconButton size={'large'} onClick={reconnect}>
+                        <RefreshOutlined />
+                    </IconButton>
+                )}
+
+                <CreateSessionDialog
+                    open={false}
+                    callback={(uid) => {
+                        if (uid.length > 2) {
+                            Account.getInstance()
+                                .getSessionList()
+                                .createSession(uid)
+                                .subscribe();
+                        }
+                    }}
+                />
+                <Menu
+                    id='menu-appbar'
+                    anchorEl={anchorEl}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    open={Boolean(anchorEl)}
+                    onClose={() => setAnchorEl(null)}>
+                    <MenuItem disabled>
+                        <SettingsOutlined />
+                        <Box m={1}>设置</Box>
+                    </MenuItem>
+                    <MenuItem onClick={onExitClick}>
+                        <ExitToAppOutlined />
+                        <Box m={1}>退出登录</Box>
+                    </MenuItem>
+                    <MenuItem onClick={() => blackListDrawerRef.current.show()}>
+                        <AdminPanelSettingsIcon />
+                        <Box m={1}>黑名单管理</Box>
+                    </MenuItem>
+                    <MenuItem disabled>
+                        <AddCommentOutlined />
+                        <Box m={1}>创建会话</Box>
+                    </MenuItem>
+                </Menu>
+
+                <BlackListDrawer ref={blackListDrawerRef} />
             </div>
         </div>
-
-        <div>
-            <IconButton size={"large"} onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <MenuOutlined fontSize={"medium"}/>
-            </IconButton>
-            {online ? "" : <IconButton size={"large"} onClick={reconnect}><RefreshOutlined/></IconButton>}
-
-            <CreateSessionDialog open={false} callback={(uid) => {
-                if (uid.length > 2) {
-                    Account.getInstance().getSessionList().createSession(uid).subscribe()
-                }
-            }}/>
-            <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-            >
-                <MenuItem disabled>
-                    <SettingsOutlined/><Box m={1}>设置</Box>
-                </MenuItem>
-                <MenuItem onClick={onExitClick}>
-                    <ExitToAppOutlined/><Box m={1}>退出登录</Box>
-                </MenuItem>
-                <MenuItem onClick={() => blackListDrawerRef.current.show()}>
-                    <AdminPanelSettingsIcon/><Box m={1}>黑名单管理</Box>
-                </MenuItem>
-                <MenuItem disabled>
-                    <AddCommentOutlined/><Box m={1}>创建会话</Box>
-                </MenuItem>
-            </Menu>
-
-            <BlackListDrawer ref={blackListDrawerRef}/>
-        </div>
-    </div>
-})
+    );
+});
 
 const BlackListDrawer = forwardRef((props, ref) => {
     const [isShow, setIsShow] = useState<boolean>(false)
@@ -149,14 +177,13 @@ const BlackListDrawer = forwardRef((props, ref) => {
 
     const updateBlackList = () => {
         setPermitOperateLoading(true)
-        relativeList.removeBlackRelativeLists(checked.map(v => v.toString())).subscribe({
+        relativeList.removeBlackRelativeLists(checked).subscribe({
             error: (e) => {
                 showSnack(e.toString())
                 setPermitOperateLoading(false)
             },
             complete: () => {
-                console.log('blackList', blackList)
-                setBlackList(blackList => blackList.filter(v => checked.includes(v.Uid.toString())))
+                setBlackList(blackList => blackList.filter(v =>  !checked.includes(v.Uid)))
                 setChecked([])
                 showSnack(`移出成功: ${checked.length} 人`)
                 setPermitOperateLoading(false)

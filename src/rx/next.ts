@@ -1,5 +1,4 @@
-import { Observable } from "rxjs";
-
+import { Observable } from 'rxjs';
 
 type RxTransfer<T> = (source: Observable<T>) => Observable<T>;
 
@@ -40,7 +39,7 @@ export function onError<T>(r: (e: any) => void): RxTransfer<T> {
         return new Observable<T>(observer => {
             return source.subscribe({
                 next(res) { observer.next(res); },
-                error(err) { 
+                error(err) {
                     r(err);
                     observer.error(err);
                 },

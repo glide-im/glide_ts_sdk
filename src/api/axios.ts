@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosPromise } from "axios";
-import { Response } from "./response";
+import axios, { AxiosInstance, AxiosPromise } from 'axios';
+import { Response } from './response';
 
 export const axiosInstance: AxiosInstance = axios.create({
     timeout: 3000,

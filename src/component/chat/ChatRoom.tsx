@@ -1,37 +1,52 @@
-import {AppBar, Box, IconButton, Menu, MenuItem, Toolbar, Typography} from "@mui/material";
-import React, {useEffect, useRef} from "react";
-import {Account} from "../../im/account";
-import {SessionMessageList} from "./MessageList";
-import {showSnack} from "../widget/SnackBar";
-import {MessageInput, MessageInputV2} from "./MessageInput";
 import {
-    ArrowBack, BlockOutlined,
+    AppBar,
+    Box,
+    IconButton,
+    Menu,
+    MenuItem,
+    Toolbar,
+    Typography,
+} from '@mui/material';
+import React, { useEffect, useRef } from 'react';
+import { Account } from '../../im/account';
+import { SessionMessageList } from './MessageList';
+import { showSnack } from '../widget/SnackBar';
+import { MessageInput, MessageInputV2 } from './MessageInput';
+import {
+    ArrowBack,
     DeleteOutlined,
     DescriptionOutlined,
     ExitToAppOutlined,
     MoreVertRounded,
-    NotificationsOffOutlined, PersonAddOutlined
-} from "@mui/icons-material";
-import {Loading} from "../widget/Loading";
-import {RouteComponentProps, useParams, withRouter} from "react-router-dom";
-import {SessionListEventType} from "../../im/session_list";
-import {catchError, filter, map, mergeMap, Observable, of, onErrorResumeNext, timeout} from "rxjs";
-import {Session, SessionType} from "../../im/session";
-import {OnlineStatus} from "../widget/OnlineStatus";
-import AddBlackList from './components/AddBlackList'
-
+    NotificationsOffOutlined,
+    PersonAddOutlined,
+} from '@mui/icons-material';
+import { Loading } from '../widget/Loading';
+import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
+import { SessionListEventType } from '../../im/session_list';
+import {
+    catchError,
+    filter,
+    map,
+    mergeMap,
+    Observable,
+    of,
+    onErrorResumeNext,
+    timeout,
+} from 'rxjs';
+import { Session, SessionType } from '../../im/session';
+import { OnlineStatus } from '../widget/OnlineStatus';
+import AddBlackList from './components/AddBlackList';
 
 function typingEvent(session: Session): Observable<boolean> {
     return onErrorResumeNext(
         session.inputEvent.pipe(
             map((v) => true),
             timeout(1500),
-            catchError((e) => of(false)),
+            catchError((e) => of(false))
         ),
-        of(false).pipe(
-            mergeMap((v) => typingEvent(session))
-        )
-    )
+        of(false).pipe(mergeMap((v) => typingEvent(session)))
+    );
 }
 
 function SessionTitleBar(props: { session: Session }) {
@@ -221,7 +236,7 @@ export function ChatRoomContainer() {
         </Box>)
 }
 
-export const ChatRoomContainerMobile = withRouter((props: RouteComponentProps) => {
+export const ChatRoomContainerMobile: any = withRouter((props: RouteComponentProps) => {
 
     const {sid} = useParams<{ sid: string }>();
     const session = Account.getInstance().getSessionList().get(sid);
