@@ -74,7 +74,6 @@ function SessionTitleBar(props: { session: Session }) {
                 setTyping(v);
             },
         });
-        props.session.event.pipe();
         return () => subscribe.unsubscribe();
     }, [props.session]);
 

@@ -198,8 +198,8 @@ class ChatMessageImpl implements ChatMessageInternal {
         }
 
         if (
-            this.Type === MessageType.StreamMarkdown ||
-            this.Type === MessageType.StreamText
+            this.Type === MessageType.CliCustomStreamMarkdown ||
+            this.Type === MessageType.CliCustomStreamText
         ) {
             if (
                 this.Status === MessageStatus.StreamFinish ||
@@ -311,8 +311,8 @@ class ChatMessageImpl implements ChatMessageInternal {
 
     private updateStreamMessage(m: ChatMessage) {
         if (
-            m.Type !== MessageType.StreamMarkdown &&
-            m.Type !== MessageType.StreamText
+            m.Type !== MessageType.CliCustomStreamMarkdown &&
+            m.Type !== MessageType.CliCustomStreamText
         ) {
             Logger.log(this.tag, "update a non stream message");
             return;
@@ -381,8 +381,8 @@ class ChatMessageImpl implements ChatMessageInternal {
         Logger.log(this.tag, "update message", [this.Content], [m.Content]);
 
         if (
-            m.Type === MessageType.StreamMarkdown ||
-            m.Type === MessageType.StreamText
+            m.Type === MessageType.CliCustomStreamMarkdown ||
+            m.Type === MessageType.CliCustomStreamText
         ) {
             this.UpdateAt = Date.now();
             this.updateStreamMessage(m);

@@ -19,24 +19,24 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { grey } from '@mui/material/colors';
-import React, { useEffect, useMemo, useState } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { Account } from '../../im/account';
-import { Cache } from '../../im/cache';
-import { ChatMessage, SendingStatus } from '../../im/chat_message';
-import { GlideBaseInfo } from '../../im/def';
-import { MessageStatus, MessageType } from '../../im/message';
-import { ImageViewer } from '../widget/ImageViewer';
-import { Markdown } from '../widget/Markdown';
-import { ChatContext } from './context/ChatContext';
-import { time2Str } from '../../utils/TimeUtils';
-import { filter, Observable } from 'rxjs';
-import { MessagePopup } from './MessagePopup';
-import { SxProps } from '@mui/system';
-import { Theme } from '@mui/material/styles';
-import { Logger } from '../../utils/Logger';
-import { SessionEventType } from '../../im/session';
+import {grey} from '@mui/material/colors';
+import React, {useEffect, useMemo, useState} from 'react';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {Account} from '../../im/account';
+import {Cache} from '../../im/cache';
+import {ChatMessage, SendingStatus} from '../../im/chat_message';
+import {GlideBaseInfo} from '../../im/def';
+import {MessageStatus, MessageType} from '../../im/message';
+import {ImageViewer} from '../widget/ImageViewer';
+import {Markdown} from '../widget/Markdown';
+import {ChatContext} from './context/ChatContext';
+import {time2Str} from '../../utils/TimeUtils';
+import {filter, Observable} from 'rxjs';
+import {MessagePopup} from './MessagePopup';
+import {SxProps} from '@mui/system';
+import {Theme} from '@mui/material/styles';
+import {Logger} from '../../utils/Logger';
+import {SessionEventType} from '../../im/session';
 
 const messageBoxStyleLeft: SxProps<Theme> = {
     overflow: 'visible',
@@ -120,7 +120,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
                         variant={'body2'}
                         textAlign={'center'}
                         px={1}
-                        sx={{ background: grey[100], borderRadius: '50px' }}>
+                        sx={{background: grey[100], borderRadius: '50px'}}>
                         {msg.getDisplayContent(true)}
                     </Typography>
                 </Box>
@@ -136,13 +136,13 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
                 {/* Avatar */}
                 <Grid item>
                     <Box px={2} pt={1}>
-                        <UserAvatar ui={sender} />
+                        <UserAvatar ui={sender}/>
                     </Box>
                 </Grid>
 
                 {/* Content */}
                 <Grid item xs={9} md={10} color={'palette.primary.main'}>
-                    <MessageHeader sender={sender} message={msg} />
+                    <MessageHeader sender={sender} message={msg}/>
                     {/* Message */}
                     <Box
                         display={'flex'}
@@ -156,11 +156,11 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
                                     : messageBoxStyleLeft
                             }>
                             <Box px={2} py={1} className={'break-all'}>
-                                <MessageContent msg={msg} />
+                                <MessageContent msg={msg}/>
                             </Box>
                         </Paper>
                         <Box>
-                            <MessageStatusView message={msg} />
+                            <MessageStatusView message={msg}/>
                         </Box>
                     </Box>
                 </Grid>
@@ -168,6 +168,7 @@ export function ChatMessageItem(props: { msg: ChatMessage }) {
         </MessagePopup>
     );
 }
+
 function MessageStatusView(props: { message: ChatMessage }) {
     const [status, setStatus] = useState<SendingStatus>(props.message.Sending);
 
@@ -205,26 +206,26 @@ function MessageStatusView(props: { message: ChatMessage }) {
     switch (status) {
         case SendingStatus.Unknown:
             hint = '未知状态';
-            statusEle = <HelpOutlined fontSize={'small'} color={'disabled'} />;
+            statusEle = <HelpOutlined fontSize={'small'} color={'disabled'}/>;
             break;
         case SendingStatus.Sending:
             hint = '发送中';
-            statusEle = <CircularProgress size={12} />;
+            statusEle = <CircularProgress size={12}/>;
             break;
         case SendingStatus.ClientAck:
             hint = '已发送(未送达)';
-            statusEle = <CheckOutlined fontSize={'small'} color={'success'} />;
+            statusEle = <CheckOutlined fontSize={'small'} color={'success'}/>;
             break;
         case SendingStatus.ServerAck:
             hint = '已送达';
             statusEle = (
-                <DoneAllOutlined fontSize={'small'} color={'success'} />
+                <DoneAllOutlined fontSize={'small'} color={'success'}/>
             );
             break;
         case SendingStatus.Failed:
             hint = '发送失败';
             hint += `(${props.message.FailedReason ?? ''})`;
-            statusEle = <ErrorOutline fontSize={'small'} color={'error'} />;
+            statusEle = <ErrorOutline fontSize={'small'} color={'error'}/>;
             break;
     }
 
@@ -324,7 +325,11 @@ const UserAvatar = withRouter((props: Props) => {
 
 const atUserRegex = /@[0-9A-Za-z_]{5,20}/g;
 
-function At(props: { id: string }) {
+interface AtProps extends RouteComponentProps {
+    id: string
+}
+
+const At = withRouter((props: AtProps) => {
     const [name, setName] = useState(
         Cache.getUserInfo(props.id)?.name ?? props.id
     );
@@ -337,6 +342,18 @@ function At(props: { id: string }) {
         });
         return () => sp.unsubscribe();
     });
+
+    const onclick = () => {
+        Account.getInstance().getSessionList()
+            .createSession(props.id)
+            .subscribe({
+                next: (ses) => {
+                    Account.session().setSelectedSession(ses.ID);
+                    props.history.replace(`/im/session/${ses.ID}`);
+                }
+            })
+    }
+
     return (
         <Button
             sx={{
@@ -346,11 +363,12 @@ function At(props: { id: string }) {
             }}
             size={'small'}
             autoCapitalize={null}
-            variant={'text'}>
+            variant={'text'}
+            onClick={onclick}>
             @{name}
         </Button>
     );
-}
+})
 
 function MessageContent(props: { msg: ChatMessage }) {
     const chatContext = React.useContext(ChatContext);
@@ -389,7 +407,7 @@ function MessageContent(props: { msg: ChatMessage }) {
                 if (!match.startsWith('@')) {
                     return;
                 }
-                const node = <At key={match} id={match.replace('@', '')} />;
+                const node = <At key={match} id={match.replace('@', '')}/>;
                 result.push(node);
                 result.push(parts[i + 1]);
             });
@@ -457,16 +475,16 @@ function MessageContent(props: { msg: ChatMessage }) {
                     />
                 </>
             );
-        case MessageType.StreamMarkdown:
-        case MessageType.StreamText:
+        case MessageType.CliCustomStreamMarkdown:
+        case MessageType.CliCustomStreamText:
             switch (status) {
                 case MessageStatus.StreamStart:
-                    return <CircularProgress />;
+                    return <CircularProgress/>;
                 case MessageStatus.StreamSending:
                     return (
                         <Box width={'100%'}>
-                            <Markdown source={content} />
-                            <LinearProgress />
+                            <Markdown source={content}/>
+                            <LinearProgress/>
                         </Box>
                     );
                 case MessageStatus.StreamCancel:
@@ -475,7 +493,7 @@ function MessageContent(props: { msg: ChatMessage }) {
                             display={'flex'}
                             justifyContent={'center'}
                             alignItems={'center'}>
-                            <ErrorOutline />
+                            <ErrorOutline/>
                             <Typography ml={1} variant={'body2'}>
                                 {content}
                             </Typography>
@@ -484,14 +502,14 @@ function MessageContent(props: { msg: ChatMessage }) {
                 case MessageStatus.StreamFinish:
                     return (
                         <Box width={'100%'}>
-                            <Markdown source={content} />
+                            <Markdown source={content}/>
                         </Box>
                     );
                 default:
-                    return <Markdown source={content} />;
+                    return <Markdown source={content}/>;
             }
         case MessageType.Markdown:
-            return <Markdown source={content} />;
+            return <Markdown source={content}/>;
         case MessageType.Text:
             return (
                 <Typography variant={'body1'} className={'font-light'}>
@@ -505,7 +523,7 @@ function MessageContent(props: { msg: ChatMessage }) {
                     justifyContent={'center'}
                     alignItems={'center'}>
                     <IconButton color={'info'} title={'语音消息'}>
-                        <Audiotrack />
+                        <Audiotrack/>
                     </IconButton>
                     <Typography variant={'body2'} color={'#5dccce'}>
                         语音消息
@@ -519,7 +537,7 @@ function MessageContent(props: { msg: ChatMessage }) {
                     justifyContent={'center'}
                     alignItems={'center'}>
                     <IconButton color={'info'} title={'语音消息'}>
-                        <Map />
+                        <Map/>
                     </IconButton>
                     <Typography variant={'body2'} color={'#5dccce'}>
                         位置
@@ -533,7 +551,7 @@ function MessageContent(props: { msg: ChatMessage }) {
                     justifyContent={'center'}
                     alignItems={'center'}>
                     <IconButton color={'info'} title={'文件消息'}>
-                        <FileDownload />
+                        <FileDownload/>
                     </IconButton>
                     <Typography variant={'body2'} color={'#5dccce'}>
                         文件

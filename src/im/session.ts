@@ -8,7 +8,7 @@ import {
     map,
     mergeMap,
     Observable,
-    of, retry, retryWhen,
+    of,
     Subject,
     take,
     tap,
@@ -16,8 +16,8 @@ import {
     timeout,
     toArray
 } from "rxjs";
-import { SessionBean } from "../api/model";
-import { Account } from "./account";
+import {SessionBean} from "../api/model";
+import {Account} from "./account";
 import {
     ChatMessage,
     ChatMessageCache,
@@ -27,19 +27,12 @@ import {
     MessageUpdateType,
     SendingStatus
 } from "./chat_message";
-import { Cache } from "./cache";
-import {
-    Actions,
-    CliCustomMessage,
-    ClientCustomType,
-    Message,
-    MessageStatus,
-    MessageType
-} from "./message";
-import { IMWsClient, isMessageSendError, MessageSendError, MessageSendResult, SendErrorCause } from "./im_ws_client";
-import { Logger } from "../utils/Logger";
-import { SessionListCache } from "./session_list";
-import { Api } from "../api/api";
+import {Cache} from "./cache";
+import {Actions, CliCustomMessage, Message, MessageStatus, MessageType} from "./message";
+import {IMWsClient, isMessageSendError, MessageSendResult, SendErrorCause} from "./im_ws_client";
+import {Logger} from "../utils/Logger";
+import {SessionListCache} from "./session_list";
+import {Api} from "../api/api";
 
 export type SessionId = string;
 
@@ -58,17 +51,19 @@ export enum SessionStatus {
 export function getSID(type: number, to: string): string {
     if (type === 2) {
         return to;
+    } else {
+        return to;
     }
 
-    let lg = Account.getInstance().getUID();
-    let sm = to;
-
-    if (lg < sm) {
-        let tmp = lg;
-        lg = sm;
-        sm = tmp;
-    }
-    return lg + "_" + sm;
+    // let lg = Account.getInstance().getUID();
+    // let sm = to;
+    //
+    // if (lg < sm) {
+    //     let tmp = lg;
+    //     lg = sm;
+    //     sm = tmp;
+    // }
+    // return lg + "_" + sm;
 }
 
 export interface SessionBaseInfo {
@@ -187,9 +182,7 @@ class InternalSessionImpl implements InternalSession {
         new Subject<ChatMessageInternal>();
     private readonly _updateSubject: Subject<SessionEvent> =
         new Subject<SessionEvent>();
-    private readonly _inputEventReceive: Subject<Array<string>> = new Subject<
-        Array<string>
-    >();
+    private readonly _inputEventReceive: Subject<Array<string>> = new Subject<Array<string>>();
     private readonly _typingEventEmitter: Subject<any> = new Subject<any>();
 
     private initialized = false;
@@ -202,7 +195,7 @@ class InternalSessionImpl implements InternalSession {
 
         this.To = to;
         this.Type = type;
-        this.ID = this.getSID();
+        this.ID = to;
         this.Title = this.ID;
         this.UpdateAt = Date.now();
 
@@ -230,7 +223,7 @@ class InternalSessionImpl implements InternalSession {
                     from: myUid,
                     id: 0,
                     to: this.To,
-                    type: ClientCustomType.CliMessageTypeTyping
+                    type: MessageType.CliCustomStreamTyping
                 } as CliCustomMessage;
                 IMWsClient.sendCliCustomMessage(m).subscribe({
                     error: (e) => {
@@ -428,32 +421,27 @@ class InternalSessionImpl implements InternalSession {
     }
 
     public onMessage(action: Actions, message: Message | CliCustomMessage) {
-        if (action === Actions.MessageCli) {
-            const m = message as CliCustomMessage;
-            switch (message.type) {
-                case ClientCustomType.CliMessageTypeTyping:
-                    this._inputEventReceive.next(JSON.parse(m.content));
-                    break;
-            }
-            return;
-        }
 
         if (message.type > MessageType.WebRtcHi) {
             return;
         }
-        const isChannel =
-            action === Actions.MessageGroup ||
-            action === Actions.MessageGroupRecall ||
-            action === Actions.NotifyGroup;
-        const chatMessage = createChatMessage2(
-            this.ID,
-            message as Message,
-            isChannel
-        );
+        const isChannel = action === Actions.MessageGroup || action === Actions.MessageGroupRecall
+            || action === Actions.NotifyGroup;
+
+        if (action === Actions.MessageCli) {
+            const m = message as CliCustomMessage;
+            switch (message.type) {
+                case MessageType.CliCustomStreamTyping:
+                    this._inputEventReceive.next(JSON.parse(m.content));
+                    return;
+            }
+        }
+
+        const chatMessage = createChatMessage2(this.ID, message as Message, isChannel);
 
         switch (chatMessage.Type) {
-            case MessageType.StreamMarkdown:
-            case MessageType.StreamText:
+            case MessageType.CliCustomStreamMarkdown:
+            case MessageType.CliCustomStreamText:
                 let streamMessage = this.messageMap.get(chatMessage.getId());
                 if (streamMessage === undefined || streamMessage === null) {
                     this.onReceiveStreamMessage(chatMessage);
@@ -471,12 +459,14 @@ class InternalSessionImpl implements InternalSession {
         ]);
         // TODO 优化
 
+        this.addMessage(chatMessage);
+
         this.cache.addMessage(chatMessage).subscribe({
             next: () => {
-                this.addMessage(chatMessage);
+                Logger.log(this.tag, [chatMessage], "save message to cache success");
             },
             error: (err) => {
-                Logger.error(this.tag, [chatMessage], "add message error", err);
+                Logger.error(this.tag, [chatMessage], "save message to cache error", err);
             }
         });
         // Cache.cacheUserInfo(message.from).then(() => {
@@ -485,20 +475,18 @@ class InternalSessionImpl implements InternalSession {
     }
 
     private onReceiveStreamMessage(chatMessage: ChatMessage) {
-        chatMessage.events().subscribe({
-            next: () => {
-                this.event.next({
-                    type: SessionEventType.MessageUpdate,
-                    session: this,
-                    message: chatMessage
-                });
-            }
-        });
 
         // 首次收到消息, 订阅消息更新
         chatMessage
             .events()
             .pipe(
+                tap((event) => {
+                    this.event.next({
+                        type: SessionEventType.MessageUpdate,
+                        session: this,
+                        message: chatMessage
+                    });
+                }),
                 timeout(10000),
                 filter(
                     (event) => event.type === MessageUpdateType.UpdateStatus

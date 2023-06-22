@@ -19,8 +19,9 @@ export enum MessageType {
     UserOnline = 100,
     UserOffline = 101,
 
-    StreamMarkdown = 1011,
-    StreamText = 1001,
+    CliCustomStreamMarkdown = 1011,
+    CliCustomStreamText = 1001,
+    CliCustomStreamTyping = 10020,
 
     // todo move to ClientCustomType
     WebRtcHi = 2000,
@@ -35,10 +36,6 @@ export enum MessageType {
     WebRtcIce = 2009,
     WebRtcClose = 2010,
     WebRtcCandidate = 2011,
-}
-
-export enum ClientCustomType {
-    CliMessageTypeTyping = 1,
 }
 
 export enum MessageStatus {
@@ -156,7 +153,7 @@ export interface Reply {
 export interface CliCustomMessage {
     from: string;
     to: string;
-    type: ClientCustomType;
+    type: MessageType;
     id: number;
     content: string | null;
 }

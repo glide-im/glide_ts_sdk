@@ -38,7 +38,6 @@ import {
 } from '@mui/icons-material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { RelativeUser } from '../../im/relative_list';
-import { Simulate } from 'react-dom/test-utils';
 import { showSnack } from '../widget/SnackBar';
 
 export const UserInfoHeader: any = withRouter((props: RouteComponentProps) => {
@@ -226,7 +225,7 @@ const BlackListDrawer = forwardRef((props, ref) => {
                         size='small'
                         variant='contained'
                         disabled={
-                            checked.length === 0 || permitOperateLoading == true
+                            checked.length === 0 || permitOperateLoading === true
                         }
                         onClick={() => updateBlackList()}>
                         完成 ({checked.length})
