@@ -220,20 +220,21 @@ export function ChatRoomContainer() {
     }, [sid]);
 
     useEffect(() => {
-        if (session === null) {
-            const sp = Account.session()
-                .event()
-                .pipe(
-                    filter(
-                        (e) =>
-                            e.event === SessionListEventType.create &&
-                            e.session.ID === sid
-                    ),
-                    map((e) => e.session)
-                )
-                .subscribe((e) => setSession(e));
-            return () => sp.unsubscribe();
-        }
+        const sp = Account.session().event().pipe(
+            filter((e) => e.session?.ID === sid)
+        ).subscribe({
+            next: (e) => {
+                if (e.event === SessionListEventType.create) {
+                    if (session === null ) {
+                        setSession(e.session)
+                    }
+                }
+                if (e.event === SessionListEventType.deleted) {
+                    setSession(null)
+                }
+            }
+        })
+        return () => sp.unsubscribe();
     }, [session, sid]);
 
     if (session === null) {

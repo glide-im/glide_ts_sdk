@@ -1,19 +1,7 @@
-import {
-    catchError,
-    concat,
-    filter,
-    groupBy,
-    map,
-    mergeMap,
-    Observable,
-    of,
-    Subject,
-    tap,
-    toArray,
-} from 'rxjs';
-import { Api } from '../api/api';
-import { Account } from './account';
-import { Actions, CliCustomMessage, CommonMessage, Message } from './message';
+import {catchError, concat, filter, groupBy, map, mergeMap, Observable, of, Subject, tap, toArray,} from 'rxjs';
+import {Api} from '../api/api';
+import {Account} from './account';
+import {Actions, CliCustomMessage, CommonMessage, Message} from './message';
 import {
     createSession,
     fromBaseInfo,
@@ -25,8 +13,8 @@ import {
     SessionId,
     SessionType,
 } from './session';
-import { ChatMessageCache } from './chat_message';
-import { Logger } from '../utils/Logger';
+import {ChatMessageCache} from './chat_message';
+import {Logger} from '../utils/Logger';
 
 export enum SessionListEventType {
     create = 0,
@@ -54,6 +42,8 @@ export interface SessionList {
     event(): Observable<SessionListEvent>;
 
     getSessionsTemped(): Session[];
+
+    cleanCache(): Observable<any>;
 }
 
 // @Internal 仅供 glide 内部使用
@@ -88,10 +78,8 @@ export class InternalSessionListImpl implements InternalSessionList {
     private currentSession: string = '0';
 
     private sessionEventSubject = new Subject<SessionListEvent>();
-    private sessionMap: Map<SessionId, InternalSession> = new Map<
-        SessionId,
-        InternalSession
-    >();
+    private sessionMap: Map<SessionId, InternalSession> = new Map<SessionId,
+        InternalSession>();
 
     private readonly cache: SessionListCache & ChatMessageCache;
 
@@ -284,6 +272,36 @@ export class InternalSessionListImpl implements InternalSessionList {
                 return of(session);
             })
         );
+    }
+
+    public cleanCache(): Observable<any> {
+        return new Observable<InternalSession>((observer) => {
+            this.sessionMap.forEach((session) => {
+                observer.next(session)
+            })
+            observer.complete();
+        }).pipe(
+            mergeMap<InternalSession, any>((session) => this.remove(session)),
+            toArray(),
+            tap(() => {
+                this.currentSession = "";
+                this.sessionMap.clear();
+            })
+        )
+    }
+
+    public remove(session: InternalSession): Observable<any> {
+        return session.clearMessageHistory().pipe(
+            mergeMap(() => this.cache.removeSession(session.ID)),
+            tap(() => {
+                this.sessionEventSubject.next({
+                    event: SessionListEventType.deleted,
+                    session: this.sessionMap.get(session.ID),
+                })
+                this.sessionMap.delete(session.ID);
+                Logger.log(this.tag, 'session removed from cache: ', session.ID);
+            })
+        )
     }
 
     public get(sid: SessionId): InternalSession | null {

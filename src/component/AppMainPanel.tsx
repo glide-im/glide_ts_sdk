@@ -107,10 +107,7 @@ const MobileMain = withRouter((props: RouteComponentProps) => {
                     <Box height={'calc(100vh - 56px)'}>
                         <AppBar position='static'>
                             <Toolbar>
-                                <IconButton
-                                    edge='start'
-                                    color='inherit'
-                                    aria-label='menu'></IconButton>
+                                <IconButton edge='start' color='inherit' aria-label='menu'/>
                                 <Typography variant='h6'>会话</Typography>
                             </Toolbar>
                         </AppBar>

@@ -1,13 +1,13 @@
-import { Box, CircularProgress, List, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
-import { Account } from '../../im/account';
-import { Session } from '../../im/session';
-import { SessionListEventType } from '../../im/session_list';
-import { SessionListItem } from './SessionListItem';
+import {Box, CircularProgress, List, Typography} from '@mui/material';
+import React, {useEffect, useState} from 'react';
+import {RouteComponentProps, useParams, withRouter} from 'react-router-dom';
+import {Account} from '../../im/account';
+import {Session} from '../../im/session';
+import {SessionListEventType} from '../../im/session_list';
+import {SessionListItem} from './SessionListItem';
 
 export const SessionListView: any = withRouter((props: RouteComponentProps) => {
-    const { sid } = useParams<{ sid: string }>();
+    const {sid} = useParams<{ sid: string }>();
     const sessionList = Account.getInstance().getSessionList();
     const relativeList = Account.getInstance().getRelativeList();
     const [sessions, setSessions] = useState(sessionList.getSessionsTemped());
@@ -29,13 +29,15 @@ export const SessionListView: any = withRouter((props: RouteComponentProps) => {
                         setSessions(sessionList.getSessionsTemped());
                         break;
                     case SessionListEventType.deleted:
+                        setSessions(sessionList.getSessionsTemped());
+                        break;
                     case SessionListEventType.init:
                         break;
                 }
             },
         });
         return () => sp.unsubscribe();
-    }, [sessionList]);
+    }, [sessionList, sid]);
 
     useEffect(() => {
         sessionList.getSessions().subscribe({
@@ -61,14 +63,16 @@ export const SessionListView: any = withRouter((props: RouteComponentProps) => {
     let content: JSX.Element;
 
     if (loadSate) {
-        content = <Progress showProgress={true} msg={'Loading'} />;
+        content = <Progress showProgress={true} msg={'Loading'}/>;
     } else if (loadError) {
-        content = <Progress showProgress={false} msg={loadError} />;
+        content = <Progress showProgress={false} msg={loadError}/>;
     } else if (sessions.length === 0) {
-        content = <Progress showProgress={false} msg={'Empty...'} />;
+        content = <Box className={'grid'} pt={"40%"}>
+            <Typography variant='body1' textAlign={'center'}>还没有人找你聊天哦</Typography>
+        </Box>
     } else {
         content = (
-            <List style={{ overflow: 'auto', height: '100%' }} disablePadding>
+            <List style={{overflow: 'auto', height: '100%'}} disablePadding>
                 {sessions?.map((value: Session) => (
                     <SessionListItem
                         key={value.ID}
@@ -87,7 +91,7 @@ function Progress(props: { showProgress?: boolean; msg?: string }) {
     return (
         <Box display={'flex'} flexDirection={'column'} paddingTop={'50%'}>
             {props.showProgress !== false ? (
-                <CircularProgress style={{ margin: 'auto' }} />
+                <CircularProgress style={{margin: 'auto'}}/>
             ) : (
                 <></>
             )}

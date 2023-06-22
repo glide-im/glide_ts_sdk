@@ -14,7 +14,9 @@ interface GlideDBSchema extends DBSchema {
     session: {
         value: SessionBaseInfo;
         key: string;
-        indexes: { 'by-to': string };
+        indexes: {
+            'by-to': string;
+        };
     };
     message: {
         value: MessageBaseInfo;
